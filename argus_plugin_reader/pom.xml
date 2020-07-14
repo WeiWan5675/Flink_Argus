@@ -15,4 +15,11 @@
         <module>mysql_reader</module>
     </modules>
 
+
+    <dependencies>
+        <dependency>
+            <groupId>org.weiwan.argus</groupId>
+            <artifactId>argus_core</artifactId>
+        </dependency>
+    </dependencies>
 </project>
