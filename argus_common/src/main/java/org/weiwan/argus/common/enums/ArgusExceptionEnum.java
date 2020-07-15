@@ -1,7 +1,5 @@
 package org.weiwan.argus.common.enums;
 
-import com.alibaba.fastjson.JSONObject;
-
 /**
  * @Author: xiaozhennan
  * @Date: 2020/4/28 9:13

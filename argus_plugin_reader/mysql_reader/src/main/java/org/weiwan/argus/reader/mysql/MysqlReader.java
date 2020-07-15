@@ -1,6 +1,6 @@
 package org.weiwan.argus.reader.mysql;
 
-import org.weiwan.argus.pub.api.BaseReader;
+import org.weiwan.argus.core.pub.api.BaseReader;
 
 /**
  * @Author: xiaozhennan

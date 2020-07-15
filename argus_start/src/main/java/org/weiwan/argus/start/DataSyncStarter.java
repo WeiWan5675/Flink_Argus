@@ -1,6 +1,6 @@
 package org.weiwan.argus.start;
 
-import org.weiwan.argus.ArgusRun;
+import org.weiwan.argus.core.ArgusRun;
 import org.weiwan.argus.common.options.OptionParser;
 import org.weiwan.argus.start.config.StartOptions;
 import org.weiwan.argus.start.enums.JobMode;

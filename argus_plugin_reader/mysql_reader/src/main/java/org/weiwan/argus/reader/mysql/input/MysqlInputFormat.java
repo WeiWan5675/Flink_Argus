@@ -1,7 +1,7 @@
 package org.weiwan.argus.reader.mysql.input;
 
-import org.weiwan.argus.pub.api.BaseRichInputFormat;
-import org.weiwan.argus.pub.pojo.DataRecord;
+import org.weiwan.argus.core.pub.pojo.DataRecord;
+import org.weiwan.argus.core.pub.api.BaseRichInputFormat;
 
 /**
  * @Author: xiaozhennan

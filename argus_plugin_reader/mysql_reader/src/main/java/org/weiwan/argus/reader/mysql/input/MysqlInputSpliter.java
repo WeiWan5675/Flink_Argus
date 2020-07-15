@@ -1,7 +1,7 @@
 package org.weiwan.argus.reader.mysql.input;
 
-import org.weiwan.argus.pub.api.BaseInputSpliter;
-import org.weiwan.argus.pub.api.InputSpliter;
+import org.weiwan.argus.core.pub.api.BaseInputSpliter;
+import org.weiwan.argus.core.pub.api.InputSpliter;
 
 /**
  * @Author: xiaozhennan

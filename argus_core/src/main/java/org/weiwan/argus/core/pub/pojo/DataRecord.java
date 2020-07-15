@@ -1,4 +1,4 @@
-package org.weiwan.argus.pub.pojo;
+package org.weiwan.argus.core.pub.pojo;
 
 import java.io.Serializable;
 

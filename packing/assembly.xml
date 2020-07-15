@@ -2,7 +2,7 @@
     <formats>
         <format>tar.gz</format>
     </formats>
-    <id>release</id>
+        <id>release</id>
     <!-- Adds dependencies to zip package under lib directory -->
     <dependencySets>
         <dependencySet>
@@ -34,9 +34,9 @@
             <useProjectArtifact>false</useProjectArtifact>
             <outputDirectory>/lib</outputDirectory>
             <excludes>
-                <exclude>org.weiwan.argus:*reader:jar:</exclude>
-                <exclude>org.weiwan.argus:*writer:jar:</exclude>
-                <exclude>org.weiwan.argus:*channel:jar:</exclude>
+                <exclude>org.weiwan.argus:*reader*:jar:</exclude>
+                <exclude>org.weiwan.argus:*writer*:jar:</exclude>
+                <exclude>org.weiwan.argus:*channel*:jar:</exclude>
             </excludes>
             <unpack>false</unpack>
         </dependencySet>

@@ -104,7 +104,7 @@ public class EasyPatternLayout extends PatternLayoutBase<ILoggingEvent> {
         defaultConverterMap.put("highlight", HighlightingCompositeConverter.class.getName());
         defaultConverterMap.put("lsn", LocalSequenceNumberConverter.class.getName());
         defaultConverterMap.put("easyHighlight", EasyHighlightingCompositeConverter.class.getName());
-        defaultConverterMap.put("pid", org.weiwan.argus.common.log.EasyHighlightingCompositeConverter.class.getName());
+        defaultConverterMap.put("pid", EasyHighlightingCompositeConverter.class.getName());
 
     }
 

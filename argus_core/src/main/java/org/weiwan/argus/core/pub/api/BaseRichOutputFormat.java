@@ -1,4 +1,4 @@
-package org.weiwan.argus.pub.api;
+package org.weiwan.argus.core.pub.api;
 
 import org.apache.flink.api.common.io.RichOutputFormat;
 
