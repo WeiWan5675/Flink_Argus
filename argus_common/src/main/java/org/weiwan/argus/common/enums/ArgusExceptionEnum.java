@@ -26,7 +26,11 @@ public enum ArgusExceptionEnum {
 
 
     //kafka消费解析的报文
-    AP_KAFKA_MSG_ERROR("AP20001","Kafka报文异常");
+    AP_KAFKA_MSG_ERROR("AP20001", "Kafka报文异常"),
+
+    //解析异常
+    CODE_ANALYZE_ERROR("CODE0001", "代码参数解析异常");
+
 
     private String code;
     private String msg;

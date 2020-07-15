@@ -11,4 +11,7 @@ import org.weiwan.argus.pub.pojo.DataRecord;
  * @Description:
  **/
 public class MysqlInputFormat extends BaseRichInputFormat<DataRecord, MysqlInputSpliter> {
+
+
+
 }

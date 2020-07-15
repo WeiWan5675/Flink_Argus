@@ -20,5 +20,5 @@ public abstract class BaseInputSpliter implements InputSplit {
         return 0;
     }
 
-    public abstract BaseInputSpliter getInputSpliter();
+    public abstract InputSpliter getInputSpliter();
 }

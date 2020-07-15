@@ -3,16 +3,15 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
-        <artifactId>argus_plugin_writer</artifactId>
+        <artifactId>argus_plugin_channel</artifactId>
         <groupId>org.weiwan.argus</groupId>
         <version>1.0.0</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>hive_writer</artifactId>
+    <artifactId>common_channel</artifactId>
 
-    <build>
-        <finalName>${project.name}</finalName>
-    </build>
-
+<build>
+    <finalName>${project.name}</finalName>
+</build>
 </project>

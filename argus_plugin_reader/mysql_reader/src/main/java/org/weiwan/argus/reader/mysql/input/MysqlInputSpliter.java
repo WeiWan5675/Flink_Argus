@@ -1,6 +1,7 @@
 package org.weiwan.argus.reader.mysql.input;
 
 import org.weiwan.argus.pub.api.BaseInputSpliter;
+import org.weiwan.argus.pub.api.InputSpliter;
 
 /**
  * @Author: xiaozhennan
@@ -10,8 +11,10 @@ import org.weiwan.argus.pub.api.BaseInputSpliter;
  * @Description:
  **/
 public class MysqlInputSpliter extends BaseInputSpliter {
+
     @Override
-    public BaseInputSpliter getInputSpliter() {
+    public InputSpliter getInputSpliter() {
+
         return null;
     }
 }

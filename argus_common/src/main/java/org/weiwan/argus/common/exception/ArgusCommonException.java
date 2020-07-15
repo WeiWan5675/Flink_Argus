@@ -27,12 +27,19 @@ public class ArgusCommonException extends RuntimeException {
     }
 
     public ArgusCommonException(ArgusExceptionEnum argusEnum, String msg) {
+        super(msg);
         this.code = argusEnum.getCode();
         this.msg = msg;
     }
 
+    public ArgusCommonException(String msg) {
+        super(msg);
+        this.code = ArgusExceptionEnum.SYS_UNKNOWN_ERROR.getCode();
+        this.msg = msg;
+    }
 
-    public static ArgusCommonException generateParameterIsNullException(String msg){
+
+    public static ArgusCommonException generateParameterIsNullException(String msg) {
         return new ArgusCommonException(ArgusExceptionEnum.AP_PARAM_NULL, msg);
     }
 

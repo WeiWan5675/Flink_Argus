@@ -1,0 +1,75 @@
+<assembly>
+    <formats>
+        <format>tar.gz</format>
+    </formats>
+    <id>release</id>
+    <!-- Adds dependencies to zip package under lib directory -->
+    <dependencySets>
+        <dependencySet>
+            <useProjectArtifact>false</useProjectArtifact>
+            <outputDirectory>/plugins/reader</outputDirectory>
+            <includes>
+                <include>org.weiwan.argus:*reader*:jar:</include>
+            </includes>
+            <unpack>false</unpack>
+        </dependencySet>
+        <dependencySet>
+            <useProjectArtifact>false</useProjectArtifact>
+            <outputDirectory>/plugins/writer</outputDirectory>
+            <includes>
+                <include>org.weiwan.argus:*writer*:jar:</include>
+            </includes>
+            <unpack>false</unpack>
+        </dependencySet>
+        <dependencySet>
+            <useProjectArtifact>false</useProjectArtifact>
+            <outputDirectory>/plugins/channel</outputDirectory>
+            <includes>
+                <include>org.weiwan.argus:*channel*:jar:</include>
+            </includes>
+            <unpack>false</unpack>
+        </dependencySet>
+
+        <dependencySet>
+            <useProjectArtifact>false</useProjectArtifact>
+            <outputDirectory>/lib</outputDirectory>
+            <excludes>
+                <exclude>org.weiwan.argus:*reader:jar:</exclude>
+                <exclude>org.weiwan.argus:*writer:jar:</exclude>
+                <exclude>org.weiwan.argus:*channel:jar:</exclude>
+            </excludes>
+            <unpack>false</unpack>
+        </dependencySet>
+    </dependencySets>
+    <fileSets>
+        <fileSet>
+            <directory>${project.build.directory}</directory>
+            <outputDirectory></outputDirectory>
+            <fileMode>0755</fileMode>
+            <includes>
+                <include>*.jar</include>
+            </includes>
+        </fileSet>
+        <fileSet>
+            <directory>src/main/bin</directory>
+            <outputDirectory>bin</outputDirectory>
+            <fileMode>0775</fileMode>
+        </fileSet>
+        <fileSet>
+            <directory>src/main/conf</directory>
+            <outputDirectory>conf</outputDirectory>
+        </fileSet>
+        <fileSet>
+            <directory>../doc</directory>
+            <outputDirectory>doc</outputDirectory>
+        </fileSet>
+
+    </fileSets>
+
+    <files>
+        <file>
+            <source>../README.md</source>
+            <outputDirectory></outputDirectory>
+        </file>
+    </files>
+</assembly>

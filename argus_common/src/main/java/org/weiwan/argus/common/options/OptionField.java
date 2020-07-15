@@ -21,22 +21,27 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
- * 
  * Reason: TODO ADD REASON(可选)
  * Date: 2019年9月16日 下午1:24:39
  * Company: www.dtstack.com
- * @author sishu.yss
  *
+ * @author sishu.yss
  */
 @Target({ElementType.FIELD})
 @Retention(RetentionPolicy.RUNTIME)
-public @interface OptionRequired {
+public @interface OptionField {
 
-	boolean required() default false;
+    boolean required() default false;
 
-	boolean hasArg() default true;
+    boolean hasArg() default true;
 
-	String description() default "";
+    String description() default "";
+
+    String[] oweKeys();
+
+    String defaultValue() default "";
 }
