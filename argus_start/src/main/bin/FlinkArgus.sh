@@ -11,6 +11,9 @@ set -e
 
 export ARGUS_HOME="$(cd "`dirname "$0"`"/..; pwd)"
 
+
+
+
 # Find the java binary
 if [ -n "${JAVA_HOME}" ]; then
   JAVA_RUN="${JAVA_HOME}/bin/java"
@@ -23,10 +26,23 @@ else
   fi
 fi
 
-JAR_DIR=$ARGUS_HOME/lib/*
-JAR_DIR=$JAR_DIR + $ARGUS_HOME/FlinkArgus-1.0.0.jar
+JAR_HOME=$ARGUS_HOME/lib
+
+
+JAR_CLASSPATH=""
+for f in $JAR_HOME/*.jar
+do
+JAR_CLASSPATH=$JAR_CLASSPATH:$f
+done
+
+
+echo $JAR_CLASSPATH
+cp=${JAR_CLASSPATH#*:}
+
+
 CLASS_NAME=org.weiwan.argus.start.DataSyncStarter
 
 echo "Flink Argus starting ..."
-nohup $JAVA_RUN -cp $JAR_DIR $CLASS_NAME $@ &
+$JAVA_RUN -cp $cp $CLASS_NAME $@
+#nohup $JAVA_RUN -cp $cp $CLASS_NAME $@ &
 echo "Flink Argus started ..."

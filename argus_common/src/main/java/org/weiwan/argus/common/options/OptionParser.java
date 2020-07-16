@@ -21,11 +21,20 @@ package org.weiwan.argus.common.options;
 import org.apache.commons.cli.BasicParser;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
+import org.apache.commons.codec.Charsets;
 import org.apache.commons.lang3.StringUtils;
+import org.weiwan.argus.common.utils.MapUtil;
+import org.weiwan.argus.common.utils.ReflectUtil;
 
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * The Parser of Launcher commandline options
@@ -73,11 +82,17 @@ public class OptionParser {
                     if (value != null) {
                         break;
                     }
+
+                    if (!optionField.hasArg()) {
+                        //没参数
+                        value = String.valueOf(commandLine.hasOption(optionName));
+                    }
                 }
 
                 if (value == null) {
                     value = commandLine.getOptionValue(fieldName);
                 }
+
 
                 //如果参数不能为空,但是命令行为空,抛出异常
                 if (optionField != null) {
@@ -92,13 +107,19 @@ public class OptionParser {
                     value = optionField.defaultValue();
                     if (value == null || value.equalsIgnoreCase("")) {
                         //默认值为空 TODO 默认值为空,这里需要拿到实体类的默认值
-                        Object fieldValue = getFieldValue(e, field);
+                        Object fieldValue = ReflectUtil.getFieldStrValue(e, field);
                         if (fieldValue != null) {
                             value = String.valueOf(fieldValue);
                         }
                     }
                 }
-                field.set(e, value);
+
+
+                if (!optionField.hasArg() && value != null) {
+                    field.setBoolean(e, true);
+                } else {
+                    field.set(e, value);
+                }
             }
         } catch (Exception exception) {
             exception.printStackTrace();
@@ -137,30 +158,22 @@ public class OptionParser {
     }
 
 
-    public static Object getFieldValue(Object object, Field field) throws Exception {
-        if (field.getGenericType().toString().equals(
-                "class java.lang.String")) { // 如果type是类类型，则前面包含"class "，后面跟类名
-            // 拿到该属性的gettet方法
-            /**
-             * 这里需要说明一下：他是根据拼凑的字符来找你写的getter方法的
-             * 在Boolean值的时候是isXXX（默认使用ide生成getter的都是isXXX）
-             * 如果出现NoSuchMethod异常 就说明它找不到那个gettet方法 需要做个规范
-             */
-            Method m = (Method) object.getClass().getMethod(
-                    "get" + getMethodName(field.getName()));
-            String val = (String) m.invoke(object);// 调用getter方法获取属性值
-            if (val != null) {
-                return val;
+    public Map<String, Object> optionToMap(Object options, Class<?> clazz) throws Exception {
+        Field[] declaredFields = clazz.getDeclaredFields();
+        Map<String, Object> res = new HashMap();
+        for (Field field : declaredFields) {
+            Object fieldValue = ReflectUtil.getObjectValue(options, field);
+            System.out.println(fieldValue);
+            OptionField optionField = field.getAnnotation(OptionField.class);
+            String[] oweKeys = optionField.oweKeys();
+            if (oweKeys.length > 0) {
+                //取oweKeys的数据
+                res.put(oweKeys[0], fieldValue);
+            } else {
+                //取字段名称作为Key
+                res.put(field.getName(), fieldValue);
             }
         }
-        return null;
-    }
-
-
-    // 把一个字符串的第一个字母大写、效率是最高的、
-    private static String getMethodName(String fildeName) throws Exception {
-        byte[] items = fildeName.getBytes();
-        items[0] = (byte) ((char) items[0] - 'a' + 'A');
-        return new String(items);
+        return res;
     }
 }

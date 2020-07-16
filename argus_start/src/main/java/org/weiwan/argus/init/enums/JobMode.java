@@ -1,4 +1,4 @@
-package org.weiwan.argus.start.enums;
+package org.weiwan.argus.init.enums;
 
 /**
  * @Author: xiaozhennan

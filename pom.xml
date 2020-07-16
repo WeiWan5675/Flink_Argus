@@ -18,7 +18,7 @@
         <module>argus_start</module>
     </modules>
     <properties>
-        <package.name>FlinkArgus-1.0.0</package.name>
+        <package.name>flink-argus-1.0.0</package.name>
         <profiles.dir>src/main/profiles</profiles.dir>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.build.targetJdk>1.8</project.build.targetJdk>
@@ -40,7 +40,8 @@
         <commons-beanutils.version>1.9.4</commons-beanutils.version>
         <junit.version>4.9</junit.version>
         <mysql.jdbc.version>5.1.48</mysql.jdbc.version>
-
+        <jackson-databind.version>2.9.10.3</jackson-databind.version>
+        <gson.version>2.7</gson.version>
         <commons-cli.version>1.2</commons-cli.version>
         <argus_common.version>1.0.0</argus_common.version>
         <argus_core.version>1.0.0</argus_core.version>
@@ -283,6 +284,18 @@
                 <version>${commons-cli.version}</version>
             </dependency>
 
+            <dependency>
+                <groupId>com.fasterxml.jackson.core</groupId>
+                <artifactId>jackson-databind</artifactId>
+                <version>${jackson-databind.version}</version>
+            </dependency>
+
+
+            <dependency>
+                <groupId>com.google.code.gson</groupId>
+                <artifactId>gson</artifactId>
+                <version>${gson.version}</version>
+            </dependency>
             <!--            <dependency>-->
             <!--                <groupId>jdk.tools</groupId>-->
             <!--                <artifactId>jdk.tools</artifactId>-->
