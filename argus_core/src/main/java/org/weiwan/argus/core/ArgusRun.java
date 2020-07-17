@@ -7,6 +7,8 @@ import org.apache.flink.streaming.api.functions.sink.SinkFunction;
 import org.apache.flink.streaming.api.functions.source.RichSourceFunction;
 import org.weiwan.argus.common.options.OptionParser;
 import org.weiwan.argus.common.utils.YamlUtils;
+import org.weiwan.argus.core.flink.pub.FlinkContains;
+import org.weiwan.argus.core.flink.utils.FlinkContextUtil;
 import org.weiwan.argus.core.start.StartOptions;
 
 import java.util.Map;
@@ -30,6 +32,9 @@ public class ArgusRun {
         String jobConf = parse.getJobConf();
         Map<String, String> jobMap = YamlUtils.loadYamlStr(jobConf);
         printEnvInfo(optionToMap, jobMap);
+
+        //获取env
+//        FlinkContextUtil.getStreamContext(jobConf);
 
 
         //解析配置文件

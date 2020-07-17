@@ -106,4 +106,10 @@ public class FlinkContextUtil {
 //        JobExecutionResult execute = env.execute();
 
     }
+
+    public static void getStreamContext(String jobConfStr) throws IOException {
+        StreamExecutionEnvironment executionEnvironment = StreamExecutionEnvironment.getExecutionEnvironment();
+        FlinkContext context = new FlinkContext(executionEnvironment,StreamExecutionEnvironment.class,jobConfStr);
+        scalaEnvIniter.initStream(context);
+    }
 }

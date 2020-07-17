@@ -27,7 +27,7 @@ public class FlinkContext<T> {
     private T env;
     private String[] args;
     private Class<T> envClass;
-
+    private String contextContent;
     private FlinkConfig<String,String> flinkConfig;
 
     public FlinkContext() {
@@ -41,6 +41,10 @@ public class FlinkContext<T> {
     }
 
     public FlinkContext(T executionEnvironment) {
+    }
+
+    public FlinkContext(T executionEnvironment, Class<T> streamExecutionEnvironmentClass, String contextArgs) {
+
     }
 
     public T getEnv() {
@@ -111,4 +115,12 @@ public class FlinkContext<T> {
         throw new ArgusCommonException(ArgusExceptionEnum.FAILURE);
     }
 
+
+    public String getContextContent() {
+        return contextContent;
+    }
+
+    public void setContextContent(String contextContent) {
+        this.contextContent = contextContent;
+    }
 }

@@ -11,9 +11,11 @@ import org.apache.flink.streaming.api.TimeCharacteristic;
 import org.apache.flink.streaming.api.environment.CheckpointConfig;
 import org.apache.flink.streaming.api.environment.LocalStreamEnvironment;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
+import org.weiwan.argus.common.utils.YamlUtils;
 import org.weiwan.argus.core.flink.utils.FlinkContextUtil;
 
 import java.io.IOException;
+import java.util.Map;
 
 /**
  * @Author: xiaozhennan
@@ -41,10 +43,9 @@ public class JavaEnvIniter extends BaseEnvIniter implements EnvIniter<FlinkConte
 
     public void initStream(FlinkContext<StreamExecutionEnvironment> context) throws IOException {
         logger.info("initialize flinkContext for Stream-Env");
-
-        //1. 初始化Flink配置信息
-        String confFilePath = getConfFilePath(context, isLocalStream(context));
-        ParameterTool mergeTool = mergeEnvConfig(context, confFilePath);
+        Map<String, String> contentMap =
+                YamlUtils.loadYamlStr(context.getContextContent());
+        ParameterTool mergeTool = mergeContentConfig(contentMap, context);
         context.getEnv().getConfig().setGlobalJobParameters(mergeTool);
         logger.debug("read flinkcontext configuration information completed");
 
@@ -59,6 +60,18 @@ public class JavaEnvIniter extends BaseEnvIniter implements EnvIniter<FlinkConte
         initStateBackend(context);
         logger.debug("initializes a stateBackend for the flinkContext of the stream-Env");
         logger.info("the flinkContext initialization of Stream-Env is completed");
+    }
+
+    private ParameterTool mergeContentConfig(Map<String, String> contentMap, FlinkContext context) {
+        /**
+         * 获得配置文件数据,将配置文件|args|system 三个合并 放入到flink env的全局parameters中
+         */
+        ParameterTool parameterTool =
+                ParameterTool.fromMap(contentMap)
+                        .mergeWith(ParameterTool.fromArgs(context.getArgs())
+                                .mergeWith(ParameterTool.fromSystemProperties()));
+        context.addFlinkConfig(parameterTool.toMap());
+        return null;
     }
 
     private void initFlinkStream(FlinkContext<StreamExecutionEnvironment> context) {
