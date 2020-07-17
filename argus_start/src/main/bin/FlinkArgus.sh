@@ -28,21 +28,17 @@ fi
 
 JAR_HOME=$ARGUS_HOME/lib
 
-
-JAR_CLASSPATH=""
-for f in $JAR_HOME/*.jar
+CLASS_PATH=".:$JAVA_HOME/lib:$JAVA_HOME/lib/dt.jar:$JAVA_HOME/lib/tools.jar"
+for jar in $JAR_HOME/*.jar
 do
-JAR_CLASSPATH=$JAR_CLASSPATH:$f
+CLASS_PATH=$CLASS_PATH:$jar
 done
-
-
-echo $JAR_CLASSPATH
-cp=${JAR_CLASSPATH#*:}
+echo $CLASS_PATH
 
 
 CLASS_NAME=org.weiwan.argus.start.DataSyncStarter
 
 echo "Flink Argus starting ..."
-$JAVA_RUN -cp $cp $CLASS_NAME $@
+$JAVA_RUN -cp $CLASS_PATH $CLASS_NAME $@
 #nohup $JAVA_RUN -cp $cp $CLASS_NAME $@ &
 echo "Flink Argus started ..."

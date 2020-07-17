@@ -116,7 +116,7 @@ public class OptionParser {
 
 
                 if (!optionField.hasArg() && value != null) {
-                    field.setBoolean(e, true);
+                    field.setBoolean(e, Boolean.valueOf(value));
                 } else {
                     field.set(e, value);
                 }
@@ -163,7 +163,6 @@ public class OptionParser {
         Map<String, Object> res = new HashMap();
         for (Field field : declaredFields) {
             Object fieldValue = ReflectUtil.getObjectValue(options, field);
-            System.out.println(fieldValue);
             OptionField optionField = field.getAnnotation(OptionField.class);
             String[] oweKeys = optionField.oweKeys();
             if (oweKeys.length > 0) {

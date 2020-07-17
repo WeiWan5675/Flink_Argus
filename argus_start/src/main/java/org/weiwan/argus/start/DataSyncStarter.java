@@ -1,14 +1,23 @@
-package org.weiwan.argus.init;
+package org.weiwan.argus.start;
 
+import org.apache.commons.codec.Charsets;
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.weiwan.argus.common.constans.Constans;
+import org.weiwan.argus.common.exception.ArgusCommonException;
 import org.weiwan.argus.common.utils.SystemUtil;
 import org.weiwan.argus.core.ArgusRun;
 import org.weiwan.argus.common.options.OptionParser;
 import org.weiwan.argus.core.start.StartOptions;
 import org.weiwan.argus.core.utils.CommonUtil;
-import org.weiwan.argus.init.enums.JobMode;
+import org.weiwan.argus.start.enums.JobMode;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 
@@ -21,6 +30,8 @@ import java.util.Map;
  **/
 public class DataSyncStarter {
 
+
+    private static final Logger logger = LoggerFactory.getLogger(DataSyncStarter.class);
     private static final String KEY_FLINK_HOME = "FLINK_HOME";
     private static final String KEY_ARGUS_HOME = "ARGUS_HOME";
     private static final String KEY_HADOOP_HOME = "HADOOP_HOME";
@@ -36,39 +47,28 @@ public class DataSyncStarter {
 
 
     public static void main(String[] args) throws Exception {
-        args = new String[]{
-                "--mode", "Local",
-                "--aconf", "argus-default.yaml",
-                "-cmd"
-//                "--hconf","hadoop-cmd.yaml"
-
-        };
         OptionParser optionParser = new OptionParser(args);
         StartOptions options = optionParser.parse(StartOptions.class);
         //命令对象 转化成List对象
 
-        Map<String, Object> optionMap = optionParser.optionToMap(options, StartOptions.class);
-
-        for (String opKey : optionMap.keySet()) {
-            System.out.println(optionMap.get(opKey));
-        }
-
         String mode = options.getMode();
         setDefaultEnvPath(options);
+
         //根据模式不同,组装不同的参数
         if (options.isCmdMode()) {
             //命令行模式
         } else {
-            //配置文件模式
-            String argusConf = options.getArgusConf();
-            //读取配置文件  转化成json对象
+            readingArgusConfig(options);
         }
+        Map<String, Object> optionMap = optionParser.optionToMap(options, StartOptions.class);
 
+        String[] argsAll;
+        argsAll = convertMap2Args(optionMap);
         boolean startFlag = false;
         switch (JobMode.valueOf(mode)) {
             case Local:
                 System.out.println("运行模式:" + JobMode.Local.toString());
-                startFlag = startFromLocalMode(options);
+                startFlag = startFromLocalMode(argsAll, options);
                 break;
             case Standalone:
                 System.out.println("运行模式:" + JobMode.Standalone.toString());
@@ -91,6 +91,41 @@ public class DataSyncStarter {
 
     }
 
+    private static String[] convertMap2Args(Map<String, Object> optionMap) {
+        List<String> argsList = new ArrayList<>();
+        for (String key : optionMap.keySet()) {
+            String cmdKey = Constans.SIGN_HORIZONTAL + key;
+            String var = String.valueOf(optionMap.get(key));
+            if (StringUtils.isNotEmpty(var)) {
+                argsList.add(cmdKey);
+                argsList.add(var);
+            }
+        }
+
+        String[] argsAll = argsList.toArray(new String[argsList.size()]);
+        return argsAll;
+    }
+
+
+    private static void readingArgusConfig(StartOptions options) throws IOException {
+        //配置文件模式
+        String aConfPath = options.getArgusConf();
+        //读取配置文件  转化成json对象
+        File file = new File(aConfPath);
+        if (!file.exists()) {
+            logger.error(String.format("Configuration file does not exist, please check, PATH:[%s]", file.getAbsolutePath()));
+            throw new ArgusCommonException("The configuration file does not exist, please check the configuration file path!");
+        }
+        FileInputStream in = new FileInputStream(file);
+        byte[] filecontent = new byte[(int) file.length()];
+        in.read(filecontent);
+        String arugsJobContext = new String(filecontent, Charsets.UTF_8.name());
+
+        if (StringUtils.isNotEmpty(arugsJobContext.trim())) {
+            options.setJobConf(arugsJobContext);
+        }
+    }
+
     private static boolean startFromYarnPerMode(StartOptions options) {
         return false;
     }
@@ -100,7 +135,10 @@ public class DataSyncStarter {
         return false;
     }
 
-    private static boolean startFromLocalMode(StartOptions options) throws Exception {
+    private static boolean startFromLocalMode(String[] argsAll, StartOptions options) throws Exception {
+
+
+        ArgusRun.main(argsAll);
         //转化脚本启动的options为Main方法可以识别的参数
         //pluginPath
         //配置分两种
@@ -145,27 +183,20 @@ public class DataSyncStarter {
 
         //
 
-        ArgusRun.main(new String[]{});
+
         return false;
     }
 
     private static void setDefaultEnvPath(StartOptions options) {
-        String argusHome = options.getArgusHome();
-        if (StringUtils.isEmpty(argusHome)) {
-            argusHome = SystemUtil.getSystemVar(DataSyncStarter.KEY_ARGUS_HOME);
-        }
+
+
+        String argusHome = getArgusHomePath(options);
+
         String pluginsRootDir = options.getPluginsDir();
         if (StringUtils.isEmpty(pluginsRootDir)) {
             pluginsRootDir = argusHome + File.separator + KEY_PLUGINS_DIR;
         }
 
-
-        String property = System.getProperty("java.class.path");
-        String property1 = System.getProperty("usr.dir");
-        String appPath = CommonUtil.getAppPath(DataSyncStarter.class);
-        System.out.println(property);
-        System.out.println(property1);
-        System.out.println(appPath);
         //获得flink环境变量
         String flinkHome = SystemUtil.getSystemVar(DataSyncStarter.KEY_FLINK_HOME);
         //设置Flink目录
@@ -176,9 +207,34 @@ public class DataSyncStarter {
         options.setHadoopConf(hadoopHome + File.separator + "conf");
         //设置插件目录
         options.setPluginsDir(pluginsRootDir);
-        options.setReaderPluginDir(pluginsRootDir + File.separator + DataSyncStarter.KEY_READER_PLUGIN_DIR);
-        options.setWriterPluginDir(pluginsRootDir + File.separator + DataSyncStarter.KEY_WRITER_PLUGIN_DIR);
-        options.setChannelPluginDir(pluginsRootDir + File.separator + DataSyncStarter.KEY_CHANNEL_PLUGIN_DIR);
+        if(StringUtils.isEmpty(options.getReaderPluginDir())){
+            options.setReaderPluginDir(pluginsRootDir + File.separator + DataSyncStarter.KEY_READER_PLUGIN_DIR);
+        }
+        if(StringUtils.isEmpty(options.getWriterPluginDir())){
+            options.setWriterPluginDir(pluginsRootDir + File.separator + DataSyncStarter.KEY_WRITER_PLUGIN_DIR);
+        }
+        if(StringUtils.isEmpty(options.getChannelPluginDir())){
+            options.setChannelPluginDir(pluginsRootDir + File.separator + DataSyncStarter.KEY_CHANNEL_PLUGIN_DIR);
+        }
+
+
+    }
+
+    private static String getArgusHomePath(StartOptions options) {
+        String argusHome = options.getArgusHome();
+
+        if (StringUtils.isEmpty(argusHome)) {
+            argusHome = SystemUtil.getSystemVar(DataSyncStarter.KEY_ARGUS_HOME);
+        }
+        if (StringUtils.isEmpty(argusHome)) {
+            logger.warn("The ARUGS_HOME environment variable was not found, use the launcher root directory!");
+            //获得当前启动类jar包得实际地址 $ARGUS_HOME/lib
+            String appPath = CommonUtil.getAppPath(DataSyncStarter.class);
+            File file = new File(appPath);
+            argusHome = file.getParent();
+        }
+        logger.info(String.format("ARGUSHOME is [%s]", argusHome));
+        return argusHome;
     }
 
     private static boolean startFromStandaloneMode(StartOptions options) {

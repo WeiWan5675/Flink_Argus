@@ -81,11 +81,25 @@ public class StartOptions {
 
 
     @OptionField(
-            oweKeys = "rd",
+            oweKeys = "hd",
             description = "argus root path")
     private String argusHome;
 
 
+    @OptionField(
+            oweKeys = "jobJSon",
+            description = "job desc josn"
+    )
+    private String jobConf;
+
+
+    public String getJobConf() {
+        return jobConf;
+    }
+
+    public void setJobConf(String jobConf) {
+        this.jobConf = jobConf;
+    }
 
     public String getReaderPluginDir() {
         return readerPluginDir;

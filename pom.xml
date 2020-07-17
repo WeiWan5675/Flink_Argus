@@ -18,7 +18,7 @@
         <module>argus_start</module>
     </modules>
     <properties>
-        <package.name>flink-argus-1.0.0</package.name>
+        <package.name>FlinkArgus-1.0.0</package.name>
         <profiles.dir>src/main/profiles</profiles.dir>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.build.targetJdk>1.8</project.build.targetJdk>

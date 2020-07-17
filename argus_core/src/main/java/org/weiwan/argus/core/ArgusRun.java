@@ -5,6 +5,11 @@ import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.api.functions.sink.SinkFunction;
 import org.apache.flink.streaming.api.functions.source.RichSourceFunction;
+import org.weiwan.argus.common.options.OptionParser;
+import org.weiwan.argus.common.utils.YamlUtils;
+import org.weiwan.argus.core.start.StartOptions;
+
+import java.util.Map;
 
 /**
  * @Author: xiaozhennan
@@ -17,54 +22,35 @@ public class ArgusRun {
 
 
     public static void main(String[] args) throws Exception {
-//        testMain();
-        realMain();
+        //args的参数已经经过了启动器处理,所以可以直接使用OptionsParser进行解析工作
+        OptionParser optionParser = new OptionParser(args);
+        StartOptions parse = optionParser.parse(StartOptions.class);
+
+        Map<String, Object> optionToMap = optionParser.optionToMap(parse, StartOptions.class);
+        String jobConf = parse.getJobConf();
+        Map<String, String> jobMap = YamlUtils.loadYamlStr(jobConf);
+        printEnvInfo(optionToMap, jobMap);
+
+
+        //解析配置文件
+
     }
 
-    public static void realMain() {
-        StreamExecutionEnvironment executionEnvironment = StreamExecutionEnvironment.getExecutionEnvironment();
-
-
+    private static void printEnvInfo(Map<String, Object> optionToMap, Map<String, String> jobMap) {
+        System.out.println("Environmental Startup Parameters");
+        System.out.println("==============================================================");
+        for (String key : optionToMap.keySet()) {
+            System.out.println(String.format("key: [%s], value: [%s]", key, optionToMap.get(key)));
+        }
+        System.out.println();
+        System.out.println();
+        System.out.println();
+        System.out.println("Job Deploy Parameters");
+        System.out.println("==============================================================");
+        for (String key : jobMap.keySet()) {
+            System.out.println(String.format("key: [%s], value: [%s]", key, jobMap.get(key)));
+        }
     }
 
 
-    public static void testMain() throws Exception {
-
-        StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
-
-        DataStream<Object> source = env.addSource(new RichSourceFunction<Object>() {
-            @Override
-            public void run(SourceContext<Object> ctx) throws Exception {
-                while (true) {
-                    ctx.collect("123456");
-                }
-            }
-
-            @Override
-            public void cancel() {
-
-            }
-        });
-
-
-        DataStream<Object> map = source.map(new MapFunction<Object, Object>() {
-            @Override
-            public Object map(Object value) throws Exception {
-                String s = (String) value;
-                return s + "1234214124";
-            }
-        });
-
-
-        map.addSink(new SinkFunction<Object>() {
-
-            @Override
-            public void invoke(Object value, Context context) throws Exception {
-                System.out.println(value);
-            }
-        }).setParallelism(1);
-
-
-        env.execute();
-    }
 }

@@ -7,7 +7,7 @@ import org.weiwan.argus.common.enums.ArgusExceptionEnum;
  * @Author: xiaozhennan
  * @Date: 2020/4/27 17:24
  * @Package: com.hopson.dc.realtime.common.exception
- * @ClassName: DcCommonException
+ * @ClassName: ArgusCommonException
  * @Description:
  **/
 public class ArgusCommonException extends RuntimeException {

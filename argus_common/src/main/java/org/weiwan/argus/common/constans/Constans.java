@@ -10,39 +10,39 @@ package org.weiwan.argus.common.constans;
 public class Constans {
 
 
-    private static final String SIGN_POINT = ".";
+    public static final String SIGN_POINT = ".";
 
-    private static final String SIGN_EMPTY = "";
+    public static final String SIGN_EMPTY = "";
 
-    private static final String SIGN_COMMA = ",";
+    public static final String SIGN_COMMA = ",";
 
-    private static final String SIGN_HORIZONTAL = "-";
+    public static final String SIGN_HORIZONTAL = "-";
 
-    private static final String SIGN_SLASH = "/";
-
-
-    private static final String SIGN_STAR = "*";
-
-    private static final String UTF_8 = "utf-8";
-
-    private static final String YYYY_MM_DD_HH_MM_SS = "yyyy-MM-dd HH:mm:ss";
-
-    private static final String YYYY_MM_DD = "yyyy-MM-dd";
+    public static final String SIGN_SLASH = "/";
 
 
-    private static final String STRING_CLASS_NAME = "java.lang.String";
-    private static final String INTEGER_CLASS_NAME = "java.lang.Integer";
-    private static final String BOOLEAN_CLASS_NAME = "java.lang.Boolean";
-    private static final String SHROT_CLASS_NAME = "java.lang.Short";
-    private static final String LONG_CLASS_NAME = "java.lang.Long";
-    private static final String BYTE_CLASS_NAME = "java.lang.Byte";
-    private static final String FLOAT_CLASS_NAME = "java.lang.Float";
-    private static final String DOUBLE_CLASS_NAME = "java.lang.Double";
+    public static final String SIGN_STAR = "*";
 
-    private static final String JAR_FILE_SUFFIX = ".jar";
-    private static final String ZIP_FILE_SUFFIX = ".zip";
-    private static final String YAML_FILE_SUFFIX = ".yaml";
-    private static final String PROPERTIES_FILE_SUFFIX = ".properties";
+    public static final String UTF_8 = "utf-8";
+
+    public static final String YYYY_MM_DD_HH_MM_SS = "yyyy-MM-dd HH:mm:ss";
+
+    public static final String YYYY_MM_DD = "yyyy-MM-dd";
+
+
+    public static final String STRING_CLASS_NAME = "java.lang.String";
+    public static final String INTEGER_CLASS_NAME = "java.lang.Integer";
+    public static final String BOOLEAN_CLASS_NAME = "java.lang.Boolean";
+    public static final String SHROT_CLASS_NAME = "java.lang.Short";
+    public static final String LONG_CLASS_NAME = "java.lang.Long";
+    public static final String BYTE_CLASS_NAME = "java.lang.Byte";
+    public static final String FLOAT_CLASS_NAME = "java.lang.Float";
+    public static final String DOUBLE_CLASS_NAME = "java.lang.Double";
+
+    public static final String JAR_FILE_SUFFIX = ".jar";
+    public static final String ZIP_FILE_SUFFIX = ".zip";
+    public static final String YAML_FILE_SUFFIX = ".yaml";
+    public static final String PROPERTIES_FILE_SUFFIX = ".properties";
 
 
 }

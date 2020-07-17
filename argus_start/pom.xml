@@ -46,7 +46,7 @@
 
 
     <build>
-<!--        <finalName>FlinkArgus-${project.version}</finalName>-->
+        <finalName>FlinkArgus-${project.version}</finalName>
         <plugins>
 <!--            <plugin>-->
 <!--                <groupId>org.apache.maven.plugins</groupId>-->

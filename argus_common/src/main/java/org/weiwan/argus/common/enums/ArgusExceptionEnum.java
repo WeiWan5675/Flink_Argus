@@ -4,7 +4,7 @@ package org.weiwan.argus.common.enums;
  * @Author: xiaozhennan
  * @Date: 2020/4/28 9:13
  * @Package: com.hopson.dc.realtime.common.enums
- * @ClassName: DcExceptionEnum
+ * @ClassName: ArgusExceptionEnum
  * @Description:
  **/
 public enum ArgusExceptionEnum {

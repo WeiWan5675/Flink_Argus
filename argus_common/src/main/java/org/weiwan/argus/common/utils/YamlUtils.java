@@ -82,6 +82,24 @@ public class YamlUtils {
         return result.get(key);
     }
 
+
+    public static Map<String, String> loadYamlStr(String str) {
+        Map<String, String> result = new HashMap<String, String>();
+        if (StringUtils.isEmpty(str)) {
+            return result;
+        }
+        Yaml yaml = new Yaml();
+        Map<String, Object> params = yaml.loadAs(str, Map.class);
+        for (Map.Entry<String, Object> entry : params.entrySet()) {
+            if (entry.getValue() instanceof Map) {
+                eachYaml(entry.getKey(), (Map<String, Object>) entry.getValue(), result);
+            } else {
+                result.put(entry.getKey(), entry.getValue().toString());
+            }
+        }
+        return result;
+    }
+
     public static void main(String[] args) {
 
     }
