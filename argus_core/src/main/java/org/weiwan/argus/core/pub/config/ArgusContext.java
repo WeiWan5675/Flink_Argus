@@ -1,5 +1,7 @@
 package org.weiwan.argus.core.pub.config;
 
+import org.weiwan.argus.core.start.StartOptions;
+
 import java.util.Map;
 
 /**
@@ -14,7 +16,10 @@ public class ArgusContext {
     private JobConfig JobConfig;
     private FlinkEnvConfig flinkEnvConfig;
 
-
+    public ArgusContext(Map<String, Object> envConf, Map<String, Object> jobConf) {
+        this.flinkEnvConfig = new FlinkEnvConfig(envConf);
+        this.JobConfig = new JobConfig(jobConf);
+    }
 
 
     public JobConfig getJobConfig() {

@@ -12,6 +12,7 @@ import org.weiwan.argus.core.pub.pojo.DataRecord;
 import org.weiwan.argus.core.start.StartOptions;
 
 import java.lang.reflect.Constructor;
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -33,10 +34,11 @@ public class ArgusRun {
 
         //读取job描述文件 json
         String jobConf = parse.getJobConf();
-        Map<String, String> jobMap = YamlUtils.loadYamlStr(jobConf);
+        Map<String, Object> jobMap = YamlUtils.loadYamlStr(jobConf);
+
         printEnvInfo(optionToMap, jobMap);
 
-        ArgusContext context = new ArgusContext();
+        ArgusContext context = new ArgusContext(optionToMap, jobMap);
 
 
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
@@ -82,7 +84,7 @@ public class ArgusRun {
         JobExecutionResult execute = env.execute("");
     }
 
-    private static void printEnvInfo(Map<String, Object> optionToMap, Map<String, String> jobMap) {
+    private static void printEnvInfo(Map<String, Object> optionToMap, Map<String, Object> jobMap) {
         System.out.println("Environmental Startup Parameters");
         System.out.println("==============================================================");
         for (String key : optionToMap.keySet()) {

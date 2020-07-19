@@ -83,8 +83,8 @@ public class YamlUtils {
     }
 
 
-    public static Map<String, String> loadYamlStr(String str) {
-        Map<String, String> result = new HashMap<String, String>();
+    public static Map<String, Object> loadYamlStr(String str) {
+        Map<String, Object> result = new HashMap<String, Object>();
         if (StringUtils.isEmpty(str)) {
             return result;
         }
