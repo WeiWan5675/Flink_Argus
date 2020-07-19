@@ -47,6 +47,10 @@ public class DataSyncStarter {
 
 
     public static void main(String[] args) throws Exception {
+        args = new String[]{
+                "-mode" ,"Local",
+                "-aconf","G:\\Project\\Flink_Argus\\argus_start\\src\\main\\resources\\argus-default.yaml"
+        };
         OptionParser optionParser = new OptionParser(args);
         StartOptions options = optionParser.parse(StartOptions.class);
         //命令对象 转化成List对象
@@ -65,21 +69,21 @@ public class DataSyncStarter {
         String[] argsAll;
         argsAll = convertMap2Args(optionMap);
         boolean startFlag = false;
-        switch (JobMode.valueOf(mode)) {
-            case Local:
-                System.out.println("运行模式:" + JobMode.Local.toString());
+        switch (JobMode.valueOf(mode.toLowerCase())) {
+            case local:
+                System.out.println("运行模式:" + JobMode.local.toString());
                 startFlag = startFromLocalMode(argsAll, options);
                 break;
-            case Standalone:
-                System.out.println("运行模式:" + JobMode.Standalone.toString());
+            case standalone:
+                System.out.println("运行模式:" + JobMode.standalone.toString());
                 startFlag = startFromStandaloneMode(options);
                 break;
-            case Yarn:
-                System.out.println("运行模式:" + JobMode.Yarn.toString());
+            case yarn:
+                System.out.println("运行模式:" + JobMode.yarn.toString());
                 startFlag = startFromYarnMode(options);
                 break;
-            case YarnPer:
-                System.out.println("运行模式:" + JobMode.YarnPer.toString());
+            case yarnpre:
+                System.out.println("运行模式:" + JobMode.yarnpre.toString());
                 startFlag = startFromYarnPerMode(options);
                 break;
             default:
@@ -112,7 +116,7 @@ public class DataSyncStarter {
         String aConfPath = options.getArgusConf();
         //读取配置文件  转化成json对象
         File file = new File(aConfPath);
-        if (!file.exists()) {
+        if (!file.exists() || file.isDirectory()) {
             logger.error(String.format("Configuration file does not exist, please check, PATH:[%s]", file.getAbsolutePath()));
             throw new ArgusCommonException("The configuration file does not exist, please check the configuration file path!");
         }
@@ -228,12 +232,12 @@ public class DataSyncStarter {
         }
         if (StringUtils.isEmpty(argusHome)) {
             logger.warn("The ARUGS_HOME environment variable was not found, use the launcher root directory!");
-            //获得当前启动类jar包得实际地址 $ARGUS_HOME/lib
+            //获得当前启动类jar包得实际地址 $ARGUS_`HOME/lib
             String appPath = CommonUtil.getAppPath(DataSyncStarter.class);
             File file = new File(appPath);
             argusHome = file.getParent();
         }
-        logger.info(String.format("ARGUSHOME is [%s]", argusHome));
+        logger.info(String.format("ARGUS_HOME is [%s]", argusHome));
         return argusHome;
     }
 

@@ -14,5 +14,7 @@ public class ChannelConfig extends AbstractConfig {
         super(map);
     }
 
-
+    public String getChannleName() {
+        return null;
+    }
 }

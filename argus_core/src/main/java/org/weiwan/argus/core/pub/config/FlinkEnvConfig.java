@@ -4,15 +4,13 @@ import java.util.Map;
 
 /**
  * @Author: xiaozhennan
- * @Date: 2020/7/17 16:41
+ * @Date: 2020/7/19 19:50
  * @Package: org.weiwan.argus.core.pub.config
- * @ClassName: JdbcConfig
+ * @ClassName: FlinkEnvConfig
  * @Description:
  **/
-public class JdbcConfig extends AbstractConfig {
-
-
-    public JdbcConfig(Map<String, Object> map) {
+public class FlinkEnvConfig extends AbstractConfig {
+    public FlinkEnvConfig(Map<String, Object> map) {
         super(map);
     }
 }

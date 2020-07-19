@@ -87,7 +87,7 @@ public class StartOptions {
 
 
     @OptionField(
-            oweKeys = "jobJSon",
+            oweKeys = "jobConf",
             description = "job desc josn"
     )
     private String jobConf;

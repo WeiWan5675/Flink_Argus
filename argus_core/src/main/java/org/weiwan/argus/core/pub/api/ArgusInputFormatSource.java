@@ -12,10 +12,8 @@ import org.apache.flink.runtime.jobgraph.tasks.InputSplitProviderException;
 import org.apache.flink.runtime.state.FunctionInitializationContext;
 import org.apache.flink.runtime.state.FunctionSnapshotContext;
 import org.apache.flink.streaming.api.checkpoint.CheckpointedFunction;
-import org.apache.flink.streaming.api.functions.source.InputFormatSourceFunction;
 import org.apache.flink.streaming.api.functions.source.RichParallelSourceFunction;
 import org.apache.flink.streaming.api.operators.StreamingRuntimeContext;
-
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
@@ -44,6 +42,10 @@ public class ArgusInputFormatSource<OUT> extends RichParallelSourceFunction<OUT>
     public ArgusInputFormatSource(InputFormat<OUT, ?> format, TypeInformation<OUT> typeInfo) {
         this.format = (InputFormat<OUT, InputSplit>) format;
         this.typeInfo = typeInfo;
+    }
+
+    public ArgusInputFormatSource(InputFormat inputFormat) {
+        this.format = inputFormat;
     }
 
     @Override

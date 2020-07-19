@@ -14,4 +14,7 @@ public class ReaderConfig extends AbstractConfig {
         super(map);
     }
 
+    public String getReaderName() {
+        return null;
+    }
 }

@@ -2,8 +2,11 @@ package org.weiwan.argus.core.flink.utils;
 
 import org.apache.flink.api.java.ExecutionEnvironment;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
-import org.weiwan.argus.core.flink.pub.*;
-
+import org.weiwan.argus.core.flink.pub.EnvIniter;
+import org.weiwan.argus.core.flink.pub.FlinkLogger;
+import org.weiwan.argus.core.flink.pub.JavaEnvIniter;
+import org.weiwan.argus.core.flink.pub.FlinkContext;
+import org.weiwan.argus.core.flink.pub.FlinkContains;
 import java.io.IOException;
 
 /**
@@ -17,7 +20,6 @@ public class FlinkContextUtil {
 
     private static final FlinkLogger logger = FlinkContextUtil.getLogger();
     private static final EnvIniter javaEnvIniter = new JavaEnvIniter();
-    private static final EnvIniter scalaEnvIniter = new ScalaEnvIniter();
 
     public static <T> FlinkContext<T> getContext(final Class<T> envTClass, final String[] args) {
         logger.info("initialize The Flink Environment ---> start");
@@ -31,16 +33,6 @@ public class FlinkContextUtil {
                 ExecutionEnvironment executionEnvironment = ExecutionEnvironment.getExecutionEnvironment();
                 flinkContext = initJavaBatchContext(executionEnvironment, args, envTClass);
             }
-            if (FlinkContains.SCALA_STREAM_ENV == envTClass) {
-                org.apache.flink.streaming.api.scala.StreamExecutionEnvironment executionEnvironment =
-                        org.apache.flink.streaming.api.scala.StreamExecutionEnvironment.getExecutionEnvironment();
-                flinkContext = initScalaStreamContext(executionEnvironment, args, envTClass);
-            }
-            if (FlinkContains.SCALA_BATCH_ENV == envTClass) {
-                org.apache.flink.api.scala.ExecutionEnvironment executionEnvironment =
-                        org.apache.flink.api.scala.ExecutionEnvironment.getExecutionEnvironment();
-                flinkContext = initScalaBatchContext(executionEnvironment, args, envTClass);
-            }
             logger.info("initialize The Flink Environment ---> end");
         } catch (IOException e) {
             e.printStackTrace();
@@ -48,18 +40,6 @@ public class FlinkContextUtil {
             flinkContext = null;
         }
         return flinkContext;
-    }
-
-    private static <T> FlinkContext<T> initScalaBatchContext(final org.apache.flink.api.scala.ExecutionEnvironment executionEnvironment, String[] args, Class<T> envTClass) {
-        FlinkContext context = new FlinkContext(executionEnvironment, envTClass, args);
-        scalaEnvIniter.initBatch(context);
-        return context;
-    }
-
-    private static <T> FlinkContext<T> initScalaStreamContext(final org.apache.flink.streaming.api.scala.StreamExecutionEnvironment executionEnvironment, String[] args, Class<T> envTClass) throws IOException {
-        FlinkContext context = new FlinkContext(executionEnvironment, envTClass, args);
-        scalaEnvIniter.initStream(context);
-        return context;
     }
 
     private static <T> FlinkContext<T> initJavaBatchContext(final ExecutionEnvironment executionEnvironment, String[] args, Class<T> envTClass) {
@@ -110,6 +90,6 @@ public class FlinkContextUtil {
     public static void getStreamContext(String jobConfStr) throws IOException {
         StreamExecutionEnvironment executionEnvironment = StreamExecutionEnvironment.getExecutionEnvironment();
         FlinkContext context = new FlinkContext(executionEnvironment,StreamExecutionEnvironment.class,jobConfStr);
-        scalaEnvIniter.initStream(context);
+        javaEnvIniter.initStream(context);
     }
 }
