@@ -48,6 +48,7 @@ public class ArgusInputFormatSource<OUT> extends RichParallelSourceFunction<OUT>
         this.format = inputFormat;
     }
 
+
     @Override
     @SuppressWarnings("unchecked")
     public void open(Configuration parameters) throws Exception {

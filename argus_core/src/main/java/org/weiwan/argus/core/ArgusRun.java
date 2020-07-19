@@ -34,11 +34,12 @@ public class ArgusRun {
 
         //读取job描述文件 json
         String jobConf = parse.getJobConf();
-        Map<String, Object> jobMap = YamlUtils.loadYamlStr(jobConf);
+        Map<String, String> jobMap = YamlUtils.loadYamlStr(jobConf);
 
         printEnvInfo(optionToMap, jobMap);
-
-        ArgusContext context = new ArgusContext(optionToMap, jobMap);
+        Map<String, Object> tmpObj = new HashMap<>();
+        tmpObj.putAll(jobMap);
+        ArgusContext context = new ArgusContext(optionToMap, tmpObj);
 
 
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
@@ -84,7 +85,7 @@ public class ArgusRun {
         JobExecutionResult execute = env.execute("");
     }
 
-    private static void printEnvInfo(Map<String, Object> optionToMap, Map<String, Object> jobMap) {
+    private static void printEnvInfo(Map<String, Object> optionToMap, Map<String, String> jobMap) {
         System.out.println("Environmental Startup Parameters");
         System.out.println("==============================================================");
         for (String key : optionToMap.keySet()) {

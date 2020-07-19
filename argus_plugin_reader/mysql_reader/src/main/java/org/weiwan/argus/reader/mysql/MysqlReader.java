@@ -1,7 +1,8 @@
 package org.weiwan.argus.reader.mysql;
 
-import org.weiwan.argus.core.pub.api.ArgusInputFormatSource;
+import org.apache.flink.types.Row;
 import org.weiwan.argus.core.pub.api.BaseReader;
+import org.weiwan.argus.core.pub.api.BaseRichInputFormat;
 import org.weiwan.argus.core.pub.pojo.DataRecord;
 
 /**
@@ -11,10 +12,13 @@ import org.weiwan.argus.core.pub.pojo.DataRecord;
  * @ClassName: MysqlReader
  * @Description:
  **/
-public class MysqlReader extends BaseReader {
+public class MysqlReader extends BaseReader<DataRecord<Row>> {
 
     @Override
-    public ArgusInputFormatSource<DataRecord> reader() {
+    public BaseRichInputFormat getInputFormat() {
+
         return null;
     }
+
+
 }

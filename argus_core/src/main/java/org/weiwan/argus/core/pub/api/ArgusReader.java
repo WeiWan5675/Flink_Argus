@@ -10,6 +10,6 @@ import org.weiwan.argus.core.pub.pojo.DataRecord;
  * @ClassName: ArgusReader
  * @Description:
  **/
-public interface ArgusReader<T> {
-    ArgusInputFormatSource<DataRecord<T>> reader();
+public interface ArgusReader<T extends DataRecord> {
+    ArgusInputFormatSource<T> reader();
 }
