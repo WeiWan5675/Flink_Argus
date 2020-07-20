@@ -9,6 +9,7 @@ import org.weiwan.argus.common.enums.ArgusExceptionEnum;
 import org.weiwan.argus.common.exception.ArgusCommonException;
 import org.weiwan.argus.common.utils.DateUtils;
 import org.weiwan.argus.core.flink.utils.FlinkContextUtil;
+import org.weiwan.argus.core.pub.config.FlinkEnvConfig;
 
 import java.util.Date;
 import java.util.Map;
@@ -28,7 +29,8 @@ public class FlinkContext<T> {
     private String[] args;
     private Class<T> envClass;
     private String contextContent;
-    private FlinkConfig<String,String> flinkConfig;
+    private FlinkConfig<String, String> flinkConfig;
+    private FlinkEnvConfig flinkEnvConfig;
 
     public FlinkContext() {
 
@@ -45,6 +47,11 @@ public class FlinkContext<T> {
 
     public FlinkContext(T executionEnvironment, Class<T> streamExecutionEnvironmentClass, String contextArgs) {
 
+    }
+
+    public FlinkContext(T executionEnvironment, FlinkEnvConfig flinkEnvConfig) {
+        this.env = executionEnvironment;
+        this.flinkEnvConfig = flinkEnvConfig;
     }
 
     public T getEnv() {
@@ -68,7 +75,7 @@ public class FlinkContext<T> {
         this.flinkConfig = new FlinkConfig(toMap);
     }
 
-    public FlinkConfig<String,String> getFlinkConfig() {
+    public FlinkConfig<String, String> getFlinkConfig() {
         return this.flinkConfig;
     }
 
@@ -122,5 +129,9 @@ public class FlinkContext<T> {
 
     public void setContextContent(String contextContent) {
         this.contextContent = contextContent;
+    }
+
+    public Map<String, Object> getFlinkEnvConfig() {
+        return flinkEnvConfig.getAll();
     }
 }

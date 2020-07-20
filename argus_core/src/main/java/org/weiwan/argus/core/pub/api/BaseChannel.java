@@ -1,5 +1,7 @@
 package org.weiwan.argus.core.pub.api;
 
+import org.apache.flink.streaming.api.datastream.DataStream;
+import org.apache.flink.streaming.api.datastream.SingleOutputStreamOperator;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.weiwan.argus.core.pub.config.ArgusContext;
 import org.weiwan.argus.core.pub.pojo.DataRecord;
@@ -11,13 +13,21 @@ import org.weiwan.argus.core.pub.pojo.DataRecord;
  * @ClassName: BaseChannel
  * @Description:
  **/
-public class BaseChannel<IN extends DataRecord, OUT extends DataRecord> implements ArgusChannel<IN, OUT> {
-
+public abstract class BaseChannel<IN extends DataRecord, OUT extends DataRecord> implements ArgusChannel<IN, OUT> {
     private StreamExecutionEnvironment env;
     private ArgusContext argusContext;
 
+    public BaseChannel(StreamExecutionEnvironment env, ArgusContext argusContext) {
+        this.env = env;
+        this.argusContext = argusContext;
+    }
+
+    public abstract ArgusChannelHandler getChannelHandler();
+
     @Override
-    public ArgusChannelHandler<IN, OUT> channel() {
-        return null;
+    public DataStream<OUT> channel(DataStream<IN> dataStream) {
+        ArgusChannelHandler channelHandler = getChannelHandler();
+        DataStream<OUT> stream = dataStream.map(channelHandler);
+        return stream;
     }
 }

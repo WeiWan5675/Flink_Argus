@@ -1,6 +1,6 @@
 package org.weiwan.argus.core.pub.api;
 
-import org.weiwan.argus.core.pub.api.ArgusInputFormatSource;
+import org.apache.flink.streaming.api.datastream.DataStream;
 import org.weiwan.argus.core.pub.pojo.DataRecord;
 
 /**
@@ -11,5 +11,5 @@ import org.weiwan.argus.core.pub.pojo.DataRecord;
  * @Description:
  **/
 public interface ArgusReader<T extends DataRecord> {
-    ArgusInputFormatSource<T> reader();
+    DataStream<T> reader();
 }

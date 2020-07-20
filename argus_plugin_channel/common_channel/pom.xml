@@ -14,4 +14,10 @@
 <build>
     <finalName>${project.name}</finalName>
 </build>
+    <dependencies>
+        <dependency>
+            <groupId>org.weiwan.argus</groupId>
+            <artifactId>argus_core</artifactId>
+        </dependency>
+    </dependencies>
 </project>

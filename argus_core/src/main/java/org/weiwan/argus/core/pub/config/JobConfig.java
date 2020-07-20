@@ -1,5 +1,6 @@
 package org.weiwan.argus.core.pub.config;
 
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -24,6 +25,23 @@ public class JobConfig extends AbstractConfig {
 
     public JobConfig(Map<String, Object> map) {
         super(map);
+        this.readerConfig = new ReaderConfig(new HashMap<>());
+        this.writerConfig = new WriterConfig(new HashMap<>());
+        this.channelConfig = new ChannelConfig(new HashMap<>());
+        for (String key : map.keySet()) {
+            Object value = map.get(key);
+            if (key.startsWith("reader")) {
+                readerConfig.setVal(key, value);
+            }
+
+            if (key.startsWith("writer")) {
+                writerConfig.setVal(key, value);
+            }
+
+            if (key.startsWith("channel")) {
+                channelConfig.setVal(key, value);
+            }
+        }
     }
 
 

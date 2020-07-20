@@ -13,4 +13,8 @@ public class FlinkEnvConfig extends AbstractConfig {
     public FlinkEnvConfig(Map<String, Object> map) {
         super(map);
     }
+
+    public FlinkEnvConfig() {
+        super();
+    }
 }

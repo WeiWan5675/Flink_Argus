@@ -1,5 +1,6 @@
 package org.weiwan.argus.core.pub.api;
 
+import org.apache.flink.streaming.api.datastream.DataStream;
 import org.weiwan.argus.core.pub.api.ArgusChannelHandler;
 import org.weiwan.argus.core.pub.pojo.DataRecord;
 
@@ -11,5 +12,5 @@ import org.weiwan.argus.core.pub.pojo.DataRecord;
  * @Description:
  **/
 public interface ArgusChannel<IN extends DataRecord,OUT extends DataRecord> {
-    ArgusChannelHandler<IN,OUT> channel();
+    DataStream<OUT> channel(DataStream<IN> dataStream);
 }

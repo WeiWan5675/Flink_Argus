@@ -4,16 +4,23 @@ import org.apache.flink.api.common.JobExecutionResult;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.datastream.DataStreamSink;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.weiwan.argus.common.options.OptionParser;
 import org.weiwan.argus.common.utils.YamlUtils;
+import org.weiwan.argus.core.flink.pub.FlinkContext;
+import org.weiwan.argus.core.flink.utils.FlinkContextUtil;
+import org.weiwan.argus.core.plugin.ArgusPluginManager;
 import org.weiwan.argus.core.pub.api.*;
 import org.weiwan.argus.core.pub.config.*;
 import org.weiwan.argus.core.pub.pojo.DataRecord;
 import org.weiwan.argus.core.start.StartOptions;
 
-import java.lang.reflect.Constructor;
-import java.util.HashMap;
-import java.util.Map;
+import java.io.File;
+import java.io.FilenameFilter;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.*;
 
 /**
  * @Author: xiaozhennan
@@ -24,30 +31,28 @@ import java.util.Map;
  **/
 public class ArgusRun {
 
+    private static final Logger logger = LoggerFactory.getLogger(ArgusRun.class);
 
     public static void main(String[] args) throws Exception {
         //args的参数已经经过了启动器处理,所以可以直接使用OptionsParser进行解析工作
         OptionParser optionParser = new OptionParser(args);
-        StartOptions parse = optionParser.parse(StartOptions.class);
+        StartOptions options = optionParser.parse(StartOptions.class);
 
-        Map<String, Object> optionToMap = optionParser.optionToMap(parse, StartOptions.class);
+        Map<String, Object> optionToMap = optionParser.optionToMap(options, StartOptions.class);
 
         //读取job描述文件 json
-        String jobConf = parse.getJobConf();
-        Map<String, String> jobMap = YamlUtils.loadYamlStr(jobConf);
-
+        String jobConfContent = options.getJobConf();
+        Map<String, String> jobMap = YamlUtils.loadYamlStr(jobConfContent);
         printEnvInfo(optionToMap, jobMap);
         Map<String, Object> tmpObj = new HashMap<>();
         tmpObj.putAll(jobMap);
-        ArgusContext context = new ArgusContext(optionToMap, tmpObj);
-
-
-        StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
-
+        ArgusContext argusContext = convertOptionsToContext(optionToMap, tmpObj);
         //任务总体描述
-        JobConfig jobConfig = context.getJobConfig();
+        JobConfig jobConfig = argusContext.getJobConfig();
         //flink环境相关描述
-        FlinkEnvConfig flinkEnvConfig = context.getFlinkEnvConfig();
+        FlinkEnvConfig flinkEnvConfig = argusContext.getFlinkEnvConfig();
+        FlinkContext<StreamExecutionEnvironment> streamContext = FlinkContextUtil.getStreamContext(flinkEnvConfig);
+        StreamExecutionEnvironment env = streamContext.getEnv();
         //reader插件相关描述
         ReaderConfig readerConfig = jobConfig.getReaderConfig();
         //channel插件相关描述
@@ -55,34 +60,57 @@ public class ArgusRun {
         //writer插件相关描述
         WriterConfig writerConfig = jobConfig.getWriterConfig();
 
-        String readerName = readerConfig.getReaderName();
+        //获得插件目录
+        List<URL> rUrls = getPluginsUrls(options.getReaderPluginDir());
+        List<URL> cUrls = getPluginsUrls(options.getChannelPluginDir());
+        List<URL> wUrls = getPluginsUrls(options.getWriterPluginDir());
 
-        String channelName = channelConfig.getChannleName();
+        String readerClassName = readerConfig.getStringVal(ArgusKey.KEY_READER_CLASS_NAME);
+        String channelClassName = channelConfig.getStringVal(ArgusKey.KEY_CHANNEL_CLASS_NAME);
+        String writerClassName = writerConfig.getStringVal(ArgusKey.KEY_WRITER_CLASS_NAME);
 
-        String writerName = writerConfig.getWriterName();
+        ArgusPluginManager argusPluginManager = new ArgusPluginManager(env, argusContext);
 
+        ArgusReader reader = argusPluginManager.loadReaderPlugin(rUrls, readerClassName);
 
-        Class<?> aClass = Class.forName(readerName);
-        Constructor<?> constructor = aClass.getConstructor(StreamExecutionEnvironment.class, ArgusContext.class);
-        ArgusReader argusReader = (ArgusReader) constructor.newInstance(env, context);
-        ArgusInputFormatSource<DataRecord<?>> source = argusReader.reader();
-        DataStream<DataRecord<?>> stream = env.addSource(source);
+        ArgusChannel channel = argusPluginManager.loadChannelPlugin(cUrls, channelClassName);
 
+        ArgusWriter writer = argusPluginManager.loadWriterPlugin(wUrls, writerClassName);
 
-        Class<?> bClass = Class.forName(channelName);
-        Constructor<?> bconstructor = bClass.getConstructor(StreamExecutionEnvironment.class, ArgusContext.class);
-        ArgusChannel argusChannel = (ArgusChannel) bconstructor.newInstance(env, context);
-        ArgusChannelHandler dataStream2 = argusChannel.channel();
-        DataStream<DataRecord<?>> mapStream = stream.map(dataStream2);
-
-
-        Class<?> cClass = Class.forName(writerName);
-        Constructor<?> cconstructor = cClass.getConstructor(StreamExecutionEnvironment.class, ArgusContext.class);
-        ArgusWriter argusWriter = (ArgusWriter) cconstructor.newInstance(env, context);
-        ArgusOutputFormatSink<DataRecord<?>> dataStream1 = argusWriter.writer();
-        DataStreamSink<DataRecord<?>> dataRecordDataStreamSink = mapStream.addSink(dataStream1);
+        DataStream readerStream = reader.reader();
+        DataStream channelStream = channel.channel(readerStream);
+        DataStreamSink writerSink = writer.writer(channelStream);
 
         JobExecutionResult execute = env.execute("");
+    }
+
+
+    private static List<URL> getPluginsUrls(String pluginPath) throws MalformedURLException {
+        logger.info("plugins path is [{}]", pluginPath);
+        File file = new File(pluginPath);
+        List<URL> urls = new ArrayList<URL>();
+        List<URL> _Urls = findJarsInDir(file);
+        urls.addAll(_Urls);
+        for (URL url : urls) {
+            System.out.println(url);
+        }
+        return urls;
+    }
+
+    private static ArgusContext convertOptionsToContext(Map<String, Object> optionToMap, Map<String, Object> taskObj) {
+        ArgusContext argusContext = new ArgusContext(optionToMap);
+        FlinkEnvConfig flinkEnvConfig = new FlinkEnvConfig(new HashMap<>());
+        JobConfig jobConfig = new JobConfig(taskObj);
+
+        for (String taskKey : taskObj.keySet()) {
+            if (taskKey.startsWith("flink.task")) {
+                //flink的配置
+                flinkEnvConfig.setVal(taskKey, taskObj.get(taskKey));
+            }
+        }
+        argusContext.setFlinkEnvConfig(flinkEnvConfig);
+        argusContext.setJobConfig(jobConfig);
+        return argusContext;
     }
 
     private static void printEnvInfo(Map<String, Object> optionToMap, Map<String, String> jobMap) {
@@ -99,6 +127,27 @@ public class ArgusRun {
         for (String key : jobMap.keySet()) {
             System.out.println(String.format("key: [%s], value: [%s]", key, jobMap.get(key)));
         }
+    }
+
+
+    public static List<URL> findJarsInDir(File dir) throws MalformedURLException {
+        List<URL> urlList = new ArrayList<>();
+
+        if (dir.exists() && dir.isDirectory()) {
+            File[] jarFiles = dir.listFiles(new FilenameFilter() {
+                @Override
+                public boolean accept(File dir, String name) {
+                    return name.toLowerCase().endsWith(".jar");
+                }
+            });
+
+            for (File jarFile : jarFiles) {
+                urlList.add(jarFile.toURI().toURL());
+            }
+
+        }
+
+        return urlList;
     }
 
 

@@ -22,6 +22,11 @@ public abstract class AbstractConfig implements Serializable {
         }
     }
 
+    public AbstractConfig() {
+
+    }
+
+
     public Map<String, Object> getAll() {
         return internalMap;
     }

@@ -47,10 +47,10 @@ public class DataSyncStarter {
 
 
     public static void main(String[] args) throws Exception {
-        args = new String[]{
-                "-mode" ,"Local",
-                "-aconf","G:\\Project\\Flink_Argus\\argus_start\\src\\main\\resources\\argus-default.yaml"
-        };
+//        args = new String[]{
+//                "-mode", "Local",
+//                "-aconf", "F:\\Project\\Flink_Argus\\argus_start\\src\\main\\resources\\argus-default.yaml"
+//        };
         OptionParser optionParser = new OptionParser(args);
         StartOptions options = optionParser.parse(StartOptions.class);
         //命令对象 转化成List对象
@@ -143,49 +143,6 @@ public class DataSyncStarter {
 
 
         ArgusRun.main(argsAll);
-        //转化脚本启动的options为Main方法可以识别的参数
-        //pluginPath
-        //配置分两种
-
-        /**
-         *-1. 解析参数
-         * 0. 初始化 hadoop yarn flink 配置文件夹
-         * 1. 判断启动模式 cliMode  CMD CONF 分为cmd模式  和conf配置文件模式
-         * 2. 根据启动模式的不同,获取对应的插件/运行类信息
-         * 4. 根据job类型 获取不同的任务提交信息
-         * 5. 本地提交模式 不需要额外的信息
-         * 6. yarn | yarnPer | 需要获得 jar信息远程连接信息 并且打包
-         * 6. 提交任务
-         * 8. 关闭资源
-         */
-
-
-        //启动方式分为两种 1. CMD方式  通过识别options中-cmd
-
-        //配置文件的方式  支持的参数很多 支持覆盖flink-conf的配置  设置任务级别的配置
-
-
-        //CMD的方式  支持简单的参数配置  支持简单的
-
-        //FlinkArgus -aconf "./argus-conf.yaml" -fconf "./flink-conf.yaml" -queue -yq
-
-        //提交任务就可以了  不需要考虑其它的  初始化参数  插件加载  都放到任务里去
-
-        //一种是插件配置
-
-        //一种是mysql
-        //ReaderPluginName
-        //WriterPluginName
-
-        //ReaderPluginClassName
-        //WriterPluginClassName
-
-
-        //Flink自身运行的一些参数
-
-        //任务的配置文件
-
-        //
 
 
         return false;
@@ -211,13 +168,13 @@ public class DataSyncStarter {
         options.setHadoopConf(hadoopHome + File.separator + "conf");
         //设置插件目录
         options.setPluginsDir(pluginsRootDir);
-        if(StringUtils.isEmpty(options.getReaderPluginDir())){
+        if (StringUtils.isEmpty(options.getReaderPluginDir())) {
             options.setReaderPluginDir(pluginsRootDir + File.separator + DataSyncStarter.KEY_READER_PLUGIN_DIR);
         }
-        if(StringUtils.isEmpty(options.getWriterPluginDir())){
+        if (StringUtils.isEmpty(options.getWriterPluginDir())) {
             options.setWriterPluginDir(pluginsRootDir + File.separator + DataSyncStarter.KEY_WRITER_PLUGIN_DIR);
         }
-        if(StringUtils.isEmpty(options.getChannelPluginDir())){
+        if (StringUtils.isEmpty(options.getChannelPluginDir())) {
             options.setChannelPluginDir(pluginsRootDir + File.separator + DataSyncStarter.KEY_CHANNEL_PLUGIN_DIR);
         }
 
@@ -248,3 +205,48 @@ public class DataSyncStarter {
 
 
 }
+
+
+//转化脚本启动的options为Main方法可以识别的参数
+//pluginPath
+//配置分两种
+
+/**
+ * -1. 解析参数
+ * 0. 初始化 hadoop yarn flink 配置文件夹
+ * 1. 判断启动模式 cliMode  CMD CONF 分为cmd模式  和conf配置文件模式
+ * 2. 根据启动模式的不同,获取对应的插件/运行类信息
+ * 4. 根据job类型 获取不同的任务提交信息
+ * 5. 本地提交模式 不需要额外的信息
+ * 6. yarn | yarnPer | 需要获得 jar信息远程连接信息 并且打包
+ * 6. 提交任务
+ * 8. 关闭资源
+ */
+
+
+//启动方式分为两种 1. CMD方式  通过识别options中-cmd
+
+//配置文件的方式  支持的参数很多 支持覆盖flink-conf的配置  设置任务级别的配置
+
+
+//CMD的方式  支持简单的参数配置  支持简单的
+
+//FlinkArgus -aconf "./argus-conf.yaml" -fconf "./flink-conf.yaml" -queue -yq
+
+//提交任务就可以了  不需要考虑其它的  初始化参数  插件加载  都放到任务里去
+
+//一种是插件配置
+
+//一种是mysql
+//ReaderPluginName
+//WriterPluginName
+
+//ReaderPluginClassName
+//WriterPluginClassName
+
+
+//Flink自身运行的一些参数
+
+//任务的配置文件
+
+//

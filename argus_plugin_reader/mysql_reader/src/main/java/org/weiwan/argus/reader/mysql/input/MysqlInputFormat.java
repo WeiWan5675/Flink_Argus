@@ -1,5 +1,6 @@
 package org.weiwan.argus.reader.mysql.input;
 
+import org.apache.flink.types.Row;
 import org.weiwan.argus.core.pub.pojo.DataRecord;
 import org.weiwan.argus.core.pub.api.BaseRichInputFormat;
 
@@ -10,8 +11,7 @@ import org.weiwan.argus.core.pub.api.BaseRichInputFormat;
  * @ClassName: MysqlInputFormat
  * @Description:
  **/
-public class MysqlInputFormat extends BaseRichInputFormat<DataRecord, MysqlInputSpliter> {
-
+public class MysqlInputFormat extends BaseRichInputFormat<DataRecord<Row>, MysqlInputSpliter> {
 
 
 }

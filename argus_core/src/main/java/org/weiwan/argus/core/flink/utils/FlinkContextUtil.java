@@ -7,6 +7,8 @@ import org.weiwan.argus.core.flink.pub.FlinkLogger;
 import org.weiwan.argus.core.flink.pub.JavaEnvIniter;
 import org.weiwan.argus.core.flink.pub.FlinkContext;
 import org.weiwan.argus.core.flink.pub.FlinkContains;
+import org.weiwan.argus.core.pub.config.FlinkEnvConfig;
+
 import java.io.IOException;
 
 /**
@@ -89,7 +91,14 @@ public class FlinkContextUtil {
 
     public static void getStreamContext(String jobConfStr) throws IOException {
         StreamExecutionEnvironment executionEnvironment = StreamExecutionEnvironment.getExecutionEnvironment();
-        FlinkContext context = new FlinkContext(executionEnvironment,StreamExecutionEnvironment.class,jobConfStr);
+        FlinkContext context = new FlinkContext(executionEnvironment, StreamExecutionEnvironment.class, jobConfStr);
         javaEnvIniter.initStream(context);
+    }
+
+    public static FlinkContext<StreamExecutionEnvironment> getStreamContext(FlinkEnvConfig flinkEnvConfig) throws IOException {
+        StreamExecutionEnvironment executionEnvironment = StreamExecutionEnvironment.getExecutionEnvironment();
+        FlinkContext<StreamExecutionEnvironment> flinkContext = new FlinkContext(executionEnvironment, flinkEnvConfig);
+        javaEnvIniter.initStream(flinkContext);
+        return flinkContext;
     }
 }

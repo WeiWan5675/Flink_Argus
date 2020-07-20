@@ -19,6 +19,10 @@ public class DataRecord<T> implements Serializable {
 
     private T data;
 
+    public DataRecord(T data) {
+        this.data = data;
+    }
+
 
     public String getSchemaName() {
         return schemaName;

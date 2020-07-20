@@ -2,6 +2,7 @@ package org.weiwan.argus.core.pub.config;
 
 import org.weiwan.argus.core.start.StartOptions;
 
+import java.io.Serializable;
 import java.util.Map;
 
 /**
@@ -11,14 +12,18 @@ import java.util.Map;
  * @ClassName: ArgusContextConfig
  * @Description:
  **/
-public class ArgusContext {
+public class ArgusContext implements Serializable {
 
     private JobConfig JobConfig;
     private FlinkEnvConfig flinkEnvConfig;
+    private Map<String, Object> startupParameters;
 
-    public ArgusContext(Map<String, Object> envConf, Map<String, Object> jobConf) {
-        this.flinkEnvConfig = new FlinkEnvConfig(envConf);
-        this.JobConfig = new JobConfig(jobConf);
+    public ArgusContext(Map<String, Object> startupParameters) {
+        this.startupParameters = startupParameters;
+    }
+
+    public ArgusContext() {
+
     }
 
 

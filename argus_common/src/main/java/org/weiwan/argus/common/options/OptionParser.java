@@ -21,19 +21,12 @@ package org.weiwan.argus.common.options;
 import org.apache.commons.cli.BasicParser;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
-import org.apache.commons.codec.Charsets;
 import org.apache.commons.lang3.StringUtils;
-import org.weiwan.argus.common.utils.MapUtil;
 import org.weiwan.argus.common.utils.ReflectUtil;
 
 
-import java.io.File;
-import java.io.FileInputStream;
 import java.lang.reflect.Field;
-import java.lang.reflect.Method;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 /**
