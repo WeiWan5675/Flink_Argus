@@ -13,6 +13,7 @@
     <packaging>pom</packaging>
     <modules>
         <module>mysql_reader</module>
+        <module>mongo_reader</module>
     </modules>
 
 

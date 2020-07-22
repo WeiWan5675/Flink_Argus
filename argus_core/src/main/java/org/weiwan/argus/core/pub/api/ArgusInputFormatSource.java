@@ -2,6 +2,10 @@ package org.weiwan.argus.core.pub.api;
 
 import org.apache.flink.api.common.io.InputFormat;
 import org.apache.flink.api.common.io.RichInputFormat;
+import org.apache.flink.api.common.state.ListState;
+import org.apache.flink.api.common.state.ListStateDescriptor;
+import org.apache.flink.api.common.state.OperatorStateStore;
+import org.apache.flink.api.common.typeinfo.TypeHint;
 import org.apache.flink.api.common.typeinfo.TypeInformation;
 import org.apache.flink.api.common.typeutils.TypeSerializer;
 import org.apache.flink.configuration.Configuration;
@@ -12,9 +16,13 @@ import org.apache.flink.runtime.jobgraph.tasks.InputSplitProviderException;
 import org.apache.flink.runtime.state.FunctionInitializationContext;
 import org.apache.flink.runtime.state.FunctionSnapshotContext;
 import org.apache.flink.streaming.api.checkpoint.CheckpointedFunction;
-import org.apache.flink.streaming.api.functions.source.RichParallelSourceFunction;
+import org.apache.flink.streaming.api.functions.source.InputFormatSourceFunction;
 import org.apache.flink.streaming.api.operators.StreamingRuntimeContext;
+import org.weiwan.argus.core.pub.config.ArgusContext;
+
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.NoSuchElementException;
 
 /**
@@ -24,7 +32,7 @@ import java.util.NoSuchElementException;
  * @ClassName: ArgusInputFormatSource
  * @Description:
  **/
-public class ArgusInputFormatSource<OUT> extends RichParallelSourceFunction<OUT> implements CheckpointedFunction {
+public class ArgusInputFormatSource<OUT> extends InputFormatSourceFunction<OUT> implements CheckpointedFunction {
 
     private static final long serialVersionUID = 1L;
 
@@ -36,16 +44,19 @@ public class ArgusInputFormatSource<OUT> extends RichParallelSourceFunction<OUT>
     private transient InputSplitProvider provider;
     private transient Iterator<InputSplit> splitIterator;
 
+
+    private ListState<JobFormatState> listState;
+    private Map<Integer, JobFormatState> cacheMapStates;
+    private boolean isRestore;
+    private ArgusContext argusContext;
+
     private volatile boolean isRunning = true;
 
-    @SuppressWarnings("unchecked")
+
     public ArgusInputFormatSource(InputFormat<OUT, ?> format, TypeInformation<OUT> typeInfo) {
+        super(format, typeInfo);
         this.format = (InputFormat<OUT, InputSplit>) format;
         this.typeInfo = typeInfo;
-    }
-
-    public ArgusInputFormatSource(InputFormat inputFormat) {
-        this.format = inputFormat;
     }
 
 
@@ -53,12 +64,21 @@ public class ArgusInputFormatSource<OUT> extends RichParallelSourceFunction<OUT>
     @SuppressWarnings("unchecked")
     public void open(Configuration parameters) throws Exception {
         StreamingRuntimeContext context = (StreamingRuntimeContext) getRuntimeContext();
-
+        int indexOfThisSubtask = context.getIndexOfThisSubtask();
         if (format instanceof RichInputFormat) {
             ((RichInputFormat) format).setRuntimeContext(context);
         }
-        format.configure(parameters);
 
+        //在启动时,配置argusContext | formatstate
+        if (format instanceof BaseRichInputFormat) {
+            BaseRichInputFormat inputFormat = ((BaseRichInputFormat) format);
+            if (isRestore) {
+                argusContext.restore(true);
+                inputFormat.setJobFormatState(cacheMapStates.get(indexOfThisSubtask));
+            }
+        }
+
+        format.configure(parameters);
         provider = context.getInputSplitProvider();
         serializer = typeInfo.createSerializer(getRuntimeContext().getExecutionConfig());
         splitIterator = getInputSplits();
@@ -179,13 +199,50 @@ public class ArgusInputFormatSource<OUT> extends RichParallelSourceFunction<OUT>
     }
 
 
+    /**
+     * 实现InputFormatSource的checkpoint 方法
+     *
+     * @param context
+     * @throws Exception
+     */
     @Override
     public void snapshotState(FunctionSnapshotContext context) throws Exception {
-
+        JobFormatState formatState = ((BaseRichInputFormat) format).getSnapshotState();
+        if (formatState != null) {
+            listState.clear();
+            listState.add(formatState);
+        }
     }
 
+    /**
+     * 初始化快照
+     *
+     * @param context
+     * @throws Exception
+     */
     @Override
     public void initializeState(FunctionInitializationContext context) throws Exception {
+        OperatorStateStore stateStore = context.getOperatorStateStore();
+        listState = stateStore.getUnionListState(new ListStateDescriptor<>(
+                "input-format-state",
+                TypeInformation.of(new TypeHint<JobFormatState>() {
+                })));
+        if (context.isRestored()) {
+            isRestore = true;
+            //如果是restore 就把restore的jobformatstate 缓存起来,在open中,把对应任务的state设置进去
+            cacheMapStates = new HashMap<>(16);
+            for (JobFormatState formatState : listState.get()) {
+                cacheMapStates.put(formatState.getNumOfSubTask(), formatState);
+            }
+        }
+    }
 
+
+    public ArgusContext getArgusContext() {
+        return argusContext;
+    }
+
+    public void setArgusContext(ArgusContext argusContext) {
+        this.argusContext = argusContext;
     }
 }

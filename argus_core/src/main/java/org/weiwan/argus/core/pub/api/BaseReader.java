@@ -38,9 +38,9 @@ public abstract class BaseReader<T extends DataRecord> implements ArgusReader<T>
 
     @Override
     public DataStream<T> reader() {
-        BaseRichInputFormat<T, InputSplit> inputFormat = getInputFormat(argusContext);
+        BaseRichInputFormat<T, BaseInputSpliter> inputFormat = getInputFormat(argusContext);
         TypeInformation<T> inputFormatTypes = TypeExtractor.getInputFormatTypes(inputFormat);
-        ArgusInputFormatSource<T> tArgusInputFormatSource = new ArgusInputFormatSource<>(inputFormat,inputFormatTypes);
+        ArgusInputFormatSource<T> tArgusInputFormatSource = new ArgusInputFormatSource<>(inputFormat, inputFormatTypes);
         DataStream<T> stream = env.addSource(tArgusInputFormatSource, "", inputFormatTypes);
         DataStream<T> afterStream = afterReading(stream, argusContext);
         return afterStream;
@@ -49,8 +49,8 @@ public abstract class BaseReader<T extends DataRecord> implements ArgusReader<T>
     /**
      * <p> 方便某些自定义reader进行一些后处理工作
      *
-     * @param stream {@link DataStream<DataRecord>} 输入是这个
-     * @return 输出也是这个
+     * @param stream 输入是 {@link DataStream<DataRecord>}
+     * @return 输出也是 {@link DataStream<DataRecord>}
      */
     protected DataStream<T> afterReading(DataStream<T> stream, ArgusContext context) {
         //do nothing

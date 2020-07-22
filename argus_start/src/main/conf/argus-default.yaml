@@ -13,8 +13,8 @@ flink:
       timeCharacteristic:    #流处理的事件模式  默认processTime eventTime
 
     checkpoint:
-      enable: true        #是否启用检查点
-      interval: 1000         #检查点间隔  单位毫秒
+      enable: true       #是否启用检查点
+      interval: 60000         #检查点间隔  单位毫秒
       timeout: 60000       #检查点超时时间 单位毫秒
       mode: EXACTLY_ONCE #检查点模式: AT_LEAST_ONCE  EXACTLY_ONCE
       minInterval: 500 #最小检查点间隔 单位毫秒

@@ -17,6 +17,7 @@ public class ArgusContext implements Serializable {
     private JobConfig JobConfig;
     private FlinkEnvConfig flinkEnvConfig;
     private Map<String, Object> startupParameters;
+    private boolean isRestore;
 
     public ArgusContext(Map<String, Object> startupParameters) {
         this.startupParameters = startupParameters;
@@ -35,12 +36,20 @@ public class ArgusContext implements Serializable {
         JobConfig = jobConfig;
     }
 
-
     public FlinkEnvConfig getFlinkEnvConfig() {
         return flinkEnvConfig;
     }
 
     public void setFlinkEnvConfig(FlinkEnvConfig flinkEnvConfig) {
         this.flinkEnvConfig = flinkEnvConfig;
+    }
+
+
+    public boolean isRestore() {
+        return isRestore;
+    }
+
+    public void restore(Boolean restore){
+        this.isRestore = restore;
     }
 }

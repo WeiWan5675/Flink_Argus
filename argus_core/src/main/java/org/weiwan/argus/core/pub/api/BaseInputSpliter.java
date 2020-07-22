@@ -1,5 +1,6 @@
 package org.weiwan.argus.core.pub.api;
 
+import org.apache.flink.core.io.GenericInputSplit;
 import org.apache.flink.core.io.InputSplit;
 
 /**
@@ -9,16 +10,22 @@ import org.apache.flink.core.io.InputSplit;
  * @ClassName: BaseInputSpliter
  * @Description:
  **/
-public abstract class BaseInputSpliter implements InputSplit {
-    /**
-     * Returns the number of this input split.
-     *
-     * @return the number of this input split
-     */
-    @Override
-    public int getSplitNumber() {
-        return 0;
+public abstract class BaseInputSpliter extends GenericInputSplit {
+
+    //处理模式,批处理,流处理
+    private String mod;
+
+    //父类方法,这些必须要传递
+    public BaseInputSpliter(int partitionNumber, int totalNumberOfPartitions) {
+        super(partitionNumber, totalNumberOfPartitions);
     }
 
-    public abstract InputSpliter getInputSpliter();
+
+    public String getMod() {
+        return mod;
+    }
+
+    public void setMod(String mod) {
+        this.mod = mod;
+    }
 }

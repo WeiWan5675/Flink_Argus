@@ -36,7 +36,7 @@ public abstract class BaseRichOutputFormat<IT> extends RichOutputFormat<IT> {
 
     @Override
     public void writeRecord(IT record) throws IOException {
-
+        System.out.println("hiveWriter处理数据:" + record);
     }
 
 
