@@ -10,8 +10,11 @@ import org.apache.flink.core.io.InputSplitAssigner;
 import org.weiwan.argus.core.pub.config.ArgusContext;
 import org.weiwan.argus.core.pub.config.JobConfig;
 import org.weiwan.argus.core.pub.config.ReaderConfig;
+import org.weiwan.argus.core.pub.pojo.DataRecord;
 
 import java.io.IOException;
+import java.io.Serializable;
+import java.util.List;
 
 /**
  * @Author: xiaozhennan
@@ -27,6 +30,9 @@ public abstract class BaseRichInputFormat<OT, T extends InputSplit> extends Rich
     protected JobConfig jobConfig;
     protected ReaderConfig readerConfig;
     protected JobFormatState formatState;
+
+
+    protected List<DataRecord<? extends Serializable>> batchList;
 
     //当前任务的index
     protected int indexOfSubTask;
@@ -138,7 +144,7 @@ public abstract class BaseRichInputFormat<OT, T extends InputSplit> extends Rich
 
     @Override
     public OT nextRecord(OT reuse) throws IOException {
-        OT ot = nextRecordInternal(reuse);
+        OT ot = this.nextRecordInternal(reuse);
         return ot;
     }
 
@@ -149,8 +155,8 @@ public abstract class BaseRichInputFormat<OT, T extends InputSplit> extends Rich
     }
 
     public JobFormatState getSnapshotState() {
-        snapshot(formatState);
-        return formatState;
+        this.snapshot(this.formatState);
+        return this.formatState;
     }
 
 

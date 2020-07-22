@@ -9,7 +9,7 @@ import java.io.Serializable;
  * @ClassName: DataRecord
  * @Description:
  **/
-public class DataRecord<T> implements Serializable {
+public class DataRecord<T extends Serializable> implements Serializable {
     private String tableName;
     private String pk;
     private String timestamp;

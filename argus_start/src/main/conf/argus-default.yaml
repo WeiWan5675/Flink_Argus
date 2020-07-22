@@ -31,7 +31,7 @@ flink:
 
 
 reader:
-  type:
+  type: stream # batch 批处理 stream
   name: mysqlreader
   class: org.weiwan.argus.reader.mysql.MysqlReader
   mysql:
@@ -39,8 +39,7 @@ reader:
     username:
     password:
     database:
-    table1:
-    table2:
+    drive: com.mysql.jdbc.Driver
 writer:
   type:
   name: hivewriter
