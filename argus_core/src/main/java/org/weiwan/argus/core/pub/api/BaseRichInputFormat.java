@@ -43,6 +43,8 @@ public abstract class BaseRichInputFormat<OT, T extends InputSplit> extends Rich
 
     public BaseRichInputFormat(ArgusContext context) {
         this.argusContext = context;
+        this.jobConfig = context.getJobConfig();
+        this.readerConfig = jobConfig.getReaderConfig();
     }
 
     public BaseRichInputFormat() {
@@ -111,9 +113,6 @@ public abstract class BaseRichInputFormat<OT, T extends InputSplit> extends Rich
 
     @Override
     public void openInputFormat() throws IOException {
-        //初始化配置基础
-        jobConfig = argusContext.getJobConfig();
-        readerConfig = argusContext.getJobConfig().getReaderConfig();
         //初始化任务编号
         indexOfSubTask = getRuntimeContext().getIndexOfThisSubtask();
 
@@ -144,6 +143,7 @@ public abstract class BaseRichInputFormat<OT, T extends InputSplit> extends Rich
 
     @Override
     public OT nextRecord(OT reuse) throws IOException {
+
         OT ot = this.nextRecordInternal(reuse);
         return ot;
     }
@@ -170,9 +170,7 @@ public abstract class BaseRichInputFormat<OT, T extends InputSplit> extends Rich
 
 
     protected boolean isComplete(Boolean... flag) {
-        if (flag.length == 0) {
-            return taskComplete;
-        } else {
+        if (flag.length == 1) {
             this.taskComplete = flag[0];
         }
         return taskComplete;

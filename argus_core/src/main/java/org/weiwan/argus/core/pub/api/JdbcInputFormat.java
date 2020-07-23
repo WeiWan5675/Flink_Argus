@@ -1,11 +1,13 @@
 package org.weiwan.argus.core.pub.api;
 
+import org.apache.flink.configuration.Configuration;
 import org.apache.flink.types.Row;
+import org.weiwan.argus.core.pub.config.ArgusContext;
 import org.weiwan.argus.core.pub.pojo.DataRecord;
 
 import javax.sql.DataSource;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
+import java.io.IOException;
+import java.sql.*;
 
 /**
  * @Author: xiaozhennan
@@ -16,17 +18,72 @@ import java.sql.PreparedStatement;
  **/
 public abstract class JdbcInputFormat extends BaseRichInputFormat<DataRecord<Row>, JdbcInputSpliter> {
 
+
+    private static final String KEY_READER_TYPE = "reader.type";
+    private static final String KEY_READER_NAME = "reader.name";
+    private static final String KEY_READER_CLASS = "reader.class";
+    private static final String KEY_READER_JDBC_URL = "reader.jdbc.url";
+    private static final String KEY_READER_JDBC_DRIVE_CLASS = "reader.jdbc.drive";
+    private static final String KEY_READER_JDBC_USERNAME = "reader.jdbc.username";
+    private static final String KEY_READER_JDBC_PASSWROD = "reader.jdbc.password";
+    private static final String KEY_READER_JDBC_SCHEMA = "reader.jdbc.schema";
+    private static final String KEY_READER_TABLENAME = "reader.tableName";
+    private static final String KEY_READER_BATCHSIZE = "reader.batchSize";
+    private static final String KEY_READER_QUERY_TIMEOUT = "reader.queryTimeout";
+    private static final String KEY_READER_SPLIT_FIELD = "reader.splitField";
+    private static final String KEY_READER_SQL_FILTER = "reader.sql.filter";
+    private static final String KEY_READER_SQL_COLUMNS = "reader.sql.columns";
+    private static final String KEY_READER_SQL_CUSTOMSQL = "reader.sql.customSql";
+    private static final String KEY_READER_INCR_INCRFIELD = "reader.increment.incrField";
+    private static final String KEY_READER_INCR_LASTOFFSET = "reader.increment.lastOffset";
+    private static final String KEY_READER_INCR_ENABLE_POLLING = "reader.increment.enablePolling";
+    private static final String KEY_READER_INCR_POLL_INTERVAL = "reader.increment.pollingInterval";
+
     protected String driveClassName;
     protected String jdbcUrl;
     protected String username;
     protected String password;
 
     protected String tableName;
+    protected int batchSize;
+    protected int queryTimeout;
+    protected boolean isPolling;
+    protected Long pollingInterval;
     protected String[] tables;
+    protected String[] columns;
+    protected String[] filters;
+    protected String incrField;
+    protected String splitField;
 
-    protected DataSource dataSource;
     protected Connection dbConn;
-    protected PreparedStatement preparedStatement;
+    protected PreparedStatement statement;
+    protected ResultSet resultSet;
+    protected ResultSetMetaData tableMetaData;
+    protected int columnCount;
+    protected String lastOffset;
+    protected SqlGenerator sqlGenerator;
+
+    public JdbcInputFormat(ArgusContext context) {
+        super(context);
+    }
+
+    @Override
+    public void configure(Configuration parameters) {
+        this.username = readerConfig.getStringVal(KEY_READER_JDBC_USERNAME);
+        this.password = readerConfig.getStringVal(KEY_READER_JDBC_PASSWROD);
+        this.driveClassName = readerConfig.getStringVal(KEY_READER_JDBC_DRIVE_CLASS);
+        this.tableName = readerConfig.getStringVal(KEY_READER_TABLENAME);
+        this.batchSize = readerConfig.getIntVal(KEY_READER_BATCHSIZE, 1000);
+        this.queryTimeout = readerConfig.getIntVal(KEY_READER_QUERY_TIMEOUT, 60);
+        this.jdbcUrl = readerConfig.getStringVal(KEY_READER_JDBC_URL);
+        this.pollingInterval = readerConfig.getLongVal(KEY_READER_INCR_POLL_INTERVAL, 10000L);
+        this.isPolling = readerConfig.getBooleanVal(KEY_READER_INCR_ENABLE_POLLING, false);
+        this.columns = readerConfig.getStringVal(KEY_READER_SQL_COLUMNS, "1").split(",");
+        this.filters = readerConfig.getStringVal(KEY_READER_SQL_FILTER, "1=1").split(",");
+        this.incrField = readerConfig.getStringVal(KEY_READER_INCR_INCRFIELD);
+        this.splitField = readerConfig.getStringVal(KEY_READER_SPLIT_FIELD);
+        this.lastOffset = readerConfig.getStringVal(KEY_READER_INCR_LASTOFFSET);
+    }
 
     /**
      * 打开InputFormat,根据split读取数据
@@ -35,7 +92,57 @@ public abstract class JdbcInputFormat extends BaseRichInputFormat<DataRecord<Row
      */
     @Override
     public void openInput(JdbcInputSpliter split) {
-        //打开数据源
+        try {
+            Class.forName(driveClassName);
+            this.dbConn = DriverManager.getConnection(jdbcUrl, username, password);
+            //打开数据源
+            SqlInfo sqlInfo = SqlInfo.newBuilder()
+                    .tableName(tableName)
+                    .columns(columns)
+                    .filters(filters)
+                    .incrField(incrField)
+                    .splitField(splitField)
+                    .splitNum(split.getTotalNumberOfSplits())
+                    .thisSplitNum(split.getSplitNumber())
+                    .build();
+            sqlGenerator = new SqlGenerator(sqlInfo);
+            //构建sql
+
+
+            String sql = sqlGenerator.generatorIncrSql();
+            statement = dbConn.prepareStatement(sql, ResultSet.TYPE_FORWARD_ONLY,
+                    ResultSet.CONCUR_READ_ONLY);
+            System.out.println("sql: " + sql);
+            //获得最大最小 max min
+            if (isPolling) {
+                statement.setFetchSize(batchSize);
+                statement.setQueryTimeout(queryTimeout);
+                statement.setString(1, "2020-07-01 00:00:00");
+                statement.setString(2, "2020-07-05 00:00:00");
+            } else {
+                //获取offset Sql 直接访问数据库获得 根据IncrField 字段
+                statement.setFetchSize(batchSize);
+                statement.setQueryTimeout(queryTimeout);
+                statement.setString(1, "2020-07-01 00:00:00");
+                statement.setString(2, "2020-07-05 00:00:00");
+                resultSet = statement.executeQuery();
+                tableMetaData = resultSet.getMetaData();
+                columnCount = tableMetaData.getColumnCount();
+            }
+
+
+            //初始化调用下next,不然result会报错
+            boolean next = resultSet.next();
+            if (!next) {
+                isComplete(true);
+            }
+
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+        }
+
     }
 
     /**
@@ -46,20 +153,50 @@ public abstract class JdbcInputFormat extends BaseRichInputFormat<DataRecord<Row
      */
     @Override
     public JdbcInputSpliter[] getInputSpliter(int minNumSplits) {
-        return new JdbcInputSpliter[0];
+        JdbcInputSpliter[] spliters = new JdbcInputSpliter[minNumSplits];
+        for (int i = 0; i < minNumSplits; i++) {
+            JdbcInputSpliter jdbcInputSpliter = new JdbcInputSpliter(i, minNumSplits);
+            String stringVal = readerConfig.getStringVal(KEY_READER_INCR_LASTOFFSET); //从启动参数中获取offset
+//            jdbcInputSpliter.setUserLastOffser(Long.valueOf(stringVal));
+            spliters[i] = jdbcInputSpliter;
+        }
+        return spliters;
     }
+
 
     /**
      * 返回一条记录
      * 当数据处理结束后,需要手动调用{@link BaseRichInputFormat#isComplete} }
      *
-     * @param reuse
+     * @param row
      * @return 数据
      */
     @Override
-    public DataRecord<Row> nextRecordInternal(DataRecord<Row> reuse) {
-        return null;
+    public DataRecord<Row> nextRecordInternal(DataRecord<Row> row) {
+        DataRecord<Row> rowDataRecord = new DataRecord();
+        try {
+            Row currentRow = new Row(columnCount);
+            rowDataRecord.setData(currentRow);
+            if (!isComplete()) {
+                for (int i = 0; i < columnCount; i++) {
+
+                    Object object = resultSet.getObject(i + 1);
+                    String columnName = tableMetaData.getColumnName(i + 1);
+                    currentRow.setField(i, object);
+                }
+            }
+
+            boolean next = resultSet.next();
+            //如果没有数据了,就isComplete()
+            if (!next) {
+                isComplete(true);
+            }
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+        }
+        return rowDataRecord;
     }
+
 
     /**
      * 关闭Input,释放资源
@@ -102,7 +239,6 @@ public abstract class JdbcInputFormat extends BaseRichInputFormat<DataRecord<Row
      *      3.3 拼接SQL,抽象SQL返回分段
      *
      */
-
 
 
 }

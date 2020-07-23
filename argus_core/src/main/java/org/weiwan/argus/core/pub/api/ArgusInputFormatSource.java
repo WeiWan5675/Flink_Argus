@@ -117,7 +117,7 @@ public class ArgusInputFormatSource<OUT> extends InputFormatSourceFunction<OUT> 
                 }
             }
         } finally {
-            format.close();
+             format.close();
             if (format instanceof RichInputFormat) {
                 ((RichInputFormat) format).closeInputFormat();
             }

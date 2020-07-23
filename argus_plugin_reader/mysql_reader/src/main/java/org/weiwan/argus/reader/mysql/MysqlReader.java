@@ -1,16 +1,13 @@
 package org.weiwan.argus.reader.mysql;
 
 import org.apache.flink.api.common.functions.MapFunction;
-import org.apache.flink.core.io.InputSplit;
 import org.apache.flink.streaming.api.datastream.DataStream;
-import org.apache.flink.streaming.api.datastream.SingleOutputStreamOperator;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.types.Row;
 import org.weiwan.argus.core.pub.api.BaseReader;
 import org.weiwan.argus.core.pub.api.BaseRichInputFormat;
 import org.weiwan.argus.core.pub.config.ArgusContext;
 import org.weiwan.argus.core.pub.pojo.DataRecord;
-import org.weiwan.argus.reader.mysql.input.MysqlInputFormat;
 
 /**
  * @Author: xiaozhennan

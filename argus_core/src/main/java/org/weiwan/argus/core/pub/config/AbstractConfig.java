@@ -9,7 +9,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 
-
 public abstract class AbstractConfig implements Serializable {
 
     protected Map<String, Object> internalMap;
@@ -170,7 +169,7 @@ public abstract class AbstractConfig implements Serializable {
         if (ret instanceof BigDecimal) {
             return ((BigDecimal) ret).doubleValue();
         }
-        throw new RuntimeException("can't cast " + key + " from " + ret.getClass().getName() + " to Long");
+        throw new RuntimeException("can't cast " + key + " from " + ret.getClass().getName() + " to Double");
     }
 
 
@@ -182,7 +181,10 @@ public abstract class AbstractConfig implements Serializable {
         if (ret instanceof Boolean) {
             return (Boolean) ret;
         }
-        throw new RuntimeException("can't cast " + key + " from " + ret.getClass().getName() + " to Long");
+        if (ret instanceof String) {
+            return Boolean.valueOf(((String) ret).toLowerCase());
+        }
+        throw new RuntimeException("can't cast " + key + " from " + ret.getClass().getName() + " to Boolean");
     }
 
 }

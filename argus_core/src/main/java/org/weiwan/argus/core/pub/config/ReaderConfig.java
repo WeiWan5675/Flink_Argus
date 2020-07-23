@@ -10,13 +10,10 @@ import java.util.Map;
  * @Description:
  **/
 public class ReaderConfig extends AbstractConfig {
+
     public ReaderConfig(Map<String, Object> map) {
         super(map);
     }
 
 
-
-    public String getReaderName() {
-        return null;
-    }
 }

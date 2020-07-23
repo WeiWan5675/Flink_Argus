@@ -1,4 +1,4 @@
-package org.weiwan.argus.reader.mysql.input;
+package org.weiwan.argus.reader.mysql;
 
 import org.weiwan.argus.core.pub.api.BaseInputSpliter;
 

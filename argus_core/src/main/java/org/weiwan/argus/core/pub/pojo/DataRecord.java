@@ -23,6 +23,10 @@ public class DataRecord<T extends Serializable> implements Serializable {
         this.data = data;
     }
 
+    public DataRecord() {
+
+    }
+
 
     public String getSchemaName() {
         return schemaName;
