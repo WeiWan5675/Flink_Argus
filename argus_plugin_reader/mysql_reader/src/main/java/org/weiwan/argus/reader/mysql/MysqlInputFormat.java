@@ -1,11 +1,10 @@
 package org.weiwan.argus.reader.mysql;
 
 import org.apache.flink.types.Row;
-import org.weiwan.argus.core.pub.api.JdbcInputFormat;
-import org.weiwan.argus.core.pub.api.JobFormatState;
+import org.weiwan.argus.core.pub.api.*;
+import org.weiwan.argus.core.pub.api.JdbcInputSpliter;
 import org.weiwan.argus.core.pub.config.ArgusContext;
 import org.weiwan.argus.core.pub.pojo.DataRecord;
-import org.weiwan.argus.core.pub.api.BaseRichInputFormat;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -22,6 +21,22 @@ public class MysqlInputFormat extends JdbcInputFormat {
 
     public MysqlInputFormat(ArgusContext context) {
         super(context);
+    }
+
+    @Override
+    public SqlGenerator getSqlGenerator(JdbcInputSpliter split) {
+        //打开数据源
+        SqlInfo sqlInfo = SqlInfo.newBuilder()
+                .tableName(tableName)
+                .columns(columns)
+                .filters(filters)
+                .incrField(incrField)
+                .splitField(splitField)
+                .splitNum(split.getTotalNumberOfSplits())
+                .thisSplitNum(split.getSplitNumber())
+                .build();
+        SqlGeneratorForMysql generator = new SqlGeneratorForMysql(sqlInfo);
+        return generator;
     }
 
 }

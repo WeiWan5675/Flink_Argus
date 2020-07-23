@@ -85,6 +85,10 @@ public abstract class JdbcInputFormat extends BaseRichInputFormat<DataRecord<Row
         this.lastOffset = readerConfig.getStringVal(KEY_READER_INCR_LASTOFFSET);
     }
 
+
+    public abstract SqlGenerator getSqlGenerator(JdbcInputSpliter split);
+
+
     /**
      * 打开InputFormat,根据split读取数据
      *
@@ -95,17 +99,8 @@ public abstract class JdbcInputFormat extends BaseRichInputFormat<DataRecord<Row
         try {
             Class.forName(driveClassName);
             this.dbConn = DriverManager.getConnection(jdbcUrl, username, password);
-            //打开数据源
-            SqlInfo sqlInfo = SqlInfo.newBuilder()
-                    .tableName(tableName)
-                    .columns(columns)
-                    .filters(filters)
-                    .incrField(incrField)
-                    .splitField(splitField)
-                    .splitNum(split.getTotalNumberOfSplits())
-                    .thisSplitNum(split.getSplitNumber())
-                    .build();
-            sqlGenerator = new SqlGenerator(sqlInfo);
+
+            sqlGenerator = getSqlGenerator(split);
             //构建sql
 
 
