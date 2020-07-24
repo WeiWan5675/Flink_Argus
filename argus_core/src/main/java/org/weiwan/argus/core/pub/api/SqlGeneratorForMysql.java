@@ -7,52 +7,27 @@ import org.apache.commons.lang3.StringUtils;
  * @Date: 2020/7/23 11:27
  * @Package: org.weiwan.argus.core.pub.api
  * @ClassName: SqlGenerator
- * @Description:
+ * @Description: mysql的sql生成器, 同时也适用大多数可以使用jdbc的数据库
  **/
 public class SqlGeneratorForMysql implements SqlGenerator {
 
-    private SqlInfo sqlInfo;
     private static final String SPACE = " ";
-
-    private static final String sql_basic = "select ${columns} from ${tableName} where 1 = 1 ${filterSql}";
+    private static final String sql_basic = "select ${columns} from ${dbSchema}.${tableName} where 1 = 1 ${filterSql}";
     private static final String filterSql = " and ";
-
     private static final String splitSql = " and ${splitField} mod ${splitNum} = ${thisNum}";
-
     private static final String incrSql = " and ${incrField} BETWEEN ? AND ?";
+    String maxSql = "select max(${incrField}) as " + MAX_VALUE + " from ${dbSchema}.${tableName} where 1 = 1";
+    String minSql = "select min(${incrField}) as " + MIN_VALUE + " from ${dbSchema}.${tableName} where 1 = 1";
+    private String sqlGenerated = "select 1";
 
-    private static final String sqlOk = "select 1";
-
-    public SqlGeneratorForMysql(SqlInfo sqlInfo) {
-        this.sqlInfo = sqlInfo;
-    }
 
     public SqlGeneratorForMysql() {
 
     }
 
 
-    public static String generatorSql() {
-
-        return sqlOk;
-    }
-
-
-    @Override
-    public String generatorIncrSql(SqlInfo sqlInfo) {
-        return null;
-    }
-
-    @Override
     public String generatorSql(SqlInfo sqlInfo) {
-        return null;
-    }
-
-    public String generatorIncrSql() {
-
         StringBuffer filterSb = new StringBuffer(filterSql);
-
-
         String[] filters = sqlInfo.getFilters();
 
         for (int i = 0; i < filters.length; i++) {
@@ -77,7 +52,7 @@ public class SqlGeneratorForMysql implements SqlGenerator {
 
         String sql_tmp1 = sql_basic.replace("${columns}", columnSb.toString());
         String sql_tmp2 = sql_tmp1.replace("${filterSql}", filterSb.toString());
-        String sql_tmp3 = sql_tmp2.replace("${tableName}", sqlInfo.getTableName());
+        String sql_tmp3 = sql_tmp2.replace("${tableName}", sqlInfo.getTableName()).replace("${dbSchema}", sqlInfo.getDbSchema());
         String sql_tmp4 = sql_tmp3;
         if (StringUtils.isNotEmpty(sqlInfo.getIncrField())) {
             //是增量任务,拼接增量SQL
@@ -93,14 +68,15 @@ public class SqlGeneratorForMysql implements SqlGenerator {
                         .replace("${thisNum}", String.valueOf(sqlInfo.getThisSplitNum()));
             }
         }
-        return sql_tmp5;
+
+        this.sqlGenerated = sql_tmp5;
+        return sqlGenerated;
     }
 
 
     public static void main(String[] args) {
 
         SqlInfo sqlInfo = SqlInfo.newBuilder()
-                .lastOffset(924194190L)
                 .thisSplitNum(0)
                 .splitNum(3)
                 .splitField("id")
@@ -108,12 +84,39 @@ public class SqlGeneratorForMysql implements SqlGenerator {
                 .columns(new String[]{"id", "broker_id", "dev_id"})
                 .filters(new String[]{"id > 10000", "broker_id is not null and dev_id > 100"})
                 .tableName("easylife_order")
+                .dbSchema("easylife")
                 .build();
 
-        SqlGeneratorForMysql sqlGenerator = new SqlGeneratorForMysql(sqlInfo);
-        String sql = sqlGenerator.generatorIncrSql();
-        System.out.println(sql);
+        SqlGenerator sqlGenerator = new SqlGeneratorForMysql();
+        sqlGenerator.generatorSql(sqlInfo);
 
+        System.out.println(sqlGenerator.getSql());
+
+    }
+
+
+    public String getSql() {
+        return this.sqlGenerated;
+    }
+
+    /**
+     * 获取incr字段最大最小值的sql
+     *
+     * @param sqlInfo
+     * @return
+     */
+    @Override
+    public String generatorIncrMaxSql(SqlInfo sqlInfo) {
+        return maxSql.replace("${incrField}", sqlInfo.getIncrField())
+                .replace("${dbSchema}", sqlInfo.getDbSchema())
+                .replace("${tableName}", sqlInfo.getTableName());
+    }
+
+    @Override
+    public String generatorIncrMinSql(SqlInfo sqlInfo) {
+        return minSql.replace("${incrField}", sqlInfo.getIncrField())
+                .replace("${dbSchema}", sqlInfo.getDbSchema())
+                .replace("${tableName}", sqlInfo.getTableName());
     }
 
 }

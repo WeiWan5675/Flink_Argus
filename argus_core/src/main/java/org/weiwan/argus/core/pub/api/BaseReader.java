@@ -4,6 +4,7 @@ import org.apache.flink.api.common.typeinfo.TypeInformation;
 import org.apache.flink.api.java.typeutils.TypeExtractor;
 import org.apache.flink.core.io.InputSplit;
 import org.apache.flink.streaming.api.datastream.DataStream;
+import org.apache.flink.streaming.api.datastream.DataStreamSource;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.weiwan.argus.core.pub.config.ArgusContext;
 import org.weiwan.argus.core.pub.config.JobConfig;
@@ -25,12 +26,25 @@ public abstract class BaseReader<T extends DataRecord> implements ArgusReader<T>
     private JobConfig jobConfig;
     private ReaderConfig readerConfig;
 
+    private static final String KEY_READER_NAME = "reader.name";
+    private static final String KEY_READER_TYPE = "reader.type";
+    private static final String KEY_READER_CLASS_NAME = "reader.class";
+    private static final String KEY_READER_PARALLELISM = "reader.parallelism";
+
+    protected String readerName;
+    protected String readerType;
+    protected String readerClassName;
+    protected Integer readerParallelism;
 
     public BaseReader(StreamExecutionEnvironment env, ArgusContext argusContext) {
         this.env = env;
         this.argusContext = argusContext;
         this.jobConfig = argusContext.getJobConfig();
         this.readerConfig = argusContext.getJobConfig().getReaderConfig();
+        this.readerName = readerConfig.getStringVal(KEY_READER_NAME,"ArugsReader");
+        this.readerType = readerConfig.getStringVal(KEY_READER_TYPE);
+        this.readerClassName = readerConfig.getStringVal(KEY_READER_CLASS_NAME);
+        this.readerParallelism = readerConfig.getIntVal(KEY_READER_PARALLELISM, 1);
     }
 
     public abstract BaseRichInputFormat getInputFormat(ArgusContext context);
@@ -41,8 +55,9 @@ public abstract class BaseReader<T extends DataRecord> implements ArgusReader<T>
         BaseRichInputFormat<T, BaseInputSpliter> inputFormat = getInputFormat(argusContext);
         TypeInformation<T> inputFormatTypes = TypeExtractor.getInputFormatTypes(inputFormat);
         ArgusInputFormatSource<T> tArgusInputFormatSource = new ArgusInputFormatSource<>(inputFormat, inputFormatTypes);
-        DataStream<T> stream = env.addSource(tArgusInputFormatSource, "", inputFormatTypes);
-        DataStream<T> afterStream = afterReading(stream, argusContext);
+        DataStreamSource<T> streamSource = env.addSource(tArgusInputFormatSource, readerName, inputFormatTypes);
+        streamSource.setParallelism(readerParallelism);
+        DataStream<T> afterStream = afterReading(streamSource, argusContext);
         return afterStream;
     }
 

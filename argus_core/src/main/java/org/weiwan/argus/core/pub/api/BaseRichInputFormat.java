@@ -68,7 +68,7 @@ public abstract class BaseRichInputFormat<OT, T extends InputSplit> extends Rich
     /**
      * 返回一条记录
      * 当数据处理结束后,需要手动调用{@link BaseRichInputFormat#isComplete} }
-     *
+     *如果不想使用isComplete 需要重写{@link BaseRichInputFormat#reachedEnd()}
      * @return 数据
      */
     public abstract OT nextRecordInternal(OT reuse);

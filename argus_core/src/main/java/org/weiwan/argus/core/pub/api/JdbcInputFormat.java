@@ -2,12 +2,18 @@ package org.weiwan.argus.core.pub.api;
 
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.types.Row;
+import org.weiwan.argus.common.utils.DateUtil;
+import org.weiwan.argus.common.utils.DateUtils;
 import org.weiwan.argus.core.pub.config.ArgusContext;
 import org.weiwan.argus.core.pub.pojo.DataRecord;
 
 import javax.sql.DataSource;
 import java.io.IOException;
 import java.sql.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @Author: xiaozhennan
@@ -44,12 +50,12 @@ public abstract class JdbcInputFormat extends BaseRichInputFormat<DataRecord<Row
     protected String username;
     protected String password;
 
+    protected String dbSchema;
     protected String tableName;
     protected int batchSize;
     protected int queryTimeout;
     protected boolean isPolling;
     protected Long pollingInterval;
-    protected String[] tables;
     protected String[] columns;
     protected String[] filters;
     protected String incrField;
@@ -72,6 +78,7 @@ public abstract class JdbcInputFormat extends BaseRichInputFormat<DataRecord<Row
         this.username = readerConfig.getStringVal(KEY_READER_JDBC_USERNAME);
         this.password = readerConfig.getStringVal(KEY_READER_JDBC_PASSWROD);
         this.driveClassName = readerConfig.getStringVal(KEY_READER_JDBC_DRIVE_CLASS);
+        this.dbSchema = readerConfig.getStringVal(KEY_READER_JDBC_SCHEMA);
         this.tableName = readerConfig.getStringVal(KEY_READER_TABLENAME);
         this.batchSize = readerConfig.getIntVal(KEY_READER_BATCHSIZE, 1000);
         this.queryTimeout = readerConfig.getIntVal(KEY_READER_QUERY_TIMEOUT, 60);
@@ -102,32 +109,61 @@ public abstract class JdbcInputFormat extends BaseRichInputFormat<DataRecord<Row
 
             sqlGenerator = getSqlGenerator(split);
             //构建sql
+            SqlInfo sqlInfo = SqlInfo.newBuilder()
+                    .columns(columns)
+                    .filters(filters)
+                    .dbSchema(dbSchema)
+                    .tableName(tableName)
+                    .incrField(incrField)
+                    .splitField(splitField)
+                    .splitNum(split.getTotalNumberOfSplits())
+                    .thisSplitNum(split.getSplitNumber()).build();
 
-
-            String sql = sqlGenerator.generatorIncrSql();
+            sqlGenerator.generatorSql(sqlInfo);
+            String sql = sqlGenerator.getSql();
+            String maxSql = sqlGenerator.generatorIncrMaxSql(sqlInfo);
+            String minSql = sqlGenerator.generatorIncrMinSql(sqlInfo);
             statement = dbConn.prepareStatement(sql, ResultSet.TYPE_FORWARD_ONLY,
                     ResultSet.CONCUR_READ_ONLY);
             System.out.println("sql: " + sql);
             //获得最大最小 max min
+            /**
+             * 获取最大最小得offset 如果没有传lastOffset 就使用数据库最大 和最小
+             * 如果是轮询,就要把每次查询得最小值保存起来 然后
+             */
+            Statement statement = dbConn.createStatement();
+            System.out.println(maxSql);
+            ResultSet rsMax = statement.executeQuery(maxSql);
+            Object maxVar = getMaxOrMinValue(rsMax,SqlGenerator.MAX_VALUE);
+            System.out.println(minSql);
+            ResultSet rsMin = statement.executeQuery(minSql);
+            Object minVar = getMaxOrMinValue(rsMin,SqlGenerator.MIN_VALUE);
+
+            if (lastOffset != null) {
+                minVar = lastOffset;
+            }
+
+            //var 是个long值 在外边谁用就自己去转化
+
             if (isPolling) {
-                statement.setFetchSize(batchSize);
-                statement.setQueryTimeout(queryTimeout);
-                statement.setString(1, "2020-07-01 00:00:00");
-                statement.setString(2, "2020-07-05 00:00:00");
+                this.statement.setFetchSize(batchSize);
+                this.statement.setQueryTimeout(queryTimeout);
+                this.statement.setString(1, "2020-07-01 00:00:00");
+                this.statement.setString(2, "2020-07-05 00:00:00");
             } else {
                 //获取offset Sql 直接访问数据库获得 根据IncrField 字段
-                statement.setFetchSize(batchSize);
-                statement.setQueryTimeout(queryTimeout);
-                statement.setString(1, "2020-07-01 00:00:00");
-                statement.setString(2, "2020-07-05 00:00:00");
-                resultSet = statement.executeQuery();
-                tableMetaData = resultSet.getMetaData();
+                this.statement.setFetchSize(batchSize);
+                this.statement.setQueryTimeout(queryTimeout);
+                this.statement.setObject(1, minVar);
+                this.statement.setObject(2, maxVar);
+                this.resultSet = this.statement.executeQuery();
+                tableMetaData = this.resultSet.getMetaData();
                 columnCount = tableMetaData.getColumnCount();
             }
 
 
             //初始化调用下next,不然result会报错
-            boolean next = resultSet.next();
+            boolean next = this.resultSet.next();
             if (!next) {
                 isComplete(true);
             }
@@ -138,6 +174,26 @@ public abstract class JdbcInputFormat extends BaseRichInputFormat<DataRecord<Row
             throwables.printStackTrace();
         }
 
+    }
+
+    private Object getMaxOrMinValue(ResultSet resultSet,String flag) throws SQLException {
+        Object var = null;
+        List<Map> maps = convertResultToMap(resultSet);
+        Object obj = null;
+        if (maps.size() == 1) {
+            Map map = maps.get(0);
+            obj = map.get(flag);
+        }
+        if (obj instanceof Number) {
+            var = Long.valueOf(String.valueOf(obj));
+        }
+        if (obj instanceof Date) {
+            var = (Date) obj;
+        }
+        if (obj instanceof Timestamp) {
+            var = (Timestamp) obj;
+        }
+        return var;
     }
 
     /**
@@ -211,6 +267,21 @@ public abstract class JdbcInputFormat extends BaseRichInputFormat<DataRecord<Row
 
     }
 
+
+    public List<Map> convertResultToMap(ResultSet resultSet) throws SQLException {
+        ResultSetMetaData md = resultSet.getMetaData();//获取键名
+        int columnCount = md.getColumnCount();//获取行的数量
+        List<Map> list = new ArrayList<>();// 定义一个list，用来存放数据
+        while (resultSet.next()) {
+            Map rowData = new HashMap();//声明Map
+            for (int i = 1; i <= columnCount; i++) {
+                rowData.put(md.getColumnName(i), resultSet.getObject(i));//获取键名及值
+            }
+            list.add(rowData);//将数据添加到list中
+        }
+        resultSet.close();
+        return list;
+    }
 
     /**
      *

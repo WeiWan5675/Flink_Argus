@@ -9,27 +9,30 @@ package org.weiwan.argus.core.pub.api;
  **/
 public class SqlInfo {
     private String tableName;
-    private Long lastOffset;
-    private Long maxOffset;
-    private Long minOffset;
+    //增量字段
     private String incrField;
+    //分区字段
     private String splitField;
+    //要查询的列
     private String[] columns;
+    //过滤条件,可以连续写,也可以分开写 循环拼接
     private String[] filters;
+    //分区的个数
     private Integer splitNum;
+    //当前分区的Index
     private Integer thisSplitNum;
 
-    private SqlInfo(Builder builder) {
+    private String dbSchema;
+
+    public SqlInfo(Builder builder) {
         setTableName(builder.tableName);
-        setLastOffset(builder.lastOffset);
-        setMaxOffset(builder.maxOffset);
-        setMinOffset(builder.minOffset);
         setIncrField(builder.incrField);
         setSplitField(builder.splitField);
         setColumns(builder.columns);
         setFilters(builder.filters);
         setSplitNum(builder.splitNum);
         setThisSplitNum(builder.thisSplitNum);
+        setDbSchema(builder.dbSchema);
     }
 
     public static Builder newBuilder() {
@@ -43,30 +46,6 @@ public class SqlInfo {
 
     public void setTableName(String tableName) {
         this.tableName = tableName;
-    }
-
-    public Long getLastOffset() {
-        return lastOffset;
-    }
-
-    public void setLastOffset(Long lastOffset) {
-        this.lastOffset = lastOffset;
-    }
-
-    public Long getMaxOffset() {
-        return maxOffset;
-    }
-
-    public void setMaxOffset(Long maxOffset) {
-        this.maxOffset = maxOffset;
-    }
-
-    public Long getMinOffset() {
-        return minOffset;
-    }
-
-    public void setMinOffset(Long minOffset) {
-        this.minOffset = minOffset;
     }
 
     public String getIncrField() {
@@ -117,11 +96,17 @@ public class SqlInfo {
         this.thisSplitNum = thisSplitNum;
     }
 
+    public String getDbSchema() {
+        return dbSchema;
+    }
+
+    public void setDbSchema(String dbSchema) {
+        this.dbSchema = dbSchema;
+    }
+
     public static final class Builder {
+        private String dbSchema;
         private String tableName;
-        private Long lastOffset;
-        private Long maxOffset;
-        private Long minOffset;
         private String incrField;
         private String splitField;
         private String[] columns;
@@ -134,21 +119,6 @@ public class SqlInfo {
 
         public Builder tableName(String val) {
             tableName = val;
-            return this;
-        }
-
-        public Builder lastOffset(Long val) {
-            lastOffset = val;
-            return this;
-        }
-
-        public Builder maxOffset(Long val) {
-            maxOffset = val;
-            return this;
-        }
-
-        public Builder minOffset(Long val) {
-            minOffset = val;
             return this;
         }
 
@@ -179,6 +149,11 @@ public class SqlInfo {
 
         public Builder thisSplitNum(Integer val) {
             thisSplitNum = val;
+            return this;
+        }
+
+        public Builder dbSchema(String val) {
+            dbSchema = val;
             return this;
         }
 

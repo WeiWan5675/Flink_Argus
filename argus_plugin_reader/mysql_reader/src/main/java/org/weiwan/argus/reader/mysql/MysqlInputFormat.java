@@ -26,17 +26,7 @@ public class MysqlInputFormat extends JdbcInputFormat {
     @Override
     public SqlGenerator getSqlGenerator(JdbcInputSpliter split) {
         //打开数据源
-        SqlInfo sqlInfo = SqlInfo.newBuilder()
-                .tableName(tableName)
-                .columns(columns)
-                .filters(filters)
-                .incrField(incrField)
-                .splitField(splitField)
-                .splitNum(split.getTotalNumberOfSplits())
-                .thisSplitNum(split.getSplitNumber())
-                .build();
-        SqlGeneratorForMysql generator = new SqlGeneratorForMysql(sqlInfo);
-        return generator;
+        return new SqlGeneratorForMysql();
     }
 
 }
