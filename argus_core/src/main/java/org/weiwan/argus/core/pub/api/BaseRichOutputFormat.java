@@ -3,6 +3,9 @@ package org.weiwan.argus.core.pub.api;
 import org.apache.flink.api.common.io.RichOutputFormat;
 import org.apache.flink.configuration.Configuration;
 import org.weiwan.argus.core.pub.config.ArgusContext;
+import org.weiwan.argus.core.pub.config.JobConfig;
+import org.weiwan.argus.core.pub.config.WriterConfig;
+import org.weiwan.argus.core.pub.pojo.DataRecord;
 
 import java.io.IOException;
 
@@ -13,10 +16,16 @@ import java.io.IOException;
  * @ClassName: BaseRichOutputFormat
  * @Description:
  **/
-public abstract class BaseRichOutputFormat<IT> extends RichOutputFormat<IT> {
+public abstract class BaseRichOutputFormat<T extends DataRecord> extends RichOutputFormat<T> {
 
     protected ArgusContext argusContext;
+    protected JobFormatState formatState;
+    protected WriterConfig writerConfig;
+    protected JobConfig jobConfig;
 
+
+
+    protected int i = 0;
     public BaseRichOutputFormat(ArgusContext argusContext) {
         this.argusContext = argusContext;
     }
@@ -35,14 +44,15 @@ public abstract class BaseRichOutputFormat<IT> extends RichOutputFormat<IT> {
 
 
     @Override
-    public void writeRecord(IT record) throws IOException {
+    public void writeRecord(T record) throws IOException {
+        i++;
         System.out.println("hiveWriter处理数据:" + record);
     }
 
 
     @Override
     public void close() throws IOException {
-
+        System.out.println(i);
     }
 
 }

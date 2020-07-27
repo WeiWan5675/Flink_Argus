@@ -55,15 +55,17 @@ public abstract class BaseReader<T extends DataRecord> implements ArgusReader<T>
         BaseRichInputFormat<T, BaseInputSpliter> inputFormat = getInputFormat(argusContext);
         TypeInformation<T> inputFormatTypes = TypeExtractor.getInputFormatTypes(inputFormat);
         ArgusInputFormatSource<T> tArgusInputFormatSource = new ArgusInputFormatSource<>(inputFormat, inputFormatTypes);
-        DataStreamSource<T> streamSource = env.addSource(tArgusInputFormatSource, readerName, inputFormatTypes);
-        streamSource.setParallelism(readerParallelism);
+        DataStreamSource<T> stream = env.addSource(tArgusInputFormatSource, readerName, inputFormatTypes);
+        //单独设置Source的并行度,默认Reader的并行度都是1 env的并行度并不会影响reader的并行度
+        DataStreamSource<T> streamSource = stream.setParallelism(readerParallelism);
+        //进行reading后处理,保留口子,如果需要处理可以重写该方法
         DataStream<T> afterStream = afterReading(streamSource, argusContext);
         return afterStream;
     }
 
     /**
      * <p> 方便某些自定义reader进行一些后处理工作
-     *
+     *  保留口子,方便一些自定义reader在进行数据处理时,特殊处理一些内容
      * @param stream 输入是 {@link DataStream<DataRecord>}
      * @return 输出也是 {@link DataStream<DataRecord>}
      */

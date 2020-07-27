@@ -74,7 +74,12 @@ public class ArgusOutputFormatSink<IN> extends RichSinkFunction<IN> implements I
      */
     @Override
     public void invoke(IN value, Context context) throws Exception {
-        format.writeRecord(value);
+        try {
+            format.writeRecord(value);
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw e;
+        }
     }
 
     @Override

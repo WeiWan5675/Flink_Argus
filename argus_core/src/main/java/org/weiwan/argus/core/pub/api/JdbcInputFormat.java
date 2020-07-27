@@ -1,14 +1,12 @@
 package org.weiwan.argus.core.pub.api;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.types.Row;
-import org.weiwan.argus.common.utils.DateUtil;
-import org.weiwan.argus.common.utils.DateUtils;
 import org.weiwan.argus.core.pub.config.ArgusContext;
+import org.weiwan.argus.core.pub.pojo.DataField;
 import org.weiwan.argus.core.pub.pojo.DataRecord;
 
-import javax.sql.DataSource;
-import java.io.IOException;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -60,6 +58,7 @@ public abstract class JdbcInputFormat extends BaseRichInputFormat<DataRecord<Row
     protected String[] filters;
     protected String incrField;
     protected String splitField;
+    protected String customSql;
 
     protected Connection dbConn;
     protected PreparedStatement statement;
@@ -85,6 +84,7 @@ public abstract class JdbcInputFormat extends BaseRichInputFormat<DataRecord<Row
         this.jdbcUrl = readerConfig.getStringVal(KEY_READER_JDBC_URL);
         this.pollingInterval = readerConfig.getLongVal(KEY_READER_INCR_POLL_INTERVAL, 10000L);
         this.isPolling = readerConfig.getBooleanVal(KEY_READER_INCR_ENABLE_POLLING, false);
+        this.customSql = readerConfig.getStringVal(KEY_READER_SQL_CUSTOMSQL);
         this.columns = readerConfig.getStringVal(KEY_READER_SQL_COLUMNS, "1").split(",");
         this.filters = readerConfig.getStringVal(KEY_READER_SQL_FILTER, "1=1").split(",");
         this.incrField = readerConfig.getStringVal(KEY_READER_INCR_INCRFIELD);
@@ -107,7 +107,7 @@ public abstract class JdbcInputFormat extends BaseRichInputFormat<DataRecord<Row
             Class.forName(driveClassName);
             this.dbConn = DriverManager.getConnection(jdbcUrl, username, password);
 
-            sqlGenerator = getSqlGenerator(split);
+            sqlGenerator = this.getSqlGenerator(split);
             //构建sql
             SqlInfo sqlInfo = SqlInfo.newBuilder()
                     .columns(columns)
@@ -115,14 +115,14 @@ public abstract class JdbcInputFormat extends BaseRichInputFormat<DataRecord<Row
                     .dbSchema(dbSchema)
                     .tableName(tableName)
                     .incrField(incrField)
+                    .customSql(customSql)
                     .splitField(splitField)
                     .splitNum(split.getTotalNumberOfSplits())
                     .thisSplitNum(split.getSplitNumber()).build();
-
             sqlGenerator.generatorSql(sqlInfo);
             String sql = sqlGenerator.getSql();
-            String maxSql = sqlGenerator.generatorIncrMaxSql(sqlInfo);
-            String minSql = sqlGenerator.generatorIncrMinSql(sqlInfo);
+            String maxSql = sqlGenerator.generatorIncrMaxSql();
+            String minSql = sqlGenerator.generatorIncrMinSql();
             statement = dbConn.prepareStatement(sql, ResultSet.TYPE_FORWARD_ONLY,
                     ResultSet.CONCUR_READ_ONLY);
             System.out.println("sql: " + sql);
@@ -134,34 +134,38 @@ public abstract class JdbcInputFormat extends BaseRichInputFormat<DataRecord<Row
             Statement statement = dbConn.createStatement();
             System.out.println(maxSql);
             ResultSet rsMax = statement.executeQuery(maxSql);
-            Object maxVar = getMaxOrMinValue(rsMax,SqlGenerator.MAX_VALUE);
+            Object maxVar = getMaxOrMinValue(rsMax, SqlGenerator.MAX_VALUE);
             System.out.println(minSql);
             ResultSet rsMin = statement.executeQuery(minSql);
-            Object minVar = getMaxOrMinValue(rsMin,SqlGenerator.MIN_VALUE);
+            Object minVar = getMaxOrMinValue(rsMin, SqlGenerator.MIN_VALUE);
 
             if (lastOffset != null) {
                 minVar = lastOffset;
             }
 
-            //var 是个long值 在外边谁用就自己去转化
+            //var object 支持三种类型  1. Long 2. Date 3.Timestamp
 
             if (isPolling) {
                 this.statement.setFetchSize(batchSize);
                 this.statement.setQueryTimeout(queryTimeout);
-                this.statement.setString(1, "2020-07-01 00:00:00");
-                this.statement.setString(2, "2020-07-05 00:00:00");
+                this.statement.setObject(1, minVar);
+                this.statement.setObject(2, maxVar);
             } else {
                 //获取offset Sql 直接访问数据库获得 根据IncrField 字段
                 this.statement.setFetchSize(batchSize);
                 this.statement.setQueryTimeout(queryTimeout);
                 this.statement.setObject(1, minVar);
                 this.statement.setObject(2, maxVar);
-                this.resultSet = this.statement.executeQuery();
-                tableMetaData = this.resultSet.getMetaData();
-                columnCount = tableMetaData.getColumnCount();
+
             }
 
-
+            if(StringUtils.isNotEmpty(lastOffset)){
+                //设置进去
+                this.statement.setString(1, lastOffset);
+            }
+            this.resultSet = this.statement.executeQuery();
+            tableMetaData = this.resultSet.getMetaData();
+            columnCount = tableMetaData.getColumnCount();
             //初始化调用下next,不然result会报错
             boolean next = this.resultSet.next();
             if (!next) {
@@ -176,7 +180,7 @@ public abstract class JdbcInputFormat extends BaseRichInputFormat<DataRecord<Row
 
     }
 
-    private Object getMaxOrMinValue(ResultSet resultSet,String flag) throws SQLException {
+    private Object getMaxOrMinValue(ResultSet resultSet, String flag) throws SQLException {
         Object var = null;
         List<Map> maps = convertResultToMap(resultSet);
         Object obj = null;
@@ -230,10 +234,13 @@ public abstract class JdbcInputFormat extends BaseRichInputFormat<DataRecord<Row
             rowDataRecord.setData(currentRow);
             if (!isComplete()) {
                 for (int i = 0; i < columnCount; i++) {
-
+                    DataField dataField = new DataField();
                     Object object = resultSet.getObject(i + 1);
                     String columnName = tableMetaData.getColumnName(i + 1);
-                    currentRow.setField(i, object);
+                    dataField.setFieldKey(columnName);
+                    dataField.setValue(object);
+                    dataField.setFieldType(object.getClass().getTypeName());
+                    currentRow.setField(i, dataField);
                 }
             }
 

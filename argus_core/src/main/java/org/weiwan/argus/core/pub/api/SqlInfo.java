@@ -24,6 +24,16 @@ public class SqlInfo {
 
     private String dbSchema;
 
+    private String customSql;
+
+    public String getCustomSql() {
+        return customSql;
+    }
+
+    public void setCustomSql(String customSql) {
+        this.customSql = customSql;
+    }
+
     public SqlInfo(Builder builder) {
         setTableName(builder.tableName);
         setIncrField(builder.incrField);
@@ -33,6 +43,7 @@ public class SqlInfo {
         setSplitNum(builder.splitNum);
         setThisSplitNum(builder.thisSplitNum);
         setDbSchema(builder.dbSchema);
+        setCustomSql(builder.customSql);
     }
 
     public static Builder newBuilder() {
@@ -105,6 +116,7 @@ public class SqlInfo {
     }
 
     public static final class Builder {
+        private String customSql;
         private String dbSchema;
         private String tableName;
         private String incrField;
@@ -124,6 +136,11 @@ public class SqlInfo {
 
         public Builder incrField(String val) {
             incrField = val;
+            return this;
+        }
+
+        public Builder customSql(String val){
+            customSql = val;
             return this;
         }
 

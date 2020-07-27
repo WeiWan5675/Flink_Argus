@@ -19,6 +19,7 @@ public class SqlGeneratorForMysql implements SqlGenerator {
     String maxSql = "select max(${incrField}) as " + MAX_VALUE + " from ${dbSchema}.${tableName} where 1 = 1";
     String minSql = "select min(${incrField}) as " + MIN_VALUE + " from ${dbSchema}.${tableName} where 1 = 1";
     private String sqlGenerated = "select 1";
+    private SqlInfo sqlInfo;
 
 
     public SqlGeneratorForMysql() {
@@ -26,7 +27,8 @@ public class SqlGeneratorForMysql implements SqlGenerator {
     }
 
 
-    public String generatorSql(SqlInfo sqlInfo) {
+    public String generatorSql(SqlInfo info) {
+        this.sqlInfo = info;
         StringBuffer filterSb = new StringBuffer(filterSql);
         String[] filters = sqlInfo.getFilters();
 
@@ -100,23 +102,28 @@ public class SqlGeneratorForMysql implements SqlGenerator {
     }
 
     /**
-     * 获取incr字段最大最小值的sql
+     * 获取incr字段最大值SQL
+     * max字段命名为:{@link SqlGenerator#MAX_VALUE}
      *
-     * @param sqlInfo
      * @return
      */
     @Override
-    public String generatorIncrMaxSql(SqlInfo sqlInfo) {
+    public String generatorIncrMaxSql() {
         return maxSql.replace("${incrField}", sqlInfo.getIncrField())
                 .replace("${dbSchema}", sqlInfo.getDbSchema())
                 .replace("${tableName}", sqlInfo.getTableName());
     }
 
+    /**
+     * 获取incr字段最小值SQL
+     * min字段名称为:{@link SqlGenerator#MIN_VALUE}
+     *
+     * @return
+     */
     @Override
-    public String generatorIncrMinSql(SqlInfo sqlInfo) {
+    public String generatorIncrMinSql() {
         return minSql.replace("${incrField}", sqlInfo.getIncrField())
                 .replace("${dbSchema}", sqlInfo.getDbSchema())
                 .replace("${tableName}", sqlInfo.getTableName());
     }
-
 }

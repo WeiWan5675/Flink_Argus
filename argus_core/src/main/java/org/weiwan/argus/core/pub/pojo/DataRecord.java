@@ -9,14 +9,13 @@ import java.io.Serializable;
  * @ClassName: DataRecord
  * @Description:
  **/
-public class DataRecord<T extends Serializable> implements Serializable {
+public class DataRecord<T> implements Serializable {
     private String tableName;
-    private String pk;
+    private String primaryKey;
     private String timestamp;
     private String schemaName;
     private String dataPath;
     private String dataType;
-
     private T data;
 
     public DataRecord(T data) {
@@ -60,14 +59,6 @@ public class DataRecord<T extends Serializable> implements Serializable {
         this.tableName = tableName;
     }
 
-    public String getPk() {
-        return pk;
-    }
-
-    public void setPk(String pk) {
-        this.pk = pk;
-    }
-
     public String getTimestamp() {
         return timestamp;
     }
@@ -82,5 +73,26 @@ public class DataRecord<T extends Serializable> implements Serializable {
 
     public void setData(T data) {
         this.data = data;
+    }
+
+    public String getPrimaryKey() {
+        return primaryKey;
+    }
+
+    public void setPrimaryKey(String primaryKey) {
+        this.primaryKey = primaryKey;
+    }
+
+    @Override
+    public String toString() {
+        return "DataRecord{" +
+                "tableName='" + tableName + '\'' +
+                ", primaryKey='" + primaryKey + '\'' +
+                ", timestamp='" + timestamp + '\'' +
+                ", schemaName='" + schemaName + '\'' +
+                ", dataPath='" + dataPath + '\'' +
+                ", dataType='" + dataType + '\'' +
+                ", data=" + data +
+                '}';
     }
 }

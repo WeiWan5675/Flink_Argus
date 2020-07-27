@@ -65,6 +65,7 @@ public class ArgusInputFormatSource<OUT> extends InputFormatSourceFunction<OUT> 
     public void open(Configuration parameters) throws Exception {
         StreamingRuntimeContext context = (StreamingRuntimeContext) getRuntimeContext();
         int indexOfThisSubtask = context.getIndexOfThisSubtask();
+
         if (format instanceof RichInputFormat) {
             ((RichInputFormat) format).setRuntimeContext(context);
         }
@@ -73,7 +74,7 @@ public class ArgusInputFormatSource<OUT> extends InputFormatSourceFunction<OUT> 
         if (format instanceof BaseRichInputFormat) {
             BaseRichInputFormat inputFormat = ((BaseRichInputFormat) format);
             if (isRestore) {
-                argusContext.restore(true);
+//                argusContext.restore(true);
                 inputFormat.setJobFormatState(cacheMapStates.get(indexOfThisSubtask));
             }
         }

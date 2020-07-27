@@ -32,12 +32,18 @@ public interface SqlGenerator {
 
 
     /**
-     * 获取incr字段最大最小值的sql
-     *
+     * 获取incr字段最大值SQL
+     *  max字段命名为:{@link SqlGenerator#MAX_VALUE}
      * @param sqlInfo
      * @return
      */
-    String generatorIncrMaxSql(SqlInfo sqlInfo);
+    String generatorIncrMaxSql();
 
-    String generatorIncrMinSql(SqlInfo sqlInfo);
+
+    /**
+     * 获取incr字段最小值SQL
+     * min字段名称为:{@link SqlGenerator#MIN_VALUE}
+     * @return
+     */
+    String generatorIncrMinSql();
 }

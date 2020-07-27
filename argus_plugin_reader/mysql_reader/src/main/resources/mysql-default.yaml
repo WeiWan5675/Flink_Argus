@@ -51,7 +51,7 @@ reader:
     customSql: #如果指定了自定义SQL 那么filter columns 都不会生效 包括increment配置 适用拉取特殊数据时使用
   increment:
     incrField: update_time_dw #如果不指定,默认 select ${columns} from ${table} where 1 = 1 and ${filter} and [splitField mod N = I]
-    lastOffset: "2020-05-01 00:00:00" #如果指定了该字段,会直接使用,如果不指定,默认是全量拉取 时间类型得  默认值为 1970-01-01 08:00:00  数值型 默认 -1
+    lastOffset: "2019-01-01 00:00:00" #如果指定了该字段,会直接使用,如果不指定,默认是全量拉取 时间类型得  默认值为 1970-01-01 08:00:00  数值型 默认 -1
     enablePolling: false #是否轮询 如果开启轮询 必须要指定increment的属性
     pollingInterval: #轮询间隔
 

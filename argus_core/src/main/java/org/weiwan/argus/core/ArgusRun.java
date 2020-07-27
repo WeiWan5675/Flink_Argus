@@ -80,7 +80,6 @@ public class ArgusRun {
         DataStream readerStream = reader.reader();
         DataStream channelStream = channel.channel(readerStream);
         DataStreamSink writerSink = writer.writer(channelStream);
-
         JobExecutionResult execute = env.execute("");
     }
 
