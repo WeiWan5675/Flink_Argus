@@ -38,6 +38,11 @@ public class StartOptions {
             description = "Hadoop and yarn conf file path")
     private String hadoopConf;
 
+
+    @OptionField(oweKeys = {"hiveConf"},
+            description = "hive conf file path")
+    private String hiveConf;
+
     @OptionField(
             oweKeys = {"argusConf", "aconf","job"},
             description = "Argus conf file")
@@ -205,5 +210,14 @@ public class StartOptions {
 
     public void setSavePointPath(String savePointPath) {
         this.savePointPath = savePointPath;
+    }
+
+
+    public String getHiveConf() {
+        return hiveConf;
+    }
+
+    public void setHiveConf(String hiveConf) {
+        this.hiveConf = hiveConf;
     }
 }

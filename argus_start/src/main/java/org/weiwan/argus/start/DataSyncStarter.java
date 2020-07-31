@@ -1,7 +1,10 @@
 package org.weiwan.argus.start;
 
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.LoggerContext;
 import org.apache.commons.codec.Charsets;
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.ILoggerFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.weiwan.argus.common.constans.Constans;
@@ -51,6 +54,12 @@ public class DataSyncStarter {
 //                "-mode", "Local",
 //                "-aconf", "F:\\Project\\Flink_Argus\\argus_start\\src\\main\\resources\\argus-default.yaml"
 //        };
+
+        LoggerContext loggerContext = (LoggerContext) LoggerFactory.getILoggerFactory();
+
+        ch.qos.logback.classic.Logger root = loggerContext.getLogger("root");
+        root.setLevel(Level.INFO);
+
         OptionParser optionParser = new OptionParser(args);
         StartOptions options = optionParser.parse(StartOptions.class);
         //命令对象 转化成List对象
@@ -165,7 +174,7 @@ public class DataSyncStarter {
         //获得hadoop环境变量
         String hadoopHome = SystemUtil.getSystemVar(DataSyncStarter.KEY_HADOOP_HOME);
         //设置Hadoop目录
-        options.setHadoopConf(hadoopHome + File.separator + "conf");
+        options.setHadoopConf(hadoopHome + File.separator + "etc/hadoop");
         //设置插件目录
         options.setPluginsDir(pluginsRootDir);
         if (StringUtils.isEmpty(options.getReaderPluginDir())) {

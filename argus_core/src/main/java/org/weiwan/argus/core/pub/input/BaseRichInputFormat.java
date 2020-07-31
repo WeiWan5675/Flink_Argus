@@ -1,12 +1,12 @@
-package org.weiwan.argus.core.pub.api;
+package org.weiwan.argus.core.pub.input;
 
 import org.apache.flink.api.common.io.DefaultInputSplitAssigner;
 import org.apache.flink.api.common.io.RichInputFormat;
 import org.apache.flink.api.common.io.statistics.BaseStatistics;
 import org.apache.flink.configuration.Configuration;
-import org.apache.flink.core.io.GenericInputSplit;
 import org.apache.flink.core.io.InputSplit;
 import org.apache.flink.core.io.InputSplitAssigner;
+import org.weiwan.argus.core.pub.pojo.JobFormatState;
 import org.weiwan.argus.core.pub.config.ArgusContext;
 import org.weiwan.argus.core.pub.config.JobConfig;
 import org.weiwan.argus.core.pub.config.ReaderConfig;
@@ -40,6 +40,7 @@ public abstract class BaseRichInputFormat<OT, T extends InputSplit> extends Rich
     protected String taskName;
     private boolean inited = false;
     private boolean taskComplete = false;
+    private boolean isRestore;
 
     public BaseRichInputFormat(ArgusContext context) {
         this.argusContext = context;
@@ -68,7 +69,8 @@ public abstract class BaseRichInputFormat<OT, T extends InputSplit> extends Rich
     /**
      * 返回一条记录
      * 当数据处理结束后,需要手动调用{@link BaseRichInputFormat#isComplete} }
-     *如果不想使用isComplete 需要重写{@link BaseRichInputFormat#reachedEnd()}
+     * 如果不想使用isComplete 需要重写{@link BaseRichInputFormat#reachedEnd()}
+     *
      * @return 数据
      */
     public abstract OT nextRecordInternal(OT reuse);
@@ -96,7 +98,7 @@ public abstract class BaseRichInputFormat<OT, T extends InputSplit> extends Rich
     public void open(T split) throws IOException {
         int indexOfThisSubtask = getRuntimeContext().getIndexOfThisSubtask();
         //不是restore 就创建一个formatstate
-        if (!argusContext.isRestore()) {
+        if (!isRestore()) {
             formatState = new JobFormatState();
             formatState.setNumOfSubTask(indexOfThisSubtask);
             //TODO need to get JobName from http
@@ -174,5 +176,12 @@ public abstract class BaseRichInputFormat<OT, T extends InputSplit> extends Rich
             this.taskComplete = flag[0];
         }
         return taskComplete;
+    }
+
+    public boolean isRestore(boolean... flags) {
+        if (flags.length == 1) {
+            this.isRestore = flags[0];
+        }
+        return this.isRestore;
     }
 }

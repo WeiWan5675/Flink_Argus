@@ -1,10 +1,14 @@
-package org.weiwan.argus.core.pub.api;
+package org.weiwan.argus.core.pub.streaming;
 
 import org.apache.flink.api.common.ExecutionConfig;
 import org.apache.flink.api.common.functions.RuntimeContext;
 import org.apache.flink.api.common.io.CleanupWhenUnsuccessful;
 import org.apache.flink.api.common.io.OutputFormat;
 import org.apache.flink.api.common.io.RichOutputFormat;
+import org.apache.flink.api.common.state.ListState;
+import org.apache.flink.api.common.state.ListStateDescriptor;
+import org.apache.flink.api.common.state.OperatorStateStore;
+import org.apache.flink.api.common.typeinfo.TypeHint;
 import org.apache.flink.api.common.typeinfo.TypeInformation;
 import org.apache.flink.api.java.typeutils.InputTypeConfigurable;
 import org.apache.flink.configuration.Configuration;
@@ -15,8 +19,13 @@ import org.apache.flink.streaming.api.functions.sink.OutputFormatSinkFunction;
 import org.apache.flink.streaming.api.functions.sink.RichSinkFunction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.weiwan.argus.core.pub.output.BaseRichOutputFormat;
+import org.weiwan.argus.core.pub.pojo.JobFormatState;
+import org.weiwan.argus.core.pub.config.ArgusContext;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * @Author: xiaozhennan
@@ -25,14 +34,21 @@ import java.io.IOException;
  * @ClassName: ArgusOutputFormatSink
  * @Description:
  **/
-public class ArgusOutputFormatSink<IN> extends RichSinkFunction<IN> implements InputTypeConfigurable, CheckpointedFunction {
+public class ArgusOutputFormatSink<T> extends RichSinkFunction<T> implements InputTypeConfigurable, CheckpointedFunction {
 
     private static final long serialVersionUID = 1L;
     private static final Logger LOG = LoggerFactory.getLogger(OutputFormatSinkFunction.class);
-    private OutputFormat<IN> format;
+    private OutputFormat<T> format;
     private boolean cleanupCalled = false;
 
-    public ArgusOutputFormatSink(OutputFormat<IN> format) {
+
+    private ListState<JobFormatState> listState;
+    private Map<Integer, JobFormatState> cacheMapStates;
+    private boolean isRestore;
+    private ArgusContext argusContext;
+
+
+    public ArgusOutputFormatSink(OutputFormat<T> format) {
         this.format = format;
     }
 
@@ -42,6 +58,17 @@ public class ArgusOutputFormatSink<IN> extends RichSinkFunction<IN> implements I
         format.configure(parameters);
         int indexInSubtaskGroup = context.getIndexOfThisSubtask();
         int currentNumberOfSubtasks = context.getNumberOfParallelSubtasks();
+
+        //在启动时,配置argusContext | formatstate
+        if (format instanceof BaseRichOutputFormat) {
+            BaseRichOutputFormat outputFormat = ((BaseRichOutputFormat) format);
+            if (isRestore) {
+                outputFormat.isRestore(true);
+                outputFormat.setJobFormatState(cacheMapStates.get(indexInSubtaskGroup));
+            }
+        }
+
+
         format.open(indexInSubtaskGroup, currentNumberOfSubtasks);
     }
 
@@ -61,19 +88,10 @@ public class ArgusOutputFormatSink<IN> extends RichSinkFunction<IN> implements I
         }
     }
 
-    /**
-     * Writes the given value to the sink. This function is called for every record.
-     *
-     * <p>You have to override this method when implementing a {@code SinkFunction}, this is a
-     * {@code default} method for backward compatibility with the old-style method only.
-     *
-     * @param value   The input record.
-     * @param context Additional context about the input record.
-     * @throws Exception This method may throw exceptions. Throwing an exception will cause the operation
-     *                   to fail and may trigger recovery.
-     */
+
+
     @Override
-    public void invoke(IN value, Context context) throws Exception {
+    public void invoke(T value, Context context) throws Exception {
         try {
             format.writeRecord(value);
         } catch (Exception e) {
@@ -103,32 +121,37 @@ public class ArgusOutputFormatSink<IN> extends RichSinkFunction<IN> implements I
         }
     }
 
-    public OutputFormat<IN> getFormat() {
+    public OutputFormat<T> getFormat() {
         return format;
     }
 
-    /**
-     * This method is called when a snapshot for a checkpoint is requested. This acts as a hook to the function to
-     * ensure that all state is exposed by means previously offered through {@link FunctionInitializationContext} when
-     * the Function was initialized, or offered now by {@link FunctionSnapshotContext} itself.
-     *
-     * @param context the context for drawing a snapshot of the operator
-     * @throws Exception
-     */
+
+
+
     @Override
     public void snapshotState(FunctionSnapshotContext context) throws Exception {
-
+        JobFormatState formatState = ((BaseRichOutputFormat) format).getSnapshotState();
+        if (formatState != null) {
+            listState.clear();
+            listState.add(formatState);
+        }
     }
 
-    /**
-     * This method is called when the parallel function instance is created during distributed
-     * execution. Functions typically set up their state storing data structures in this method.
-     *
-     * @param context the context for initializing the operator
-     * @throws Exception
-     */
+
     @Override
     public void initializeState(FunctionInitializationContext context) throws Exception {
-
+        OperatorStateStore stateStore = context.getOperatorStateStore();
+        listState = stateStore.getUnionListState(new ListStateDescriptor<>(
+                "input-format-state",
+                TypeInformation.of(new TypeHint<JobFormatState>() {
+                })));
+        if (context.isRestored()) {
+            isRestore = true;
+            //如果是restore 就把restore的jobformatstate 缓存起来,在open中,把对应任务的state设置进去
+            cacheMapStates = new HashMap<>(16);
+            for (JobFormatState formatState : listState.get()) {
+                cacheMapStates.put(formatState.getNumOfSubTask(), formatState);
+            }
+        }
     }
 }

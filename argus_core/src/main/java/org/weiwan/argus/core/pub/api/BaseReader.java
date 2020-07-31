@@ -2,14 +2,16 @@ package org.weiwan.argus.core.pub.api;
 
 import org.apache.flink.api.common.typeinfo.TypeInformation;
 import org.apache.flink.api.java.typeutils.TypeExtractor;
-import org.apache.flink.core.io.InputSplit;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.datastream.DataStreamSource;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.weiwan.argus.core.pub.config.ArgusContext;
 import org.weiwan.argus.core.pub.config.JobConfig;
 import org.weiwan.argus.core.pub.config.ReaderConfig;
+import org.weiwan.argus.core.pub.input.BaseInputSpliter;
+import org.weiwan.argus.core.pub.input.BaseRichInputFormat;
 import org.weiwan.argus.core.pub.pojo.DataRecord;
+import org.weiwan.argus.core.pub.streaming.ArgusInputFormatSource;
 
 
 /**

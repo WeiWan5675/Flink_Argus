@@ -1,4 +1,4 @@
-package org.weiwan.argus.core.pub.api;
+package org.weiwan.argus.core.pub.input;
 
 import org.apache.flink.core.io.GenericInputSplit;
 import org.apache.flink.core.io.InputSplit;

@@ -1,4 +1,4 @@
-package org.weiwan.argus.core.pub.api;
+package org.weiwan.argus.core.pub.handler;
 
 import org.apache.flink.api.common.functions.RichMapFunction;
 import org.apache.flink.runtime.state.FunctionInitializationContext;

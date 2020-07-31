@@ -1,8 +1,9 @@
 package org.weiwan.argus.writer.hive;
 
+import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.types.Row;
-import org.weiwan.argus.core.pub.api.BaseRichOutputFormat;
+import org.weiwan.argus.core.pub.output.BaseRichOutputFormat;
 import org.weiwan.argus.core.pub.api.BaseWriter;
 import org.weiwan.argus.core.pub.config.ArgusContext;
 import org.weiwan.argus.core.pub.pojo.DataRecord;
@@ -25,4 +26,5 @@ public class HiveWriter extends BaseWriter<DataRecord<Row>> {
         HiveOutputFormat hiveOutputFormat = new HiveOutputFormat(argusContext);
         return hiveOutputFormat;
     }
+
 }

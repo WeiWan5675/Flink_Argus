@@ -1,14 +1,10 @@
 package org.weiwan.argus.reader.mysql;
 
-import org.apache.flink.types.Row;
-import org.weiwan.argus.core.pub.api.*;
-import org.weiwan.argus.core.pub.api.JdbcInputSpliter;
+import org.weiwan.argus.core.pub.input.jdbc.JdbcInputFormat;
+import org.weiwan.argus.core.pub.input.jdbc.JdbcInputSpliter;
 import org.weiwan.argus.core.pub.config.ArgusContext;
-import org.weiwan.argus.core.pub.pojo.DataRecord;
-
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
+import org.weiwan.argus.core.pub.input.jdbc.SqlGenerator;
+import org.weiwan.argus.core.pub.input.jdbc.SqlGeneratorForMysql;
 
 /**
  * @Author: xiaozhennan

@@ -1,5 +1,8 @@
 package org.weiwan.argus.core.pub.config;
 
+import org.apache.flink.configuration.GlobalConfiguration;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.weiwan.argus.core.start.StartOptions;
 
 import java.io.Serializable;
@@ -17,7 +20,6 @@ public class ArgusContext implements Serializable {
     private JobConfig JobConfig;
     private FlinkEnvConfig flinkEnvConfig;
     private Map<String, Object> startupParameters;
-    private boolean isRestore;
 
     public ArgusContext(Map<String, Object> startupParameters) {
         this.startupParameters = startupParameters;
@@ -44,12 +46,13 @@ public class ArgusContext implements Serializable {
         this.flinkEnvConfig = flinkEnvConfig;
     }
 
-
-    public boolean isRestore() {
-        return isRestore;
+    public Map<String, Object> getStartupParameters() {
+        return startupParameters;
     }
 
-    public void restore(Boolean restore){
-        this.isRestore = restore;
+    public void setStartupParameters(Map<String, Object> startupParameters) {
+        this.startupParameters = startupParameters;
     }
+
+
 }

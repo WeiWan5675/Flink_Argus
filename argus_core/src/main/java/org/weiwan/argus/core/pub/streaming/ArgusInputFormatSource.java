@@ -1,4 +1,4 @@
-package org.weiwan.argus.core.pub.api;
+package org.weiwan.argus.core.pub.streaming;
 
 import org.apache.flink.api.common.io.InputFormat;
 import org.apache.flink.api.common.io.RichInputFormat;
@@ -18,6 +18,8 @@ import org.apache.flink.runtime.state.FunctionSnapshotContext;
 import org.apache.flink.streaming.api.checkpoint.CheckpointedFunction;
 import org.apache.flink.streaming.api.functions.source.InputFormatSourceFunction;
 import org.apache.flink.streaming.api.operators.StreamingRuntimeContext;
+import org.weiwan.argus.core.pub.input.BaseRichInputFormat;
+import org.weiwan.argus.core.pub.pojo.JobFormatState;
 import org.weiwan.argus.core.pub.config.ArgusContext;
 
 import java.util.HashMap;
@@ -74,7 +76,7 @@ public class ArgusInputFormatSource<OUT> extends InputFormatSourceFunction<OUT> 
         if (format instanceof BaseRichInputFormat) {
             BaseRichInputFormat inputFormat = ((BaseRichInputFormat) format);
             if (isRestore) {
-//                argusContext.restore(true);
+                inputFormat.isRestore(true);
                 inputFormat.setJobFormatState(cacheMapStates.get(indexOfThisSubtask));
             }
         }
@@ -118,7 +120,7 @@ public class ArgusInputFormatSource<OUT> extends InputFormatSourceFunction<OUT> 
                 }
             }
         } finally {
-             format.close();
+            format.close();
             if (format instanceof RichInputFormat) {
                 ((RichInputFormat) format).closeInputFormat();
             }

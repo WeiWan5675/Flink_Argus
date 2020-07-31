@@ -1,9 +1,8 @@
 package org.weiwan.argus.plugin.mongo.input;
 
 import org.apache.flink.types.Row;
-import org.weiwan.argus.core.pub.api.BaseRichInputFormat;
-import org.weiwan.argus.core.pub.api.JobFormatState;
-import org.weiwan.argus.core.pub.config.ArgusContext;
+import org.weiwan.argus.core.pub.input.BaseRichInputFormat;
+import org.weiwan.argus.core.pub.pojo.JobFormatState;
 import org.weiwan.argus.core.pub.pojo.DataRecord;
 
 /**

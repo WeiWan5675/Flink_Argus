@@ -2,7 +2,7 @@ flink:
   task:
     name: flinkApp
     common:
-      parallelism: 1 #并行度
+      parallelism: 2 #并行度
       restartMode: fixed-delay #fixed-delay | failure-rate | none  默认fixed-delay
       restartNum: 4  #重启次数  默认3
       restartInterval: 30000  #重启延迟  默认30S
@@ -31,36 +31,57 @@ flink:
 
 
 reader:
-  type: stream # batch 批处理 stream
+  type: batch # batch 批处理 stream
   name: mysqlreader
   class: org.weiwan.argus.reader.mysql.MysqlReader
+  parallelism: 1
   jdbc:
-    url:
-    username:
-    password:
-    schema:
+    url: jdbc:mysql://10.2.39.129:3306/easylife?useUnicode=true&characterEncoding=utf8&autoReconnect=true
+    username: root
+    password: root123HOPSON
+    schema: easylife
     drive: com.mysql.jdbc.Driver
   tableName: easylife_order
-  batchSize: #setFeachSize()的大小 每次从服务器取多少数据
-  queryTimeout:
-  splitField: #只支持数字类型 通过 sql mod N = 0 N = 1 N = 2 N = 3
+  batchSize: 1000 #setFeachSize()的大小 每次从服务器取多少数据
+  queryTimeout: 60
+  splitField: id #只支持数字类型 通过 sql mod N = 0 N = 1 N = 2 N = 3
   sql:
-    filter: #a=3,b=5这样
-    columns: a,b,c,id
+    filter: id > 100 #a=3,b=5这样
+    columns: id,broker_id,update_time_dw
     customSql: #如果指定了自定义SQL 那么filter columns 都不会生效 包括increment配置 适用拉取特殊数据时使用
   increment:
-    incrField: #如果不指定,默认 select ${columns} from ${table} where 1 = 1 and ${filter} and [splitField mod N = I]
-    lastOffset: #如果指定了该字段,会直接使用,如果不指定,默认是全量拉取 时间类型得  默认值为 1970-01-01 08:00:00  数值型 默认 -1
-    enablePolling: #是否轮询 如果开启轮询 必须要指定increment的属性
+    incrField: update_time_dw #如果不指定,默认 select ${columns} from ${table} where 1 = 1 and ${filter} and [splitField mod N = I]
+    lastOffset: "2019-01-01 00:00:00" #如果指定了该字段,会直接使用,如果不指定,默认是全量拉取 时间类型得  默认值为 1970-01-01 08:00:00  数值型 默认 -1
+    enablePolling: false #是否轮询 如果开启轮询 必须要指定increment的属性
     pollingInterval: #轮询间隔
 
 
 
 
 writer:
-  type:
+  type: batch # stream
   name: hivewriter
   class: org.weiwan.argus.writer.hive.HiveWriter
+  defaultFS:
+  hadoopConfig: ""
+  batchWriteMode: true #写出模式,是批量写出 还是逐条写出
+  batchWriteSize: 10000 #批量写出的大小
+  hive:
+    jdbcUrl: jdbc:hive2://10.2.39.67:10000/default
+    username: hive
+    password: hopson
+    schema: default #数据库
+    tableName: easylife_order_test #数据表
+    writeMode: overwrite #overwrite append
+
+    partitionField: dw_day #分区字段
+    fileType: text #text orc parquet   默认text
+    compressType: GZIP #text GZIP BIZP2 | orc SNAPPY GZIP BZIP LZ4 | parquet SNAPPY GZIP LZ0
+    enableAutoCreateTable: true #默认不自动建表
+    matchMode: Mapping # Alignment 字段位置映射 | Mapping 字段名称匹配
+    fieldDelimiter: '\u0001' #列分隔符
+    lineDelimiter: "\n"
+
 
 channel:
   type:

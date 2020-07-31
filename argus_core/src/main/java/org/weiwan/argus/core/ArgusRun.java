@@ -1,9 +1,12 @@
 package org.weiwan.argus.core;
 
 import org.apache.flink.api.common.JobExecutionResult;
+import org.apache.flink.configuration.GlobalConfiguration;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.datastream.DataStreamSink;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.weiwan.argus.common.options.OptionParser;
@@ -15,6 +18,7 @@ import org.weiwan.argus.core.pub.api.*;
 import org.weiwan.argus.core.pub.config.*;
 import org.weiwan.argus.core.pub.pojo.DataRecord;
 import org.weiwan.argus.core.start.StartOptions;
+import org.weiwan.argus.core.utils.ClusterConfigLoader;
 
 import java.io.File;
 import java.io.FilenameFilter;
@@ -80,7 +84,8 @@ public class ArgusRun {
         DataStream readerStream = reader.reader();
         DataStream channelStream = channel.channel(readerStream);
         DataStreamSink writerSink = writer.writer(channelStream);
-        JobExecutionResult execute = env.execute("");
+        JobExecutionResult execute = env.execute(jobConfig.getStringVal("flink.task.name", "ArgusJob"));
+
     }
 
 
@@ -109,6 +114,16 @@ public class ArgusRun {
         }
         argusContext.setFlinkEnvConfig(flinkEnvConfig);
         argusContext.setJobConfig(jobConfig);
+
+
+        //设置三大环境变量
+        /**
+         * 1. Hadoop
+         * 2. Flink
+         * 3. Yarn
+         */
+        Map<String, Object> startArgs = argusContext.getStartupParameters();
+
         return argusContext;
     }
 

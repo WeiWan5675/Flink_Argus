@@ -1,7 +1,6 @@
 package org.weiwan.argus.core.pub.api;
 
 import org.apache.flink.streaming.api.datastream.DataStream;
-import org.weiwan.argus.core.pub.api.ArgusChannelHandler;
 import org.weiwan.argus.core.pub.pojo.DataRecord;
 
 /**

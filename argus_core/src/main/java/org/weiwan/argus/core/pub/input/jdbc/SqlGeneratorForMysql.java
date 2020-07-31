@@ -1,6 +1,7 @@
-package org.weiwan.argus.core.pub.api;
+package org.weiwan.argus.core.pub.input.jdbc;
 
 import org.apache.commons.lang3.StringUtils;
+import org.weiwan.argus.core.pub.pojo.SqlInfo;
 
 /**
  * @Author: xiaozhennan

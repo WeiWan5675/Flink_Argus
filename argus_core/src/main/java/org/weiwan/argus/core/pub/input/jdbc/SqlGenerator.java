@@ -1,4 +1,6 @@
-package org.weiwan.argus.core.pub.api;
+package org.weiwan.argus.core.pub.input.jdbc;
+
+import org.weiwan.argus.core.pub.pojo.SqlInfo;
 
 /**
  * @Author: xiaozhennan

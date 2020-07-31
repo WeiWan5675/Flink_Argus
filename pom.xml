@@ -29,7 +29,9 @@
         <scala.binary.version>2.11</scala.binary.version>
         <scala.version>2.11.12</scala.version>
         <hadoop.version>2.7.3</hadoop.version>
-
+        <snappy-java.version>1.1.4</snappy-java.version>
+        <org.apache.parquet.version>1.8.3</org.apache.parquet.version>
+        <hive.version>1.1.1</hive.version>
 
         <fastjson.version>1.2.62</fastjson.version>
         <logback.version>1.2.3</logback.version>
@@ -78,11 +80,6 @@
                 <groupId>org.weiwan.argus</groupId>
                 <artifactId>mysql_reader</artifactId>
                 <version>${mysql_reader.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.weiwan.argus</groupId>
-                <artifactId>hive_writer</artifactId>
-                <version>${hive_writer.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.weiwan.argus</groupId>
@@ -216,6 +213,49 @@
             <!--flink-end-->
 
 
+            <!-- hadoop-start -->
+            <dependency>
+                <groupId>org.apache.hadoop</groupId>
+                <artifactId>hadoop-hdfs</artifactId>
+                <version>${hadoop.version}</version>
+<!--                <scope>provided</scope>-->
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.hadoop</groupId>
+                <artifactId>hadoop-common</artifactId>
+                <version>${hadoop.version}</version>
+<!--                <scope>provided</scope>-->
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.hadoop</groupId>
+                <artifactId>hadoop-yarn-common</artifactId>
+                <version>${hadoop.version}</version>
+<!--                <scope>provided</scope>-->
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.hadoop</groupId>
+                <artifactId>hadoop-yarn-client</artifactId>
+                <version>${hadoop.version}</version>
+<!--                <scope>provided</scope>-->
+            </dependency>
+            <dependency>
+                <groupId>org.apache.hadoop</groupId>
+                <artifactId>hadoop-mapreduce-client-core</artifactId>
+                <version>${hadoop.version}</version>
+<!--                <scope>provided</scope>-->
+            </dependency>
+            <dependency>
+                <groupId>org.apache.hadoop</groupId>
+                <artifactId>hadoop-yarn-api</artifactId>
+                <version>${hadoop.version}</version>
+<!--                <scope>provided</scope>-->
+            </dependency>
+
+            <!-- hadoop-end -->
+
             <!-- 日志 -->
             <dependency>
                 <groupId>ch.qos.logback</groupId>
@@ -296,6 +336,70 @@
                 <artifactId>gson</artifactId>
                 <version>${gson.version}</version>
             </dependency>
+
+
+            <dependency>
+                <groupId>org.apache.hive</groupId>
+                <artifactId>hive-exec</artifactId>
+                <version>${hive.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <artifactId>calcite-core</artifactId>
+                        <groupId>org.apache.calcite</groupId>
+                    </exclusion>
+                    <exclusion>
+                        <artifactId>calcite-avatica</artifactId>
+                        <groupId>org.apache.calcite</groupId>
+                    </exclusion>
+                    <exclusion>
+                        <artifactId>derby</artifactId>
+                        <groupId>org.apache.derby</groupId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.xerial.snappy</groupId>
+                        <artifactId>snappy-java</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.hive</groupId>
+                <artifactId>hive-serde</artifactId>
+                <version>${hive.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.apache.hadoop</groupId>
+                        <artifactId>hadoop-yarn-api</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.xerial.snappy</groupId>
+                        <artifactId>snappy-java</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.hive</groupId>
+                <artifactId>hive-metastore</artifactId>
+                <version>${hive.version}</version>
+            </dependency>
+            <dependency>
+                <artifactId>parquet-hadoop</artifactId>
+                <groupId>org.apache.parquet</groupId>
+                <version>${org.apache.parquet.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.xerial.snappy</groupId>
+                        <artifactId>snappy-java</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+
+            <dependency>
+                <groupId>org.xerial.snappy</groupId>
+                <artifactId>snappy-java</artifactId>
+                <version>${snappy-java.version}</version>
+            </dependency>
+
             <!--            <dependency>-->
             <!--                <groupId>jdk.tools</groupId>-->
             <!--                <artifactId>jdk.tools</artifactId>-->
@@ -305,6 +409,7 @@
             <!--                <systemPath>${java.home}/lib/tools.jar</systemPath>-->
             <!--            </dependency>-->
         </dependencies>
+
     </dependencyManagement>
 
 

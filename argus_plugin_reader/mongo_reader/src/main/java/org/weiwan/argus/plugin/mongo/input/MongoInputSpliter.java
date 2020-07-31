@@ -1,6 +1,6 @@
 package org.weiwan.argus.plugin.mongo.input;
 
-import org.weiwan.argus.core.pub.api.BaseInputSpliter;
+import org.weiwan.argus.core.pub.input.BaseInputSpliter;
 
 /**
  * @Author: xiaozhennan

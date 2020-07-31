@@ -1,8 +1,11 @@
-package org.weiwan.argus.core.pub.api;
+package org.weiwan.argus.core.pub.input.jdbc;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.types.Row;
+import org.weiwan.argus.core.pub.input.BaseRichInputFormat;
+import org.weiwan.argus.core.pub.pojo.JobFormatState;
+import org.weiwan.argus.core.pub.pojo.SqlInfo;
 import org.weiwan.argus.core.pub.config.ArgusContext;
 import org.weiwan.argus.core.pub.pojo.DataField;
 import org.weiwan.argus.core.pub.pojo.DataRecord;

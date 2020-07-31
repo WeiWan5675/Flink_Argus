@@ -1,4 +1,4 @@
-package org.weiwan.argus.core.pub.api;
+package org.weiwan.argus.core.pub.pojo;
 
 /**
  * @Author: xiaozhennan
