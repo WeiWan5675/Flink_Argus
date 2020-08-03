@@ -16,14 +16,10 @@ import org.weiwan.argus.core.pub.pojo.DataRecord;
 import org.weiwan.argus.core.start.StartOptions;
 import org.weiwan.argus.core.utils.ClusterConfigLoader;
 import org.weiwan.argus.core.utils.JdbcFactory;
-import org.weiwan.argus.core.utils.JdbcHolder;
-import org.weiwan.argus.core.utils.JdbcInfo;
 
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DriverManager;
-import java.sql.Statement;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 

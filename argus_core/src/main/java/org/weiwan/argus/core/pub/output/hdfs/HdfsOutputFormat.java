@@ -9,7 +9,10 @@ import org.weiwan.argus.core.pub.enums.WriteMode;
 import org.weiwan.argus.core.pub.output.BaseRichOutputFormat;
 import org.weiwan.argus.core.pub.pojo.DataRecord;
 import org.weiwan.argus.core.pub.pojo.JobFormatState;
+import org.weiwan.argus.core.start.StartOptions;
+import org.weiwan.argus.core.utils.ClusterConfigLoader;
 
+import java.io.IOException;
 import java.util.List;
 
 /**
@@ -26,17 +29,15 @@ public class HdfsOutputFormat<T extends DataRecord> extends BaseRichOutputFormat
 
     protected String flieSuffix;
 
-    protected String lineDelimiter;
+    protected String lineDelimiter = "\n";
 
-    protected String fieldDelimiter;
+    protected String fieldDelimiter = "\u0001";
 
-    protected boolean isCompress;
+    protected CompressType compressType = CompressType.NONE;
 
-    protected CompressType compressType;
+    protected WriteMode writeMode = WriteMode.OVERWRITE;
 
-    protected WriteMode writeMode;
-
-    protected FileType fileType;
+    protected FileType fileType = FileType.TEXT;
 
     protected String fsDefault;
 
@@ -45,7 +46,6 @@ public class HdfsOutputFormat<T extends DataRecord> extends BaseRichOutputFormat
 
     @Override
     public void configure(Configuration parameters) {
-        super.configure(parameters);
 
     }
 
@@ -62,6 +62,17 @@ public class HdfsOutputFormat<T extends DataRecord> extends BaseRichOutputFormat
      */
     @Override
     public void openOutput(int taskNumber, int numTasks, ArgusContext argusContext) {
+        StartOptions startOptions = argusContext.getStartOptions();
+        String hadoopConfDir = startOptions.getHadoopConf();
+        org.apache.hadoop.conf.Configuration configuration = ClusterConfigLoader.loadHadoopConfig(hadoopConfDir);
+
+        try {
+            flieSystem = FileSystem.get(configuration);
+
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
     }
 
