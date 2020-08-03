@@ -66,19 +66,18 @@ writer:
   hadoopConfig: ""
   batchWriteMode: true #写出模式,是批量写出 还是逐条写出
   batchWriteSize: 10000 #批量写出的大小
+  writeMode: overwrite #overwrite append
+  matchMode: Mapping # Alignment 字段位置映射 | Mapping 字段名称匹配
   hive:
     jdbcUrl: jdbc:hive2://10.2.39.67:10000/default
     username: hive
     password: hopson
-    schema: default #数据库
-    tableName: easylife_order_test #数据表
-    writeMode: overwrite #overwrite append
-
-    partitionField: dw_day #分区字段
+    schema: easylife_ods #数据库
+    tableName: source_easylife_order #数据表
+    partitionField: update_time_dw #分区字段
     fileType: text #text orc parquet   默认text
     compressType: GZIP #text GZIP BIZP2 | orc SNAPPY GZIP BZIP LZ4 | parquet SNAPPY GZIP LZ0
     enableAutoCreateTable: true #默认不自动建表
-    matchMode: Mapping # Alignment 字段位置映射 | Mapping 字段名称匹配
     fieldDelimiter: '\u0001' #列分隔符
     lineDelimiter: "\n"
 

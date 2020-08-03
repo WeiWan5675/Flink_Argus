@@ -29,6 +29,11 @@ public class MysqlReader extends BaseReader<DataRecord<Row>> {
         return mysqlInputFormat;
     }
 
+    @Override
+    public void readRequire(ArgusContext argusContext) {
+
+    }
+
 
     /**
      * <p> 方便某些自定义reader进行一些后处理工作

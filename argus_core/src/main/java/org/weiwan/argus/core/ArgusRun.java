@@ -50,7 +50,8 @@ public class ArgusRun {
         printEnvInfo(optionToMap, jobMap);
         Map<String, Object> tmpObj = new HashMap<>();
         tmpObj.putAll(jobMap);
-        ArgusContext argusContext = convertOptionsToContext(optionToMap, tmpObj);
+        tmpObj.putAll(optionToMap);
+        ArgusContext argusContext = convertOptionsToContext(options, tmpObj);
         //任务总体描述
         JobConfig jobConfig = argusContext.getJobConfig();
         //flink环境相关描述
@@ -101,8 +102,8 @@ public class ArgusRun {
         return urls;
     }
 
-    private static ArgusContext convertOptionsToContext(Map<String, Object> optionToMap, Map<String, Object> taskObj) {
-        ArgusContext argusContext = new ArgusContext(optionToMap);
+    private static ArgusContext convertOptionsToContext(StartOptions startOptions, Map<String, Object> taskObj) {
+        ArgusContext argusContext = new ArgusContext(startOptions);
         FlinkEnvConfig flinkEnvConfig = new FlinkEnvConfig(new HashMap<>());
         JobConfig jobConfig = new JobConfig(taskObj);
 
@@ -114,15 +115,6 @@ public class ArgusRun {
         }
         argusContext.setFlinkEnvConfig(flinkEnvConfig);
         argusContext.setJobConfig(jobConfig);
-
-
-        //设置三大环境变量
-        /**
-         * 1. Hadoop
-         * 2. Flink
-         * 3. Yarn
-         */
-        Map<String, Object> startArgs = argusContext.getStartupParameters();
 
         return argusContext;
     }

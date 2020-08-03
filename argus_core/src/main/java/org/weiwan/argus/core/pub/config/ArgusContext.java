@@ -19,10 +19,10 @@ public class ArgusContext implements Serializable {
 
     private JobConfig JobConfig;
     private FlinkEnvConfig flinkEnvConfig;
-    private Map<String, Object> startupParameters;
+    private StartOptions startOptions;
 
-    public ArgusContext(Map<String, Object> startupParameters) {
-        this.startupParameters = startupParameters;
+    public ArgusContext(StartOptions startOptions) {
+        this.startOptions = startOptions;
     }
 
     public ArgusContext() {
@@ -46,13 +46,11 @@ public class ArgusContext implements Serializable {
         this.flinkEnvConfig = flinkEnvConfig;
     }
 
-    public Map<String, Object> getStartupParameters() {
-        return startupParameters;
+    public StartOptions getStartOptions() {
+        return startOptions;
     }
 
-    public void setStartupParameters(Map<String, Object> startupParameters) {
-        this.startupParameters = startupParameters;
+    public void setStartOptions(StartOptions startOptions) {
+        this.startOptions = startOptions;
     }
-
-
 }

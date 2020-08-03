@@ -43,7 +43,7 @@ public abstract class BaseReader<T extends DataRecord> implements ArgusReader<T>
         this.argusContext = argusContext;
         this.jobConfig = argusContext.getJobConfig();
         this.readerConfig = argusContext.getJobConfig().getReaderConfig();
-        this.readerName = readerConfig.getStringVal(KEY_READER_NAME,"ArugsReader");
+        this.readerName = readerConfig.getStringVal(KEY_READER_NAME, "ArugsReader");
         this.readerType = readerConfig.getStringVal(KEY_READER_TYPE);
         this.readerClassName = readerConfig.getStringVal(KEY_READER_CLASS_NAME);
         this.readerParallelism = readerConfig.getIntVal(KEY_READER_PARALLELISM, 1);
@@ -51,6 +51,7 @@ public abstract class BaseReader<T extends DataRecord> implements ArgusReader<T>
 
     public abstract BaseRichInputFormat getInputFormat(ArgusContext context);
 
+    public abstract void readRequire(ArgusContext argusContext);
 
     @Override
     public DataStream<T> reader() {
@@ -67,7 +68,8 @@ public abstract class BaseReader<T extends DataRecord> implements ArgusReader<T>
 
     /**
      * <p> 方便某些自定义reader进行一些后处理工作
-     *  保留口子,方便一些自定义reader在进行数据处理时,特殊处理一些内容
+     * 保留口子,方便一些自定义reader在进行数据处理时,特殊处理一些内容
+     *
      * @param stream 输入是 {@link DataStream<DataRecord>}
      * @return 输出也是 {@link DataStream<DataRecord>}
      */

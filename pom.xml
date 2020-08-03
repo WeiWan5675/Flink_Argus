@@ -383,6 +383,11 @@
                 <version>${hive.version}</version>
             </dependency>
             <dependency>
+                <groupId>org.apache.hive</groupId>
+                <artifactId>hive-jdbc</artifactId>
+                <version>${hive.version}</version>
+            </dependency>
+            <dependency>
                 <artifactId>parquet-hadoop</artifactId>
                 <groupId>org.apache.parquet</groupId>
                 <version>${org.apache.parquet.version}</version>

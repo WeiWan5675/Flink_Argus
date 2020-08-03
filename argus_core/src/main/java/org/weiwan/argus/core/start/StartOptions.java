@@ -3,6 +3,8 @@ package org.weiwan.argus.core.start;
 import org.weiwan.argus.common.options.Option;
 import org.weiwan.argus.common.options.OptionField;
 
+import java.io.Serializable;
+
 /**
  * @Author: xiaozhennan
  * @Date: 2020/7/14 20:04
@@ -11,7 +13,7 @@ import org.weiwan.argus.common.options.OptionField;
  * @Description:
  **/
 @Option("startOptions")
-public class StartOptions {
+public class StartOptions implements Serializable {
 
 
     @OptionField(
@@ -220,4 +222,6 @@ public class StartOptions {
     public void setHiveConf(String hiveConf) {
         this.hiveConf = hiveConf;
     }
+
+
 }
