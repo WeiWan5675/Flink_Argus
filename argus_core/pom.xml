@@ -17,10 +17,6 @@
             <groupId>org.weiwan.argus</groupId>
             <artifactId>argus_common</artifactId>
         </dependency>
-        <dependency>
-            <groupId>org.weiwan.argus</groupId>
-            <artifactId>argus_core</artifactId>
-        </dependency>
         <!-- flink-start-->
         <dependency>
             <groupId>org.apache.flink</groupId>

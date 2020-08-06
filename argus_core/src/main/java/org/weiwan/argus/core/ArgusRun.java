@@ -1,12 +1,9 @@
 package org.weiwan.argus.core;
 
 import org.apache.flink.api.common.JobExecutionResult;
-import org.apache.flink.configuration.GlobalConfiguration;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.datastream.DataStreamSink;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.weiwan.argus.common.options.OptionParser;
@@ -16,9 +13,7 @@ import org.weiwan.argus.core.flink.utils.FlinkContextUtil;
 import org.weiwan.argus.core.plugin.ArgusPluginManager;
 import org.weiwan.argus.core.pub.api.*;
 import org.weiwan.argus.core.pub.config.*;
-import org.weiwan.argus.core.pub.pojo.DataRecord;
 import org.weiwan.argus.core.start.StartOptions;
-import org.weiwan.argus.core.utils.ClusterConfigLoader;
 
 import java.io.File;
 import java.io.FilenameFilter;

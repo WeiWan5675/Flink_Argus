@@ -11,7 +11,7 @@ public enum JobMode {
 
     local("Local", "本地Main方法模式"),
     yarnpre("YarnPer", "在yarn上启动flinkSession运行"),
-    yarn("Yarn", "在Yarn上已经启动的Session中允许"),
+    yarn("Yarn", "在Yarn上已经启动的Session中运行"),
     standalone("Standalone", "本地Standalone集群模式");
     private String mode;
     private String msg;
