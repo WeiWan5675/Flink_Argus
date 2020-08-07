@@ -1,4 +1,4 @@
-package org.weiwan.argus.writer.hive;
+package org.weiwan.argus.core.pub.output.hdfs;
 
 import java.io.Serializable;
 

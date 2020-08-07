@@ -4,6 +4,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.types.Row;
 import org.weiwan.argus.core.pub.input.BaseRichInputFormat;
+import org.weiwan.argus.core.pub.output.hdfs.ColumnType;
 import org.weiwan.argus.core.pub.pojo.JobFormatState;
 import org.weiwan.argus.core.pub.pojo.SqlInfo;
 import org.weiwan.argus.core.pub.config.ArgusContext;
@@ -162,7 +163,7 @@ public abstract class JdbcInputFormat extends BaseRichInputFormat<DataRecord<Row
 
             }
 
-            if(StringUtils.isNotEmpty(lastOffset)){
+            if (StringUtils.isNotEmpty(lastOffset)) {
                 //设置进去
                 this.statement.setString(1, lastOffset);
             }
@@ -242,7 +243,8 @@ public abstract class JdbcInputFormat extends BaseRichInputFormat<DataRecord<Row
                     String columnName = tableMetaData.getColumnName(i + 1);
                     dataField.setFieldKey(columnName);
                     dataField.setValue(object);
-                    dataField.setFieldType(object.getClass().getTypeName());
+                    ColumnType columnType = ColumnType.getType(object.getClass().getTypeName());
+                    dataField.setFieldType(columnType);
                     currentRow.setField(i, dataField);
                 }
             }

@@ -1,25 +1,15 @@
 package org.weiwan.argus.core.pub.output.hdfs;
 
 import org.apache.commons.lang3.CharEncoding;
-import org.apache.commons.lang3.CharSet;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.flink.configuration.Configuration;
 import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.hive.ql.exec.TextRecordWriter;
-import org.apache.hadoop.hive.ql.io.orc.OrcSerde;
-import org.apache.hadoop.hive.serde2.AbstractSerDe;
-import org.apache.hadoop.hive.serde2.SerDe;
-import org.apache.hadoop.hive.serde2.objectinspector.StructObjectInspector;
-import org.apache.hadoop.mapred.FileOutputFormat;
-import org.apache.hadoop.mapred.JobConf;
-import org.apache.hadoop.mapred.RecordWriter;
-import org.apache.parquet.hadoop.ParquetOutputFormat;
 import org.weiwan.argus.core.pub.config.ArgusContext;
-import org.weiwan.argus.core.pub.config.WriterConfig;
 import org.weiwan.argus.core.pub.enums.CompressType;
 import org.weiwan.argus.core.pub.enums.FileType;
 import org.weiwan.argus.core.pub.enums.WriteMode;
 import org.weiwan.argus.core.pub.output.BaseRichOutputFormat;
+import org.weiwan.argus.core.pub.pojo.DataField;
 import org.weiwan.argus.core.pub.pojo.DataRecord;
 import org.weiwan.argus.core.pub.pojo.JobFormatState;
 import org.weiwan.argus.core.start.StartOptions;
@@ -56,23 +46,26 @@ public class HdfsOutputFormat<T extends DataRecord> extends BaseRichOutputFormat
     protected String dfsDefault;
     private String charsetName;
 
+    protected FileOutputer outPuter;
+    protected List<DataField> dataFields;
+
     protected FileSystem flieSystem;
-    private RecordWriter recordWriter;
-    private AbstractSerDe serDe;
-    private StructObjectInspector inspector;
-    private FileOutputFormat outputFormat;
-    private JobConf jobConf;
 
-    public static final String WRITER_HDFS_OUTPUT_FILE_NAME = "writer.hdfs.output.fileName";
-    public static final String WRITER_HDFS_OUTPUT_FILE_SUFFIX = "writer.hdfs.output.fileSuffix";
-    public static final String WRITER_HDFS_OUTPUT_PATH = "writer.hdfs.output.dir";
-    public static final String WRITER_HDFS_OUTPUT_LINEDELIMITER = "writer.hdfs.output.lineDelimiter";
-    public static final String WRITER_HDFS_OUTPUT_FIELDDELIMITER = "writer.hdfs.output.fieldDelimiter";
-    public static final String WRITER_HDFS_OUTPUT_CHARSETNAME = "writer.hdfs.output.charSetName";
 
-    public static final String WRITER_HDFS_DFSDEFAULT = "writer.hdfs.dfsDefault";
+    public static final String WRITER_HDFS_OUTPUT_FILE_NAME = "writer.output.fileName";
+    public static final String WRITER_HDFS_OUTPUT_FILE_SUFFIX = "writer.output.fileSuffix";
+    public static final String WRITER_HDFS_OUTPUT_PATH = "writer.output.dir";
+    public static final String WRITER_HDFS_OUTPUT_LINEDELIMITER = "writer.output.lineDelimiter";
+    public static final String WRITER_HDFS_OUTPUT_FIELDDELIMITER = "writer.output.fieldDelimiter";
+    public static final String WRITER_HDFS_OUTPUT_CHARSETNAME = "writer.output.charSetName";
+    public static final String WRITER_HDFS_OUTPUT_MATCHMODE = "writer.output.matchMode";
+    private static final String WRITER_HDFS_OUTPUT_WRITERMODE = "writer.output.writeMode";
+    private static final String WRITER_HDFS_OUTPUT_COMPRESSTYPE = "writer.output.compressType";
+    public static final String WRITER_HDFS_DFSDEFAULT = "writer.dfsDefault";
     private String currentFileBlock;
     private org.apache.hadoop.conf.Configuration configuration;
+    private MatchMode matchMode;
+
     @Override
     public void configure(Configuration parameters) {
         //初始化配置文件
@@ -83,6 +76,9 @@ public class HdfsOutputFormat<T extends DataRecord> extends BaseRichOutputFormat
         this.fieldDelimiter = writerConfig.getStringVal(WRITER_HDFS_OUTPUT_FIELDDELIMITER, "\u0001");
         this.charsetName = writerConfig.getStringVal(WRITER_HDFS_OUTPUT_CHARSETNAME, CharEncoding.UTF_8);
         this.dfsDefault = writerConfig.getStringVal(WRITER_HDFS_DFSDEFAULT);
+        this.matchMode = MatchMode.valueOf(writerConfig.getStringVal(WRITER_HDFS_OUTPUT_MATCHMODE, "ALIGNMENT").toUpperCase());
+        this.writeMode = WriteMode.valueOf(writerConfig.getStringVal(WRITER_HDFS_OUTPUT_WRITERMODE,"APPEND").toUpperCase());
+        this.compressType = CompressType.valueOf(writerConfig.getStringVal(WRITER_HDFS_OUTPUT_COMPRESSTYPE,"NONE").toUpperCase());
     }
 
     public HdfsOutputFormat(ArgusContext argusContext) {
@@ -104,33 +100,23 @@ public class HdfsOutputFormat<T extends DataRecord> extends BaseRichOutputFormat
 
 
         //初始化成员变量
-        checkFormatVars();
+//        checkFormatVars();
         //初始化文件夹/临时文件夹/临时文件/目标文件名称
         if (StringUtils.isBlank(fileName)) {
             //为空,根据任务index生成文件名称
             this.fileName = "0000" + taskNumber + fileSuffix;
         }
         //临时目录
-        this.tmpPath = targetPath + ".temporary";
-        this.tmpFileName = fileName + tmpFileSuffix;
+        this.tmpPath = targetPath +File.separator + ".temporary";
+        this.tmpFileName = "." + fileName + "." + tmpFileSuffix;
         if (isRestore()) {
-            this.tmpFileName = "." + fileName + tmpFileSuffix;
+            this.tmpFileName = "." + fileName +"." + tmpFileSuffix;
         }
         this.currentFileBlock = tmpPath + File.separator + tmpFileName;
 
-//        FileOutputFormat fileOutputFormat = FileOutputFacory.generateOutputFormat(fileType, compressType, configuration);
-        ParquetOutputFormat<Object> opof = new ParquetOutputFormat<>();
-
-
-        /**
-         * HDFS :
-         * HIVE :
-         *
-         */
-
         try {
             flieSystem = FileSystem.get(configuration);
-
+            initOutputer();
             //初始化目录
             /**
              * 目标目录
@@ -141,6 +127,25 @@ public class HdfsOutputFormat<T extends DataRecord> extends BaseRichOutputFormat
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+    }
+
+    private void initOutputer() {
+        switch (fileType) {
+            case TEXT:
+                outPuter = new TextFileOutputer(configuration, currentFileBlock);
+                break;
+            case ORC:
+                outPuter = new OrcFileOutputer(configuration, currentFileBlock);
+                break;
+            case PARQUET:
+                outPuter = new ParquetFileOutputer(configuration, currentFileBlock);
+                break;
+            default:
+                System.out.println("未匹配");
+        }
+
+        outPuter.init(dataFields, matchMode);
 
     }
 
@@ -157,7 +162,7 @@ public class HdfsOutputFormat<T extends DataRecord> extends BaseRichOutputFormat
      */
     @Override
     public void writerRecordInternal(T record) {
-
+        outPuter.output(record);
     }
 
     /**

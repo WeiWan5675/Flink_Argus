@@ -1,5 +1,7 @@
 package org.weiwan.argus.core.pub.pojo;
 
+import org.weiwan.argus.core.pub.output.hdfs.ColumnType;
+
 import java.io.Serializable;
 
 /**
@@ -9,13 +11,14 @@ import java.io.Serializable;
  * @ClassName: DataField
  * @Description:
  **/
-public class DataField implements Serializable{
+public class DataField implements Serializable {
 
     private String fieldKey;
-    private String fieldType;
+    private ColumnType fieldType;
     private Object value;
 
-    public DataField(String fieldKey, String fieldType, Object value) {
+
+    public DataField(String fieldKey, ColumnType fieldType, Object value) {
         this.fieldKey = fieldKey;
         this.fieldType = fieldType;
         this.value = value;
@@ -23,6 +26,7 @@ public class DataField implements Serializable{
 
     public DataField() {
     }
+
 
     public String getFieldKey() {
         return fieldKey;
@@ -32,11 +36,11 @@ public class DataField implements Serializable{
         this.fieldKey = fieldKey;
     }
 
-    public String getFieldType() {
+    public ColumnType getFieldType() {
         return fieldType;
     }
 
-    public void setFieldType(String fieldType) {
+    public void setFieldType(ColumnType fieldType) {
         this.fieldType = fieldType;
     }
 

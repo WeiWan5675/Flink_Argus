@@ -13,6 +13,7 @@
 
     <modules>
         <module>hive_writer</module>
+        <module>hdfs_writer</module>
     </modules>
 
     <build>

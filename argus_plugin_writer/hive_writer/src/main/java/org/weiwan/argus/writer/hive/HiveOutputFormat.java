@@ -10,6 +10,7 @@ import org.apache.thrift.TException;
 import org.weiwan.argus.core.pub.enums.CompressType;
 import org.weiwan.argus.core.pub.enums.FileType;
 import org.weiwan.argus.core.pub.output.BaseRichOutputFormat;
+import org.weiwan.argus.core.pub.output.hdfs.MatchMode;
 import org.weiwan.argus.core.pub.pojo.JobFormatState;
 import org.weiwan.argus.core.pub.config.ArgusContext;
 import org.weiwan.argus.core.pub.pojo.DataRecord;

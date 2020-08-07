@@ -2,6 +2,7 @@ package org.weiwan.argus.writer.hive;
 
 import org.weiwan.argus.core.pub.enums.CompressType;
 import org.weiwan.argus.core.pub.enums.FileType;
+import org.weiwan.argus.core.pub.output.hdfs.MatchMode;
 
 /**
  * @Author: xiaozhennan

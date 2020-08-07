@@ -53,6 +53,7 @@
 
 
         <hive_writer.version>1.0.0</hive_writer.version>
+        <hdfs_writer.version>1.0.0</hdfs_writer.version>
         <mysql_reader.version>1.0.0</mysql_reader.version>
         <common_channel.version>1.0.0</common_channel.version>
     </properties>
@@ -85,6 +86,11 @@
                 <groupId>org.weiwan.argus</groupId>
                 <artifactId>hive_writer</artifactId>
                 <version>${hive_writer.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.weiwan.argus</groupId>
+                <artifactId>hdfs_writer</artifactId>
+                <version>${hdfs_writer.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.weiwan.argus</groupId>

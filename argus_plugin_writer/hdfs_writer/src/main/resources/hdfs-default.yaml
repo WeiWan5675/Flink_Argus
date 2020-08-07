@@ -1,0 +1,86 @@
+flink:
+  task:
+    name: flinkApp
+    common:
+      parallelism: 2 #并行度
+      restartMode: fixed-delay #fixed-delay | failure-rate | none  默认fixed-delay
+      restartNum: 4  #重启次数  默认3
+      restartInterval: 30000  #重启延迟  默认30S
+      restartFailMaxNum: 3 #最大重启失败次数
+    batch:
+      sessionTimeout:     #保存作业的中间结果的超时时间 暂未启用
+    stream:
+      timeCharacteristic:    #流处理的事件模式  默认processTime eventTime
+
+    checkpoint:
+      enable: true       #是否启用检查点
+      interval: 60000         #检查点间隔  单位毫秒
+      timeout: 60000       #检查点超时时间 单位毫秒
+      mode: EXACTLY_ONCE #检查点模式: AT_LEAST_ONCE  EXACTLY_ONCE
+      minInterval: 500 #最小检查点间隔 单位毫秒
+      maxConcurrent: 1   #z最多有多少checkpoint可以在运行
+      externalized:
+        enable: false    #是否开启checkpoint的外部持久化
+        cleanUp: DELETE_ON_CANCELLATION #DELETE_ON_CANCELLATION  自动删除   RETAIN_ON_CANCELLATION 保留
+      onFail: true  #当checkpoint发生错误时,是否认为任务失败 true 失败  false 拒绝checkpoint继续任务
+
+    stateBackend:
+      type: Memory #三种 Memory  FileSystem  RocksDB
+      async: true #仅在配置为Memory FileSystem 时生效 RocksDB默认为异步
+      path:  #支持hdfs路径 或者本地文件路径 hdfs://namenode:40010/flink/checkpoints  file:///data/flink/checkpoints
+
+
+reader:
+  type: batch # batch 批处理 stream
+  name: mysqlreader
+  class: org.weiwan.argus.reader.mysql.MysqlReader
+  parallelism: 1
+  jdbc:
+    url: jdbc:mysql://10.2.39.129:3306/easylife?useUnicode=true&characterEncoding=utf8&autoReconnect=true
+    username: root
+    password: root123HOPSON
+    schema: easylife
+    drive: com.mysql.jdbc.Driver
+  tableName: easylife_order
+  batchSize: 1000 #setFeachSize()的大小 每次从服务器取多少数据
+  queryTimeout: 60
+  splitField: id #只支持数字类型 通过 sql mod N = 0 N = 1 N = 2 N = 3
+  sql:
+    filter: id > 100 #a=3,b=5这样
+    columns: id,broker_id,update_time_dw
+    customSql: #如果指定了自定义SQL 那么filter columns 都不会生效 包括increment配置 适用拉取特殊数据时使用
+  increment:
+    incrField: update_time_dw #如果不指定,默认 select ${columns} from ${table} where 1 = 1 and ${filter} and [splitField mod N = I]
+    lastOffset: "2019-01-01 00:00:00" #如果指定了该字段,会直接使用,如果不指定,默认是全量拉取 时间类型得  默认值为 1970-01-01 08:00:00  数值型 默认 -1
+    enablePolling: false #是否轮询 如果开启轮询 必须要指定increment的属性
+    pollingInterval: #轮询间隔
+
+
+
+
+writer:
+  type: batch # stream
+  name: hdfswriter
+  class: org.weiwan.argus.writer.hdfs.HdfsWriter
+  defaultFS:
+  hadoopConfig: ""
+  batchWriteMode: false #写出模式,是批量写出 还是逐条写出
+  batchWriteSize: 10000 #批量写出的大小
+  output:
+    fileName: test
+    fileSuffix: .tz
+    dir: /tmp/xiaozhennan_test/test1
+    lineDelimiter: "\n"
+    fieldDelimiter: "\u0001"
+    charSetName: UTF-8
+    matchMode: Alignment # Alignment 字段位置映射 | Mapping 字段名称匹配
+    writeMode: overwrite #overwrite append
+    compressType: NONE
+
+
+
+
+channel:
+  type:
+  name: commonchannel
+  class: org.weiwan.argus.channel.CommonChannel
