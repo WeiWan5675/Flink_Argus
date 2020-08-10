@@ -3,11 +3,11 @@ package org.weiwan.argus.reader.mysql;
 import org.apache.flink.api.common.functions.MapFunction;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
-import org.apache.flink.types.Row;
 import org.weiwan.argus.core.pub.api.BaseReader;
 import org.weiwan.argus.core.pub.input.BaseRichInputFormat;
 import org.weiwan.argus.core.pub.config.ArgusContext;
 import org.weiwan.argus.core.pub.pojo.DataRecord;
+import org.weiwan.argus.core.pub.pojo.DataRow;
 
 /**
  * @Author: xiaozhennan
@@ -16,7 +16,7 @@ import org.weiwan.argus.core.pub.pojo.DataRecord;
  * @ClassName: MysqlReader
  * @Description:
  **/
-public class MysqlReader extends BaseReader<DataRecord<Row>> {
+public class MysqlReader extends BaseReader<DataRecord<DataRow>> {
 
 
     public MysqlReader(StreamExecutionEnvironment env, ArgusContext argusContext) {
@@ -43,10 +43,10 @@ public class MysqlReader extends BaseReader<DataRecord<Row>> {
      * @return 输出也是这个
      */
     @Override
-    protected DataStream<DataRecord<Row>> afterReading(DataStream<DataRecord<Row>> stream, ArgusContext context) {
-        DataStream<DataRecord<Row>> map = stream.map(new MapFunction<DataRecord<Row>, DataRecord<Row>>() {
+    protected DataStream<DataRecord<DataRow>> afterReading(DataStream<DataRecord<DataRow>> stream, ArgusContext context) {
+        DataStream<DataRecord<DataRow>> map = stream.map(new MapFunction<DataRecord<DataRow>, DataRecord<DataRow>>() {
             @Override
-            public DataRecord<Row> map(DataRecord<Row> value) throws Exception {
+            public DataRecord<DataRow> map(DataRecord<DataRow> value) throws Exception {
                 System.out.println("afterReading处理数据" + value.getData().toString());
 
                 return value;

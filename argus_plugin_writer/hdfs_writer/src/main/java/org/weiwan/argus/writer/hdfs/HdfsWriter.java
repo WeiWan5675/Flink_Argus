@@ -1,12 +1,12 @@
 package org.weiwan.argus.writer.hdfs;
 
-import com.sun.rowset.internal.Row;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.weiwan.argus.core.pub.api.BaseWriter;
 import org.weiwan.argus.core.pub.config.ArgusContext;
 import org.weiwan.argus.core.pub.output.BaseRichOutputFormat;
 import org.weiwan.argus.core.pub.output.hdfs.HdfsOutputFormat;
 import org.weiwan.argus.core.pub.pojo.DataRecord;
+import org.weiwan.argus.core.pub.pojo.DataRow;
 
 /**
  * @Author: xiaozhennan
@@ -15,14 +15,14 @@ import org.weiwan.argus.core.pub.pojo.DataRecord;
  * @ClassName: HdfsWriter
  * @Description:
  **/
-public class HdfsWriter extends BaseWriter<DataRecord<Row>> {
+public class HdfsWriter extends BaseWriter<DataRecord<DataRow>> {
 
     public HdfsWriter(StreamExecutionEnvironment env, ArgusContext argusContext) {
         super(env, argusContext);
     }
 
     @Override
-    public BaseRichOutputFormat<DataRecord<Row>> getOutputFormat() {
+    public BaseRichOutputFormat<DataRecord<DataRow>> getOutputFormat() {
         HdfsOutputFormat hdfsOutputFormat = new HdfsOutputFormat(argusContext);
         return hdfsOutputFormat;
     }

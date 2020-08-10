@@ -1,10 +1,11 @@
 package org.weiwan.argus.core.pub.output.hdfs;
 
-import org.apache.flink.types.Row;
 import org.apache.hadoop.conf.Configuration;
-import org.weiwan.argus.core.pub.pojo.DataRecord;
+import org.apache.hadoop.fs.FileSystem;
+import org.weiwan.argus.core.pub.pojo.DataField;
+import org.weiwan.argus.core.pub.pojo.DataRow;
 
-import java.util.List;
+import java.io.IOException;
 import java.util.Map;
 
 /**
@@ -14,25 +15,26 @@ import java.util.Map;
  * @ClassName: OrcFileOutputer
  * @Description:
  **/
-public class OrcFileOutputer extends BaseFileOutputer<Row> {
+public class OrcFileOutputer extends BaseFileOutputer<DataRow> {
 
 
-    public OrcFileOutputer(Configuration configuration, String path) {
-        super(configuration, path);
+    public OrcFileOutputer(Configuration configuration, FileSystem fileSystem) {
+        super(configuration, fileSystem);
     }
 
     @Override
-    protected void initOutput() {
+    public void closeOutputer() {
 
     }
 
     @Override
-    public boolean out(List<Object> data) {
+    public void initOutputer() throws IOException {
+
+    }
+
+    @Override
+    public boolean out(Map<String, DataField> data) throws Exception {
         return false;
     }
 
-    @Override
-    public Object converType(Object obj) {
-        return null;
-    }
 }

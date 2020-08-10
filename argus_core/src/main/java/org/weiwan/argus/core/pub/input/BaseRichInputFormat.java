@@ -145,7 +145,6 @@ public abstract class BaseRichInputFormat<OT, T extends InputSplit> extends Rich
 
     @Override
     public OT nextRecord(OT reuse) throws IOException {
-
         OT ot = this.nextRecordInternal(reuse);
         return ot;
     }

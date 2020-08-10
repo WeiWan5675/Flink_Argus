@@ -1,6 +1,5 @@
 package org.weiwan.argus.writer.hive;
 
-import org.apache.flink.types.Row;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.hive.conf.HiveConf;
@@ -11,6 +10,7 @@ import org.weiwan.argus.core.pub.enums.CompressType;
 import org.weiwan.argus.core.pub.enums.FileType;
 import org.weiwan.argus.core.pub.output.BaseRichOutputFormat;
 import org.weiwan.argus.core.pub.output.hdfs.MatchMode;
+import org.weiwan.argus.core.pub.pojo.DataRow;
 import org.weiwan.argus.core.pub.pojo.JobFormatState;
 import org.weiwan.argus.core.pub.config.ArgusContext;
 import org.weiwan.argus.core.pub.pojo.DataRecord;
@@ -31,7 +31,7 @@ import java.util.Map;
  * @ClassName: HiveOutputFormat
  * @Description:
  **/
-public class HiveOutputFormat extends BaseRichOutputFormat<DataRecord<Row>> {
+public class HiveOutputFormat extends BaseRichOutputFormat<DataRecord<DataRow>> {
 
 
     private static final String KEY_AUTO_CREATE_TABLE = "writer.hive.enableAutoCreateTable";
@@ -215,13 +215,13 @@ public class HiveOutputFormat extends BaseRichOutputFormat<DataRecord<Row>> {
     }
 
     @Override
-    public void writerRecordInternal(DataRecord<Row> record) {
+    public void writerRecordInternal(DataRecord<DataRow> record) {
         //写出单条记录
         System.out.println(record.toString());
     }
 
     @Override
-    public void batchWriteRecordsInternal(List<DataRecord<Row>> batchRecords) {
+    public void batchWriteRecordsInternal(List<DataRecord<DataRow>> batchRecords) {
         //批量写出记录
     }
 

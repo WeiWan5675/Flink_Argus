@@ -16,7 +16,7 @@ public enum CompressType implements Serializable {
     BIZP2("BIZP2", "BIZP2", BZip2Codec.class),
     SNAPPY("SNAPPY", "SNAPPY", SnappyCodec.class),
     LZ4("LZ4", "LZ4", Lz4Codec.class),
-    NONE("NONE", "none", DefaultCodec.class);
+    NONE("NONE", "NONE", DefaultCodec.class);
 
     private String code;
     private String msg;

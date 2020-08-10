@@ -1,5 +1,6 @@
 package org.weiwan.argus.core.pub.pojo;
 
+import org.apache.flink.annotation.PublicEvolving;
 import org.weiwan.argus.core.pub.output.hdfs.ColumnType;
 
 import java.io.Serializable;
@@ -11,14 +12,15 @@ import java.io.Serializable;
  * @ClassName: DataField
  * @Description:
  **/
-public class DataField implements Serializable {
+@PublicEvolving
+public class DataField<T> implements Serializable {
 
     private String fieldKey;
     private ColumnType fieldType;
-    private Object value;
+    private T value;
 
 
-    public DataField(String fieldKey, ColumnType fieldType, Object value) {
+    public DataField(String fieldKey, ColumnType fieldType, T value) {
         this.fieldKey = fieldKey;
         this.fieldType = fieldType;
         this.value = value;
@@ -48,7 +50,7 @@ public class DataField implements Serializable {
         return value;
     }
 
-    public void setValue(Object value) {
+    public void setValue(T value) {
         this.value = value;
     }
 

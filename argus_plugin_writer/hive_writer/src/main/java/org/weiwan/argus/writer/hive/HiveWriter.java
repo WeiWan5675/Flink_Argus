@@ -1,11 +1,11 @@
 package org.weiwan.argus.writer.hive;
 
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
-import org.apache.flink.types.Row;
 import org.weiwan.argus.core.pub.output.BaseRichOutputFormat;
 import org.weiwan.argus.core.pub.api.BaseWriter;
 import org.weiwan.argus.core.pub.config.ArgusContext;
 import org.weiwan.argus.core.pub.pojo.DataRecord;
+import org.weiwan.argus.core.pub.pojo.DataRow;
 
 /**
  * @Author: xiaozhennan
@@ -14,7 +14,7 @@ import org.weiwan.argus.core.pub.pojo.DataRecord;
  * @ClassName: HiveWriter
  * @Description:
  **/
-public class HiveWriter extends BaseWriter<DataRecord<Row>> {
+public class HiveWriter extends BaseWriter<DataRecord<DataRow>> {
 
     public HiveWriter(StreamExecutionEnvironment env, ArgusContext argusContext) {
         super(env, argusContext);

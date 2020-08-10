@@ -4,6 +4,7 @@ import org.apache.commons.lang3.CharEncoding;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.flink.configuration.Configuration;
 import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 import org.weiwan.argus.core.pub.config.ArgusContext;
 import org.weiwan.argus.core.pub.enums.CompressType;
 import org.weiwan.argus.core.pub.enums.FileType;
@@ -49,7 +50,7 @@ public class HdfsOutputFormat<T extends DataRecord> extends BaseRichOutputFormat
     protected FileOutputer outPuter;
     protected List<DataField> dataFields;
 
-    protected FileSystem flieSystem;
+    protected FileSystem fileSystem;
 
 
     public static final String WRITER_HDFS_OUTPUT_FILE_NAME = "writer.output.fileName";
@@ -63,6 +64,7 @@ public class HdfsOutputFormat<T extends DataRecord> extends BaseRichOutputFormat
     private static final String WRITER_HDFS_OUTPUT_COMPRESSTYPE = "writer.output.compressType";
     public static final String WRITER_HDFS_DFSDEFAULT = "writer.dfsDefault";
     private String currentFileBlock;
+    private String completeFileBlock;
     private org.apache.hadoop.conf.Configuration configuration;
     private MatchMode matchMode;
 
@@ -71,14 +73,14 @@ public class HdfsOutputFormat<T extends DataRecord> extends BaseRichOutputFormat
         //初始化配置文件
         this.fileName = writerConfig.getStringVal(WRITER_HDFS_OUTPUT_FILE_NAME, new Date().getTime() + "");
         this.targetPath = writerConfig.getStringVal(WRITER_HDFS_OUTPUT_PATH);
-        this.fileSuffix = writerConfig.getStringVal(WRITER_HDFS_OUTPUT_FILE_SUFFIX);
+        this.fileSuffix = writerConfig.getStringVal(WRITER_HDFS_OUTPUT_FILE_SUFFIX, "");
         this.lineDelimiter = writerConfig.getStringVal(WRITER_HDFS_OUTPUT_LINEDELIMITER, "\n");
         this.fieldDelimiter = writerConfig.getStringVal(WRITER_HDFS_OUTPUT_FIELDDELIMITER, "\u0001");
         this.charsetName = writerConfig.getStringVal(WRITER_HDFS_OUTPUT_CHARSETNAME, CharEncoding.UTF_8);
         this.dfsDefault = writerConfig.getStringVal(WRITER_HDFS_DFSDEFAULT);
         this.matchMode = MatchMode.valueOf(writerConfig.getStringVal(WRITER_HDFS_OUTPUT_MATCHMODE, "ALIGNMENT").toUpperCase());
-        this.writeMode = WriteMode.valueOf(writerConfig.getStringVal(WRITER_HDFS_OUTPUT_WRITERMODE,"APPEND").toUpperCase());
-        this.compressType = CompressType.valueOf(writerConfig.getStringVal(WRITER_HDFS_OUTPUT_COMPRESSTYPE,"NONE").toUpperCase());
+        this.writeMode = WriteMode.valueOf(writerConfig.getStringVal(WRITER_HDFS_OUTPUT_WRITERMODE, "APPEND").toUpperCase());
+        this.compressType = CompressType.valueOf(writerConfig.getStringVal(WRITER_HDFS_OUTPUT_COMPRESSTYPE, "NONE").toUpperCase());
     }
 
     public HdfsOutputFormat(ArgusContext argusContext) {
@@ -105,17 +107,19 @@ public class HdfsOutputFormat<T extends DataRecord> extends BaseRichOutputFormat
         if (StringUtils.isBlank(fileName)) {
             //为空,根据任务index生成文件名称
             this.fileName = "0000" + taskNumber + fileSuffix;
+        } else {
+            this.fileName = fileName + "_" + taskNumber + fileSuffix;
         }
         //临时目录
-        this.tmpPath = targetPath +File.separator + ".temporary";
+        this.tmpPath = targetPath + File.separator + ".temporary";
         this.tmpFileName = "." + fileName + "." + tmpFileSuffix;
         if (isRestore()) {
-            this.tmpFileName = "." + fileName +"." + tmpFileSuffix;
+            this.tmpFileName = "." + fileName + "." + tmpFileSuffix;
         }
         this.currentFileBlock = tmpPath + File.separator + tmpFileName;
-
+        this.completeFileBlock = targetPath + File.separator + fileName;
         try {
-            flieSystem = FileSystem.get(configuration);
+            fileSystem = FileSystem.get(configuration);
             initOutputer();
             //初始化目录
             /**
@@ -133,19 +137,31 @@ public class HdfsOutputFormat<T extends DataRecord> extends BaseRichOutputFormat
     private void initOutputer() {
         switch (fileType) {
             case TEXT:
-                outPuter = new TextFileOutputer(configuration, currentFileBlock);
+                outPuter = new TextFileOutputer(configuration, fileSystem);
                 break;
             case ORC:
-                outPuter = new OrcFileOutputer(configuration, currentFileBlock);
+                outPuter = new OrcFileOutputer(configuration, fileSystem);
                 break;
             case PARQUET:
-                outPuter = new ParquetFileOutputer(configuration, currentFileBlock);
+                outPuter = new ParquetFileOutputer(configuration, fileSystem);
                 break;
             default:
                 System.out.println("未匹配");
         }
 
-        outPuter.init(dataFields, matchMode);
+        try {
+            BaseFileOutputer outputer = ((BaseFileOutputer) outPuter);
+            outputer.setCharsetName(charsetName);
+            outputer.setCompressType(compressType);
+            outputer.setFileType(fileType);
+            outputer.setMatchMode(matchMode);
+            outputer.setBlockPath(currentFileBlock);
+            outputer.setFieldDelimiter(fieldDelimiter);
+            outputer.setLineDelimiter(lineDelimiter);
+            outPuter.init(dataFields);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
     }
 
@@ -162,7 +178,11 @@ public class HdfsOutputFormat<T extends DataRecord> extends BaseRichOutputFormat
      */
     @Override
     public void writerRecordInternal(T record) {
-        outPuter.output(record);
+        try {
+            outPuter.output(record);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     /**
@@ -180,7 +200,21 @@ public class HdfsOutputFormat<T extends DataRecord> extends BaseRichOutputFormat
      */
     @Override
     public void colseOutput() {
+        outPuter.close();
 
+        //把文件名称修改为实际处理完成的文件名称
+        Path src = new Path(currentFileBlock);
+        Path dsc = new Path(completeFileBlock);
+        try {
+            boolean exists = fileSystem.exists(dsc);
+            if (exists) {
+                fileSystem.delete(dsc, true);
+            }
+            fileSystem.rename(src, dsc);
+            fileSystem.delete(new Path(tmpPath), true);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     /**

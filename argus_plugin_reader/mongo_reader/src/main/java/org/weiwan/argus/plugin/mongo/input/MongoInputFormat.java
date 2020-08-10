@@ -1,7 +1,7 @@
 package org.weiwan.argus.plugin.mongo.input;
 
-import org.apache.flink.types.Row;
 import org.weiwan.argus.core.pub.input.BaseRichInputFormat;
+import org.weiwan.argus.core.pub.pojo.DataRow;
 import org.weiwan.argus.core.pub.pojo.JobFormatState;
 import org.weiwan.argus.core.pub.pojo.DataRecord;
 
@@ -12,7 +12,7 @@ import org.weiwan.argus.core.pub.pojo.DataRecord;
  * @ClassName: MongoInputFormat
  * @Description:
  **/
-public class MongoInputFormat extends BaseRichInputFormat<DataRecord<Row>, MongoInputSpliter> {
+public class MongoInputFormat extends BaseRichInputFormat<DataRecord<DataRow>, MongoInputSpliter> {
 
     /**
      * 打开InputFormat,根据split读取数据
@@ -43,7 +43,7 @@ public class MongoInputFormat extends BaseRichInputFormat<DataRecord<Row>, Mongo
      * @return 数据
      */
     @Override
-    public DataRecord<Row> nextRecordInternal(DataRecord<Row> reuse) {
+    public DataRecord<DataRow> nextRecordInternal(DataRecord<DataRow> reuse) {
         return null;
     }
 

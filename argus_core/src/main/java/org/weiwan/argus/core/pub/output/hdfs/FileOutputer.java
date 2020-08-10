@@ -1,9 +1,12 @@
 package org.weiwan.argus.core.pub.output.hdfs;
 
-import org.apache.flink.types.Row;
+import org.weiwan.argus.core.pub.enums.CompressType;
+import org.weiwan.argus.core.pub.enums.FileType;
 import org.weiwan.argus.core.pub.pojo.DataField;
 import org.weiwan.argus.core.pub.pojo.DataRecord;
+import org.weiwan.argus.core.pub.pojo.DataRow;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
@@ -14,10 +17,13 @@ import java.util.Map;
  * @ClassName: FileOutputer
  * @Description:
  **/
-public interface FileOutputer<T extends Row> {
+public interface FileOutputer<T extends DataRow> {
 
-    public void init(List<DataField> fields, MatchMode matchMode);
+    public void init(List<DataField> fields) throws IOException;
 
-    public boolean output(DataRecord<T> data);
+    public boolean output(DataRecord<T> data) throws Exception;
+
+
+    public void close();
 
 }

@@ -2,14 +2,10 @@ package org.weiwan.argus.core.pub.input.jdbc;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.flink.configuration.Configuration;
-import org.apache.flink.types.Row;
 import org.weiwan.argus.core.pub.input.BaseRichInputFormat;
 import org.weiwan.argus.core.pub.output.hdfs.ColumnType;
-import org.weiwan.argus.core.pub.pojo.JobFormatState;
-import org.weiwan.argus.core.pub.pojo.SqlInfo;
+import org.weiwan.argus.core.pub.pojo.*;
 import org.weiwan.argus.core.pub.config.ArgusContext;
-import org.weiwan.argus.core.pub.pojo.DataField;
-import org.weiwan.argus.core.pub.pojo.DataRecord;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -24,7 +20,7 @@ import java.util.Map;
  * @ClassName: JdbcInputFormat
  * @Description:
  **/
-public abstract class JdbcInputFormat extends BaseRichInputFormat<DataRecord<Row>, JdbcInputSpliter> {
+public abstract class JdbcInputFormat extends BaseRichInputFormat<DataRecord<DataRow>, JdbcInputSpliter> {
 
 
     private static final String KEY_READER_TYPE = "reader.type";
@@ -89,7 +85,7 @@ public abstract class JdbcInputFormat extends BaseRichInputFormat<DataRecord<Row
         this.pollingInterval = readerConfig.getLongVal(KEY_READER_INCR_POLL_INTERVAL, 10000L);
         this.isPolling = readerConfig.getBooleanVal(KEY_READER_INCR_ENABLE_POLLING, false);
         this.customSql = readerConfig.getStringVal(KEY_READER_SQL_CUSTOMSQL);
-        this.columns = readerConfig.getStringVal(KEY_READER_SQL_COLUMNS, "1").split(",");
+        this.columns = readerConfig.getStringVal(KEY_READER_SQL_COLUMNS, "*").split(",");
         this.filters = readerConfig.getStringVal(KEY_READER_SQL_FILTER, "1=1").split(",");
         this.incrField = readerConfig.getStringVal(KEY_READER_INCR_INCRFIELD);
         this.splitField = readerConfig.getStringVal(KEY_READER_SPLIT_FIELD);
@@ -231,10 +227,10 @@ public abstract class JdbcInputFormat extends BaseRichInputFormat<DataRecord<Row
      * @return 数据
      */
     @Override
-    public DataRecord<Row> nextRecordInternal(DataRecord<Row> row) {
-        DataRecord<Row> rowDataRecord = new DataRecord();
+    public DataRecord<DataRow> nextRecordInternal(DataRecord<DataRow> row) {
+        DataRecord<DataRow> rowDataRecord = new DataRecord();
         try {
-            Row currentRow = new Row(columnCount);
+            DataRow currentRow = new DataRow(columnCount);
             rowDataRecord.setData(currentRow);
             if (!isComplete()) {
                 for (int i = 0; i < columnCount; i++) {
@@ -242,9 +238,14 @@ public abstract class JdbcInputFormat extends BaseRichInputFormat<DataRecord<Row
                     Object object = resultSet.getObject(i + 1);
                     String columnName = tableMetaData.getColumnName(i + 1);
                     dataField.setFieldKey(columnName);
-                    dataField.setValue(object);
-                    ColumnType columnType = ColumnType.getType(object.getClass().getTypeName());
-                    dataField.setFieldType(columnType);
+                    if (object == null) {
+                        dataField.setValue(null);
+                        dataField.setFieldType(ColumnType.NULL);
+                    } else {
+                        dataField.setValue(object);
+                        ColumnType columnType = ColumnType.getType(object.getClass().getTypeName());
+                        dataField.setFieldType(columnType);
+                    }
                     currentRow.setField(i, dataField);
                 }
             }
@@ -257,6 +258,7 @@ public abstract class JdbcInputFormat extends BaseRichInputFormat<DataRecord<Row
         } catch (SQLException throwables) {
             throwables.printStackTrace();
         }
+        row = rowDataRecord;
         return rowDataRecord;
     }
 

@@ -19,7 +19,7 @@ public class SqlGeneratorForMysql implements SqlGenerator {
     private static final String incrSql = " and ${incrField} BETWEEN ? AND ?";
     String maxSql = "select max(${incrField}) as " + MAX_VALUE + " from ${dbSchema}.${tableName} where 1 = 1";
     String minSql = "select min(${incrField}) as " + MIN_VALUE + " from ${dbSchema}.${tableName} where 1 = 1";
-    private String sqlGenerated = "select 1";
+    private String sqlGenerated = "select 1 ";
     private SqlInfo sqlInfo;
 
 
@@ -44,14 +44,14 @@ public class SqlGeneratorForMysql implements SqlGenerator {
 
         StringBuffer columnSb = new StringBuffer("");
         String[] columns = sqlInfo.getColumns();
-        for (int i = 0; i < columns.length; i++) {
-            if (i < columns.length - 1) {
-                columnSb.append(columns[i])
-                        .append(",");
-            } else {
-                columnSb.append(columns[i]);
+            for (int i = 0; i < columns.length; i++) {
+                if (i < columns.length - 1) {
+                    columnSb.append(columns[i])
+                            .append(",");
+                } else {
+                    columnSb.append(columns[i]);
+                }
             }
-        }
 
         String sql_tmp1 = sql_basic.replace("${columns}", columnSb.toString());
         String sql_tmp2 = sql_tmp1.replace("${filterSql}", filterSb.toString());

@@ -20,8 +20,8 @@ package org.weiwan.argus.core.utils;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import org.apache.flink.types.Row;
 import org.apache.flink.util.Preconditions;
+import org.weiwan.argus.core.pub.pojo.DataRow;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -35,7 +35,7 @@ import java.util.Map;
 public class RowUtil {
     static Gson gson = new GsonBuilder().disableHtmlEscaping().create();
 
-    public static String rowToJson(Row row, String[] colName) {
+    public static String rowToJson(DataRow row, String[] colName) {
         Preconditions.checkNotNull(colName);
         Map<String,Object> map = new LinkedHashMap<>(colName.length);
 

@@ -1,5 +1,7 @@
 package org.weiwan.argus.core.pub.pojo;
 
+import org.apache.flink.annotation.PublicEvolving;
+
 import java.io.Serializable;
 
 /**
@@ -9,6 +11,7 @@ import java.io.Serializable;
  * @ClassName: DataRecord
  * @Description:
  **/
+@PublicEvolving
 public class DataRecord<T> implements Serializable {
     private String tableName;
     private String primaryKey;

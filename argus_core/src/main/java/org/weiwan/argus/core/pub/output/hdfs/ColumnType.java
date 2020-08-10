@@ -2,6 +2,7 @@ package org.weiwan.argus.core.pub.output.hdfs;
 
 import org.weiwan.argus.core.constants.ArgusConstans;
 
+import java.io.Serializable;
 import java.util.Arrays;
 import java.util.List;
 
@@ -12,32 +13,35 @@ import java.util.List;
  * @ClassName: ColumnType
  * @Description:
  **/
-public enum ColumnType {
+public enum ColumnType implements Serializable {
 
     /**
      * string type
      */
-    STRING, VARCHAR, VARCHAR2, CHAR, NVARCHAR, TEXT, KEYWORD, BINARY,
+    STRING, VARCHAR, VARCHAR2, CHAR, NVARCHAR, TEXT, KEYWORD, BINARY, JSON,
 
     /**
      * number type
      */
-    INT, INT32, MEDIUMINT, TINYINT, DATETIME, SMALLINT, BIGINT, LONG, INT64, SHORT, INTEGER,
+    INT, INT32, MEDIUMINT, TINYINT, SMALLINT, BIGINT, LONG, INT64, SHORT, INTEGER,
 
     /**
      * double type
      */
     DOUBLE, FLOAT,
-    BOOLEAN,
+    BOOLEAN, DECIMAL,
 
     /**
      * date type
      */
     DATE, TIMESTAMP, TIME,
-    DECIMAL, YEAR, BIT;
+    YEAR, DATETIME,
+
+
+    NULL;
 
     public static List<ColumnType> TIME_TYPE = Arrays.asList(
-            DATE, DATETIME, TIME, TIMESTAMP
+            DATE, DATETIME, TIME, TIMESTAMP, YEAR
     );
 
     public static List<ColumnType> NUMBER_TYPE = Arrays.asList(

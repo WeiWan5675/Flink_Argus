@@ -1,12 +1,20 @@
 package org.weiwan.argus.core.pub.output.hdfs;
 
-import org.apache.flink.types.Row;
+import org.apache.commons.net.ntp.TimeStamp;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.hive.metastore.api.Decimal;
 import org.apache.hadoop.mapred.FileOutputFormat;
+import org.weiwan.argus.core.pub.enums.CompressType;
+import org.weiwan.argus.core.pub.enums.FileType;
 import org.weiwan.argus.core.pub.pojo.DataField;
 import org.weiwan.argus.core.pub.pojo.DataRecord;
+import org.weiwan.argus.core.pub.pojo.DataRow;
 
+import java.io.IOException;
+import java.sql.Time;
+import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.*;
 
 /**
@@ -16,7 +24,7 @@ import java.util.*;
  * @ClassName: BaseFileOutputer
  * @Description:
  **/
-public abstract class BaseFileOutputer<T extends Row> implements FileOutputer<T> {
+public abstract class BaseFileOutputer<T extends DataRow> implements FileOutputer<T> {
 
 
     /**
@@ -33,15 +41,19 @@ public abstract class BaseFileOutputer<T extends Row> implements FileOutputer<T>
     protected boolean inited = false;
     protected FileOutputFormat fileOutputFormat;
     protected FileSystem fileSystem;
+    protected CompressType compressType;
+    protected FileType fileType;
+    protected String charsetName = "UTF-8";
+    protected String lineDelimiter = "\n";
+    protected String fieldDelimiter = "\u0001";
 
-    public BaseFileOutputer(Configuration configuration, String path) {
+    public BaseFileOutputer(Configuration configuration, FileSystem fileSystem) {
         this.configuration = configuration;
-        this.blockPath = path;
+        this.fileSystem = fileSystem;
     }
 
     @Override
-    public void init(List<DataField> fields, MatchMode matchMode) {
-        this.matchMode = matchMode;
+    public void init(List<DataField> fields) throws IOException {
         if (MatchMode.MAPPING == matchMode && (fields == null || fields.size() < 1)) {
             //是匹配模式,但是没有给定fields,直接抛出异常
             throw new RuntimeException(String.format("select MatchMode: %s but fields is empty", matchMode.name()));
@@ -55,56 +67,45 @@ public abstract class BaseFileOutputer<T extends Row> implements FileOutputer<T>
         for (DataField field : fields) {
             columnTypes.put(field.getFieldKey(), field);
         }
-        initOutput();
+
+        initOutputer();
         inited = true;
     }
 
 
     @Override
-    public boolean output(DataRecord<T> data) {
+    public boolean output(DataRecord<T> data) throws Exception {
 
         //没有初始化,并且是index匹配模式
         if (!inited && MatchMode.ALIGNMENT == matchMode) {
             //使用数据的类型进行初始化
-            Row firstRow = data.getData();
+            DataRow firstRow = data.getData();
             columnTypes = new LinkedHashMap<>();
             for (int i = 0; i < firstRow.getArity(); i++) {
                 DataField field = (DataField) firstRow.getField(i);
                 String fieldKey = field.getFieldKey();
                 columnTypes.put(fieldKey, field);
             }
-            initOutput();
+            initOutputer();
             inited = true;
         }
 
         //数据中字段类型需要匹配
-        Row row = data.getData();
+        DataRow row = data.getData();
         Map<String, DataField> dataFieldMap = transformRow2Map(row);
-        List<Object> datas = new ArrayList<Object>();
-        switch (matchMode) {
-            case MAPPING:
-                for (String key : columnTypes.keySet()) {
-                    DataField dataField = dataFieldMap.get(key);
-                    Object isOK = converTypeInternal(dataField.getValue(), columnTypes.get(key).getFieldType());
-                    datas.add(isOK);
-                }
-                break;
-            case ALIGNMENT:
-                //直接写出
-
-            default:
-                System.out.println("没有匹配的映射模式");
-        }
-
-
+        this.out(dataFieldMap);
         return false;
     }
 
-    private Map<String, DataField> transformRow2Map(Row row) {
+    private Map<String, DataField> transformRow2Map(DataRow row) {
         Map<String, DataField> res = new HashMap();
         for (int i = 0; i < row.getArity(); i++) {
             DataField field = (DataField) row.getField(i);
             if (field != null) {
+                Object value = field.getValue();
+                ColumnType fieldType = field.getFieldType();
+                Object o = converTypeInternal(value, fieldType);
+                field.setValue(o);
                 res.put(field.getFieldKey(), field);
             }
         }
@@ -112,17 +113,111 @@ public abstract class BaseFileOutputer<T extends Row> implements FileOutputer<T>
     }
 
 
-    protected abstract void initOutput();
+    @Override
+    public void close() {
+        closeOutputer();
+    }
 
-    public abstract boolean out(List<Object> data);
+    public abstract void closeOutputer();
 
-    public abstract Object converType(Object obj);
+    public abstract void initOutputer() throws IOException;
+
+    public abstract boolean out(Map<String, DataField> data) throws Exception;
+
 
     //提供一套默认转换
     public Object converTypeInternal(Object obj, ColumnType columnType) {
-        Object o = converType(obj);
-        return o;
+
+        switch (columnType) {
+            case STRING:
+            case VARCHAR:
+            case VARCHAR2:
+            case NVARCHAR:
+            case TEXT:
+            case BINARY:
+            case JSON:
+                return String.valueOf(obj);
+            case TINYINT:
+            case INTEGER:
+            case INT:
+            case INT32:
+            case INT64:
+                return Integer.valueOf(obj.toString());
+
+            case LONG:
+            case BIGINT:
+                return Long.valueOf(obj.toString());
+
+
+            case TIMESTAMP:
+                return Timestamp.valueOf(obj.toString());
+            case TIME:
+                return Time.valueOf(obj.toString()).getTime();
+            case DATETIME:
+                return obj;
+            case FLOAT:
+            case DOUBLE:
+                return Double.valueOf(obj.toString());
+            case BOOLEAN:
+                return Boolean.valueOf(obj.toString());
+        }
+        return obj;
     }
 
 
+    public MatchMode getMatchMode() {
+        return matchMode;
+    }
+
+    public void setMatchMode(MatchMode matchMode) {
+        this.matchMode = matchMode;
+    }
+
+    public CompressType getCompressType() {
+        return compressType;
+    }
+
+    public void setCompressType(CompressType compressType) {
+        this.compressType = compressType;
+    }
+
+    public FileType getFileType() {
+        return fileType;
+    }
+
+    public void setFileType(FileType fileType) {
+        this.fileType = fileType;
+    }
+
+    public String getCharsetName() {
+        return charsetName;
+    }
+
+    public void setCharsetName(String charsetName) {
+        this.charsetName = charsetName;
+    }
+
+    public String getBlockPath() {
+        return blockPath;
+    }
+
+    public void setBlockPath(String blockPath) {
+        this.blockPath = blockPath;
+    }
+
+    public String getLineDelimiter() {
+        return lineDelimiter;
+    }
+
+    public void setLineDelimiter(String lineDelimiter) {
+        this.lineDelimiter = lineDelimiter;
+    }
+
+    public String getFieldDelimiter() {
+        return fieldDelimiter;
+    }
+
+    public void setFieldDelimiter(String fieldDelimiter) {
+        this.fieldDelimiter = fieldDelimiter;
+    }
 }
