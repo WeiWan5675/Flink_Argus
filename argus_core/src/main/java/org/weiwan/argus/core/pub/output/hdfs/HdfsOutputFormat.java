@@ -42,7 +42,6 @@ public class HdfsOutputFormat<T extends DataRecord> extends BaseRichOutputFormat
     protected CompressType compressType = CompressType.NONE;
     protected WriteMode writeMode = WriteMode.OVERWRITE;
     protected FileType fileType = FileType.TEXT;
-    protected Long fileBlockSize;
 
 
     protected String tmpPath;
@@ -94,7 +93,8 @@ public class HdfsOutputFormat<T extends DataRecord> extends BaseRichOutputFormat
         this.writeMode = WriteMode.valueOf(writerConfig.getStringVal(WRITER_HDFS_OUTPUT_WRITERMODE, "APPEND").toUpperCase());
         this.compressType = CompressType.valueOf(writerConfig.getStringVal(WRITER_HDFS_OUTPUT_COMPRESSTYPE, "NONE").toUpperCase());
         this.fileType = FileType.valueOf(writerConfig.getStringVal(WRITER_HDFS_OUTPUT_FILETYPE, "TEXT").toUpperCase());
-        this.fileBlockSize = writerConfig.getLongVal(WRITER_HDFS_OUTPUT_FILE_BLOCKSIZE, 65535L);
+
+
     }
 
     public HdfsOutputFormat(ArgusContext argusContext) {
@@ -112,16 +112,21 @@ public class HdfsOutputFormat<T extends DataRecord> extends BaseRichOutputFormat
     public void openOutput(int taskNumber, int numTasks, ArgusContext argusContext) {
         StartOptions startOptions = argusContext.getStartOptions();
         String hadoopConfDir = startOptions.getHadoopConf();
+        System.setProperty("HADOOP_USER_NAME", "hdfs");
         this.configuration = ClusterConfigLoader.loadHadoopConfig(hadoopConfDir);
         configuration.set("dfs.socket.timeout", "6000000");
-        //初始化成员变量
-//        checkFormatVars();
-        //初始化文件夹/临时文件夹/临时文件/目标文件名称
-        nextFileBlock(taskNumber);
-        //完成的文件路径
 
         try {
             fileSystem = FileSystem.get(configuration);
+            //初始化成员变量
+//        checkFormatVars();
+            if (WriteMode.OVERWRITE == writeMode) {
+                //是覆盖写入,直接删除文件夹
+                HdfsUtil.deleteFile(new Path(targetPath), fileSystem, true);
+            }
+            //初始化文件夹/临时文件夹/临时文件/目标文件名称
+            nextFileBlock(taskNumber);
+            //完成的文件路径
             initOutputer();
 
         } catch (IOException e) {
@@ -198,11 +203,6 @@ public class HdfsOutputFormat<T extends DataRecord> extends BaseRichOutputFormat
     @Override
     public void writerRecordInternal(T record) {
         try {
-            Long currentBlockSize = outPuter.getCurrentFileBlockSize();
-            if (currentBlockSize >= fileBlockSize) {
-                outPuter.writeNextBlock(nextFileBlock(taskNumber));
-                Thread.sleep(500L);
-            }
             outPuter.output(record);
         } catch (Exception e) {
             e.printStackTrace();

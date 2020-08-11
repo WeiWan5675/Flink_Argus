@@ -173,16 +173,4 @@ public class TextFileOutputer extends BaseFileOutputer<DataRow> {
     }
 
 
-    @Override
-    public void writeNextBlock(String nextFileBlock) {
-        //写下一个块
-        this.blockPath = nextFileBlock;
-        try {
-            closeOutputer();
-            Path path = new Path(blockPath);
-            initStream(path);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
 }

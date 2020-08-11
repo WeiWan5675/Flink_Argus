@@ -126,25 +126,6 @@ public abstract class BaseFileOutputer<T extends DataRow> implements FileOutpute
     }
 
 
-    /**
-     * 返回当前文件块大小(Bytes) 默认 1024 * 1024 * 1024 64M
-     * 默认实现
-     *
-     * @return
-     */
-    @Override
-    public Long getCurrentFileBlockSize() {
-        Path path = new Path(blockPath);
-        try {
-            if (fileSystem.exists(path) && fileSystem.isFile(path)) {
-                FileStatus fileStatus = fileSystem.getFileStatus(path);
-                return fileStatus.getLen();
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return -1L;
-    }
 
     @Override
     public void close() {

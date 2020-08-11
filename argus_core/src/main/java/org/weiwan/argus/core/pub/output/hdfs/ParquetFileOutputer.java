@@ -43,8 +43,5 @@ public class ParquetFileOutputer extends BaseFileOutputer<DataRow> {
         return false;
     }
 
-    @Override
-    public void writeNextBlock(String nextFileBlock) {
 
-    }
 }

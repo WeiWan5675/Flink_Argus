@@ -27,12 +27,5 @@ public interface FileOutputer<T extends DataRow> {
 
     public void close();
 
-    /**
-     * 返回当前文件块大小(Bytes) 默认 1024 * 1024 * 1024 64M
-     * @return
-     */
-    Long getCurrentFileBlockSize();
-
-    void writeNextBlock(String nextFileBlock);
 
 }

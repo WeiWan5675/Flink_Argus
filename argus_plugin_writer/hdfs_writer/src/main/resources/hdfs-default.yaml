@@ -62,20 +62,21 @@ writer:
   type: batch # stream
   name: hdfswriter
   class: org.weiwan.argus.writer.hdfs.HdfsWriter
-  defaultFS:
+  defaultFS: hdfs://nameservices
   hadoopConfig: ""
+  parallelism: 3
   batchWriteMode: false #写出模式,是批量写出 还是逐条写出
   batchWriteSize: 10000 #批量写出的大小
   output:
     fileName: test
     fileSuffix:
-    dir: /tmp/xiaozhennan_test/test1
+    dir: /user/hive/warehouse/easylife_ods.db/source_easylife_order_test
     lineDelimiter: "\n"
     fieldDelimiter: "\u0001"
     charSetName: UTF-8
     matchMode: Alignment # Alignment 字段位置映射 | Mapping 字段名称匹配
     writeMode: overwrite #overwrite append
-    compressType: none
+    compressType: GZIP
     fileType: Text
 
 
