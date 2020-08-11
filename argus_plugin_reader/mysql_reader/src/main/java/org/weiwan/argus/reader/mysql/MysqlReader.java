@@ -47,7 +47,7 @@ public class MysqlReader extends BaseReader<DataRecord<DataRow>> {
         DataStream<DataRecord<DataRow>> map = stream.map(new MapFunction<DataRecord<DataRow>, DataRecord<DataRow>>() {
             @Override
             public DataRecord<DataRow> map(DataRecord<DataRow> value) throws Exception {
-                System.out.println("afterReading处理数据" + value.getData().toString());
+//                System.out.println("afterReading处理数据" + value.getData().toString());
 
                 return value;
             }

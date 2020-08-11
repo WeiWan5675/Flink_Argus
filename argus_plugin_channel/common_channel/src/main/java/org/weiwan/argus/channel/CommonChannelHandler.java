@@ -13,7 +13,7 @@ import org.weiwan.argus.core.pub.pojo.DataRecord;
 public class CommonChannelHandler extends ArgusChannelHandler<DataRecord, DataRecord> {
     @Override
     public DataRecord process(DataRecord value) {
-        System.out.println("channel处理数据!!!!" + value.getData().toString());
+//        System.out.println("channel处理数据!!!!" + value.getData().toString());
         return new DataRecord(value.getData());
     }
 }

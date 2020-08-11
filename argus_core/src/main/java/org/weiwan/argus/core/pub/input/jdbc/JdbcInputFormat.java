@@ -2,6 +2,8 @@ package org.weiwan.argus.core.pub.input.jdbc;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.flink.configuration.Configuration;
+import org.apache.flink.table.types.DataType;
+import org.weiwan.argus.common.utils.DateUtils;
 import org.weiwan.argus.core.pub.input.BaseRichInputFormat;
 import org.weiwan.argus.core.pub.output.hdfs.ColumnType;
 import org.weiwan.argus.core.pub.pojo.*;
@@ -229,6 +231,9 @@ public abstract class JdbcInputFormat extends BaseRichInputFormat<DataRecord<Dat
     @Override
     public DataRecord<DataRow> nextRecordInternal(DataRecord<DataRow> row) {
         DataRecord<DataRow> rowDataRecord = new DataRecord();
+        rowDataRecord.setTableName(tableName);
+        rowDataRecord.setSchemaName(dbSchema);
+        rowDataRecord.setTimestamp(DateUtils.getDateStr(new java.util.Date()));
         try {
             DataRow currentRow = new DataRow(columnCount);
             rowDataRecord.setData(currentRow);

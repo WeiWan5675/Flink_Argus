@@ -27,13 +27,30 @@ else
 fi
 
 JAR_HOME=$ARGUS_HOME/lib
-
+PLUGINS_DIR=$ARGUS_HOME/plugins
+READER_PLUGINS_DIR=$PLUGINS_DIR/reader
+CHANNEL_PLUGINS_DIR=$PLUGINS_DIR/channel
+WRITER_PLUGINS_DIR=$PLUGINS_DIR/writer
 CLASS_PATH=".:$JAVA_HOME/lib:$JAVA_HOME/lib/dt.jar:$JAVA_HOME/lib/tools.jar"
 for jar in $JAR_HOME/*.jar
 do
 CLASS_PATH=$CLASS_PATH:$jar
 done
 echo $CLASS_PATH
+
+for jar in $READER_PLUGINS_DIR/*.jar
+do
+  CLASS_PATH=$CLASS_PATH:$jar
+done
+for jar in $WRITER_PLUGINS_DIR/*.jar
+do
+  CLASS_PATH=$CLASS_PATH:$jar
+done
+
+for jar in $CHANNEL_PLUGINS_DIR/*.jar
+do
+  CLASS_PATH=$CLASS_PATH:$jar
+done
 
 
 CLASS_NAME=org.weiwan.argus.start.DataSyncStarter

@@ -49,7 +49,7 @@ public class DataRow<T> implements Serializable {
      * @return The field at the specified position.
      * @throws IndexOutOfBoundsException Thrown, if the position is negative, or equal to, or larger than the number of fields.
      */
-    public Object getField(int pos) {
+    public T getField(int pos) {
         return fields[pos];
     }
 

@@ -46,7 +46,7 @@ public class DataField<T> implements Serializable {
         this.fieldType = fieldType;
     }
 
-    public Object getValue() {
+    public T getValue() {
         return value;
     }
 

@@ -88,7 +88,7 @@ public class StartOptions implements Serializable {
 
 
     @OptionField(
-            oweKeys = "hd",
+            oweKeys = "appHome",
             description = "argus root path")
     private String argusHome;
 

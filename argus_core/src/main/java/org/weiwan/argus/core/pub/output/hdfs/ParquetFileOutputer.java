@@ -3,9 +3,11 @@ package org.weiwan.argus.core.pub.output.hdfs;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.weiwan.argus.core.pub.pojo.DataField;
+import org.weiwan.argus.core.pub.pojo.DataRecord;
 import org.weiwan.argus.core.pub.pojo.DataRow;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -16,7 +18,6 @@ import java.util.Map;
  * @Description:
  **/
 public class ParquetFileOutputer extends BaseFileOutputer<DataRow> {
-
 
     public ParquetFileOutputer(Configuration configuration, FileSystem fileSystem) {
         super(configuration, fileSystem);
@@ -37,4 +38,13 @@ public class ParquetFileOutputer extends BaseFileOutputer<DataRow> {
         return false;
     }
 
+    @Override
+    public boolean batchOutput(List<DataRecord<DataRow>> dataRecords) {
+        return false;
+    }
+
+    @Override
+    public void writeNextBlock(String nextFileBlock) {
+
+    }
 }

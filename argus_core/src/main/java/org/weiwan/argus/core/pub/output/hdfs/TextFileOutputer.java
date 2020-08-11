@@ -1,14 +1,16 @@
 package org.weiwan.argus.core.pub.output.hdfs;
 
-import org.apache.commons.compress.compressors.bzip2.BZip2CompressorOutputStream;
 import org.apache.commons.compress.compressors.gzip.GzipCompressorOutputStream;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.common.type.HiveDecimal;
-import org.weiwan.argus.common.utils.DateUtil;
+import org.iq80.snappy.SnappyOutputStream;
+import org.weiwan.argus.common.utils.DateUtils;
 import org.weiwan.argus.core.pub.pojo.DataField;
+import org.weiwan.argus.core.pub.pojo.DataRecord;
 import org.weiwan.argus.core.pub.pojo.DataRow;
+import org.weiwan.argus.core.utils.HdfsUtil;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -17,6 +19,7 @@ import java.math.BigInteger;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -30,6 +33,8 @@ public class TextFileOutputer extends BaseFileOutputer<DataRow> {
 
     private OutputStream stream;
 
+    private int waitBatchSize = 0;
+
     public TextFileOutputer(Configuration configuration, FileSystem fileSystem) {
         super(configuration, fileSystem);
     }
@@ -41,6 +46,7 @@ public class TextFileOutputer extends BaseFileOutputer<DataRow> {
                 stream.flush();
                 stream.close();
             }
+            this.stream = null;
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -49,6 +55,10 @@ public class TextFileOutputer extends BaseFileOutputer<DataRow> {
     @Override
     public void initOutputer() throws IOException {
         Path path = new Path(blockPath);
+        initStream(path);
+    }
+
+    private void initStream(Path path) throws IOException {
         switch (compressType) {
             case NONE:
                 stream = fileSystem.create(path);
@@ -56,8 +66,8 @@ public class TextFileOutputer extends BaseFileOutputer<DataRow> {
             case GZIP:
                 stream = new GzipCompressorOutputStream(fileSystem.create(path));
                 break;
-            case BIZP2:
-                stream = new BZip2CompressorOutputStream(fileSystem.create(path));
+            case SNAPPY:
+                stream = new SnappyOutputStream(fileSystem.create(path));
                 break;
         }
     }
@@ -116,7 +126,7 @@ public class TextFileOutputer extends BaseFileOutputer<DataRow> {
                     case VARCHAR:
                     case CHAR:
                         if (value instanceof Timestamp) {
-                            SimpleDateFormat fm = DateUtil.getDateTimeFormatter();
+                            SimpleDateFormat fm = DateUtils.getDateTimeFormatter();
                             sb.append(fm.format(value));
                         } else {
                             sb.append(rowData);
@@ -126,12 +136,12 @@ public class TextFileOutputer extends BaseFileOutputer<DataRow> {
                         sb.append(Boolean.valueOf(rowData));
                         break;
                     case DATE:
-                        value = DateUtil.columnToDate(value, null);
-                        sb.append(DateUtil.dateToString((Date) value));
+                        value = DateUtils.columnToDate(value, null);
+                        sb.append(DateUtils.dateToString((Date) value));
                         break;
                     case TIMESTAMP:
-                        value = DateUtil.columnToTimestamp(value, null);
-                        sb.append(DateUtil.timestampToString((Date) value));
+                        value = DateUtils.columnToTimestamp(value, null);
+                        sb.append(DateUtils.timestampToString((Date) value));
                         break;
                     default:
                         throw new IllegalArgumentException("Unsupported column type: " + fieldType);
@@ -142,13 +152,37 @@ public class TextFileOutputer extends BaseFileOutputer<DataRow> {
 
         String tmpStr = sb.toString();
         int lastDelimiterIndex = tmpStr.lastIndexOf(fieldDelimiter);
-        String subStr = tmpStr.substring(0,lastDelimiterIndex);
+        String subStr = tmpStr.substring(0, lastDelimiterIndex);
         String line = subStr + lineDelimiter;
         byte[] bytes = line.getBytes(this.charsetName);
         stream.write(bytes);
-        stream.flush();
+        if (waitBatchSize % batchWriteSize == 0) {
+            stream.flush();
+        }
+        waitBatchSize++;
         return true;
     }
 
 
+    @Override
+    public boolean batchOutput(List<DataRecord<DataRow>> dataRecords) {
+        for (DataRecord<DataRow> dataRecord : dataRecords) {
+
+        }
+        return false;
+    }
+
+
+    @Override
+    public void writeNextBlock(String nextFileBlock) {
+        //写下一个块
+        this.blockPath = nextFileBlock;
+        try {
+            closeOutputer();
+            Path path = new Path(blockPath);
+            initStream(path);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 }

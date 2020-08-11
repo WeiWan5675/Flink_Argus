@@ -5,6 +5,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.flink.configuration.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.weiwan.argus.common.utils.SystemUtil;
 import org.weiwan.argus.core.pub.config.ArgusContext;
 import org.weiwan.argus.core.pub.enums.CompressType;
 import org.weiwan.argus.core.pub.enums.FileType;
@@ -15,9 +16,11 @@ import org.weiwan.argus.core.pub.pojo.DataRecord;
 import org.weiwan.argus.core.pub.pojo.JobFormatState;
 import org.weiwan.argus.core.start.StartOptions;
 import org.weiwan.argus.core.utils.ClusterConfigLoader;
+import org.weiwan.argus.core.utils.HdfsUtil;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -39,6 +42,8 @@ public class HdfsOutputFormat<T extends DataRecord> extends BaseRichOutputFormat
     protected CompressType compressType = CompressType.NONE;
     protected WriteMode writeMode = WriteMode.OVERWRITE;
     protected FileType fileType = FileType.TEXT;
+    protected Long fileBlockSize;
+
 
     protected String tmpPath;
     protected String tmpFileName;
@@ -49,7 +54,6 @@ public class HdfsOutputFormat<T extends DataRecord> extends BaseRichOutputFormat
 
     protected FileOutputer outPuter;
     protected List<DataField> dataFields;
-
     protected FileSystem fileSystem;
 
 
@@ -60,13 +64,21 @@ public class HdfsOutputFormat<T extends DataRecord> extends BaseRichOutputFormat
     public static final String WRITER_HDFS_OUTPUT_FIELDDELIMITER = "writer.output.fieldDelimiter";
     public static final String WRITER_HDFS_OUTPUT_CHARSETNAME = "writer.output.charSetName";
     public static final String WRITER_HDFS_OUTPUT_MATCHMODE = "writer.output.matchMode";
-    private static final String WRITER_HDFS_OUTPUT_WRITERMODE = "writer.output.writeMode";
-    private static final String WRITER_HDFS_OUTPUT_COMPRESSTYPE = "writer.output.compressType";
+    public static final String WRITER_HDFS_OUTPUT_WRITERMODE = "writer.output.writeMode";
+    public static final String WRITER_HDFS_OUTPUT_COMPRESSTYPE = "writer.output.compressType";
+    public static final String WRITER_HDFS_OUTPUT_FILETYPE = "writer.output.fileType";
+    public static final String WRITER_HDFS_OUTPUT_FILE_BLOCKSIZE = "writer.output.fileBlockSize";
     public static final String WRITER_HDFS_DFSDEFAULT = "writer.dfsDefault";
+
     private String currentFileBlock;
-    private String completeFileBlock;
+
+    private int currentFileBlockIndex = 0;
+    private int nextFileBlockIndex = 0;
     private org.apache.hadoop.conf.Configuration configuration;
     private MatchMode matchMode;
+    private List<String> completeFileBlocks = new ArrayList<>();
+    private List<String> waitFinishdFileBlocks = new ArrayList<>();
+
 
     @Override
     public void configure(Configuration parameters) {
@@ -81,6 +93,8 @@ public class HdfsOutputFormat<T extends DataRecord> extends BaseRichOutputFormat
         this.matchMode = MatchMode.valueOf(writerConfig.getStringVal(WRITER_HDFS_OUTPUT_MATCHMODE, "ALIGNMENT").toUpperCase());
         this.writeMode = WriteMode.valueOf(writerConfig.getStringVal(WRITER_HDFS_OUTPUT_WRITERMODE, "APPEND").toUpperCase());
         this.compressType = CompressType.valueOf(writerConfig.getStringVal(WRITER_HDFS_OUTPUT_COMPRESSTYPE, "NONE").toUpperCase());
+        this.fileType = FileType.valueOf(writerConfig.getStringVal(WRITER_HDFS_OUTPUT_FILETYPE, "TEXT").toUpperCase());
+        this.fileBlockSize = writerConfig.getLongVal(WRITER_HDFS_OUTPUT_FILE_BLOCKSIZE, 65535L);
     }
 
     public HdfsOutputFormat(ArgusContext argusContext) {
@@ -99,16 +113,30 @@ public class HdfsOutputFormat<T extends DataRecord> extends BaseRichOutputFormat
         StartOptions startOptions = argusContext.getStartOptions();
         String hadoopConfDir = startOptions.getHadoopConf();
         this.configuration = ClusterConfigLoader.loadHadoopConfig(hadoopConfDir);
-
-
+        configuration.set("dfs.socket.timeout", "6000000");
         //初始化成员变量
 //        checkFormatVars();
         //初始化文件夹/临时文件夹/临时文件/目标文件名称
+        nextFileBlock(taskNumber);
+        //完成的文件路径
+
+        try {
+            fileSystem = FileSystem.get(configuration);
+            initOutputer();
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+    }
+
+    private String nextFileBlock(int taskNumber) {
+        this.currentFileBlockIndex = nextFileBlockIndex;
         if (StringUtils.isBlank(fileName)) {
             //为空,根据任务index生成文件名称
-            this.fileName = "0000" + taskNumber + fileSuffix;
+            this.fileName = "part_0000" + currentFileBlockIndex + "_" + taskNumber + fileSuffix;
         } else {
-            this.fileName = fileName + "_" + taskNumber + fileSuffix;
+            this.fileName = fileName + "_" + currentFileBlockIndex + "_" + taskNumber + fileSuffix;
         }
         //临时目录
         this.tmpPath = targetPath + File.separator + ".temporary";
@@ -117,21 +145,10 @@ public class HdfsOutputFormat<T extends DataRecord> extends BaseRichOutputFormat
             this.tmpFileName = "." + fileName + "." + tmpFileSuffix;
         }
         this.currentFileBlock = tmpPath + File.separator + tmpFileName;
-        this.completeFileBlock = targetPath + File.separator + fileName;
-        try {
-            fileSystem = FileSystem.get(configuration);
-            initOutputer();
-            //初始化目录
-            /**
-             * 目标目录
-             * 临时目录
-             * 如果目标目录有数据,判断文件写入模式
-             */
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
+        this.nextFileBlockIndex = currentFileBlockIndex++;
+        completeFileBlocks.add(targetPath + File.separator + fileName);
+        waitFinishdFileBlocks.add(currentFileBlock);
+        return currentFileBlock;
     }
 
     private void initOutputer() {
@@ -158,6 +175,8 @@ public class HdfsOutputFormat<T extends DataRecord> extends BaseRichOutputFormat
             outputer.setBlockPath(currentFileBlock);
             outputer.setFieldDelimiter(fieldDelimiter);
             outputer.setLineDelimiter(lineDelimiter);
+            outputer.setBatchWriteMode(isBatchWriteMode);
+            outputer.setBatchWriteSize(batchWriteSize);
             outPuter.init(dataFields);
         } catch (IOException e) {
             e.printStackTrace();
@@ -179,6 +198,11 @@ public class HdfsOutputFormat<T extends DataRecord> extends BaseRichOutputFormat
     @Override
     public void writerRecordInternal(T record) {
         try {
+            Long currentBlockSize = outPuter.getCurrentFileBlockSize();
+            if (currentBlockSize >= fileBlockSize) {
+                outPuter.writeNextBlock(nextFileBlock(taskNumber));
+                Thread.sleep(500L);
+            }
             outPuter.output(record);
         } catch (Exception e) {
             e.printStackTrace();
@@ -192,28 +216,76 @@ public class HdfsOutputFormat<T extends DataRecord> extends BaseRichOutputFormat
      */
     @Override
     public void batchWriteRecordsInternal(List<T> batchRecords) {
-
+        for (T batchRecord : batchRecords) {
+            try {
+                outPuter.output(batchRecord);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     /**
      * 关闭output,释放资源
      */
     @Override
-    public void colseOutput() {
+    public void colseOutput() throws IOException {
+        //文件写入器先释放
         outPuter.close();
+        //删除临时文件
+        try {
+            waitAllTaskComplete();
+            moveDataToTargetDir();
+        } catch (IOException e) {
+            e.printStackTrace();
+            throw e;
+        } finally {
+            //不管任务是否正常完成,删除临时目录
+            HdfsUtil.deleteFile(new Path(tmpPath), fileSystem, true);
+        }
+    }
 
-        //把文件名称修改为实际处理完成的文件名称
-        Path src = new Path(currentFileBlock);
-        Path dsc = new Path(completeFileBlock);
+    private void moveDataToTargetDir() throws IOException {
+        //临时文件修改为实际complete文件
+        if (waitFinishdFileBlocks.size() != 0 && completeFileBlocks.size() == waitFinishdFileBlocks.size()) {
+            for (int i = 0; i < waitFinishdFileBlocks.size(); i++) {
+                Path src = new Path(waitFinishdFileBlocks.get(i));
+                Path dsc = new Path(completeFileBlocks.get(i));
+                HdfsUtil.moveBlockToTarget(src, dsc, fileSystem, true);
+            }
+        }
+    }
+
+    private void waitAllTaskComplete() throws IOException {
+        Path finishedDir = new Path(tmpPath);
+        final int maxRetryTime = 100;
+        int i = 0;
+        //等待所有子任务完成
+        for (; i < maxRetryTime; ++i) {
+            if (fileSystem.listStatus(finishedDir).length == numTasks) {
+                break;
+            }
+            SystemUtil.sleep(3000);
+        }
+
+        //如果等待所有文件写出完成失败,直接任务失败,抛出异常
+        if (i == maxRetryTime) {
+            throw new RuntimeException("timeout when gathering finish tags for each subtasks");
+        }
+    }
+
+    private void moveCurrentBlockToCompleteBlock(Path src, Path dsc) throws IOException {
         try {
             boolean exists = fileSystem.exists(dsc);
             if (exists) {
                 fileSystem.delete(dsc, true);
             }
+            //将临时文件移动到目标文件
             fileSystem.rename(src, dsc);
-            fileSystem.delete(new Path(tmpPath), true);
         } catch (IOException e) {
+            //移动出现问题
             e.printStackTrace();
+            throw e;
         }
     }
 

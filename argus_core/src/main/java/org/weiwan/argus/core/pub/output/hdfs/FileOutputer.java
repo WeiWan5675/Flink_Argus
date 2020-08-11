@@ -23,7 +23,16 @@ public interface FileOutputer<T extends DataRow> {
 
     public boolean output(DataRecord<T> data) throws Exception;
 
+    public boolean batchOutput(List<DataRecord<T>> dataRecords) throws Exception;
 
     public void close();
+
+    /**
+     * 返回当前文件块大小(Bytes) 默认 1024 * 1024 * 1024 64M
+     * @return
+     */
+    Long getCurrentFileBlockSize();
+
+    void writeNextBlock(String nextFileBlock);
 
 }

@@ -21,6 +21,10 @@
             <artifactId>argus_core</artifactId>
         </dependency>
         <dependency>
+            <groupId>org.weiwan.argus</groupId>
+            <artifactId>hdfs_writer</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.apache.hive</groupId>
             <artifactId>hive-exec</artifactId>
             <exclusions>

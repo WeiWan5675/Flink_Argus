@@ -2,11 +2,14 @@ package org.weiwan.argus.core.pub.output.hdfs;
 
 import org.apache.commons.net.ntp.TimeStamp;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.metastore.api.Decimal;
 import org.apache.hadoop.mapred.FileOutputFormat;
 import org.weiwan.argus.core.pub.enums.CompressType;
 import org.weiwan.argus.core.pub.enums.FileType;
+import org.weiwan.argus.core.pub.enums.WriteMode;
 import org.weiwan.argus.core.pub.pojo.DataField;
 import org.weiwan.argus.core.pub.pojo.DataRecord;
 import org.weiwan.argus.core.pub.pojo.DataRow;
@@ -47,6 +50,9 @@ public abstract class BaseFileOutputer<T extends DataRow> implements FileOutpute
     protected String lineDelimiter = "\n";
     protected String fieldDelimiter = "\u0001";
 
+    protected boolean isBatchWriteMode = true;
+    protected int batchWriteSize = 1000;
+
     public BaseFileOutputer(Configuration configuration, FileSystem fileSystem) {
         this.configuration = configuration;
         this.fileSystem = fileSystem;
@@ -75,7 +81,6 @@ public abstract class BaseFileOutputer<T extends DataRow> implements FileOutpute
 
     @Override
     public boolean output(DataRecord<T> data) throws Exception {
-
         //没有初始化,并且是index匹配模式
         if (!inited && MatchMode.ALIGNMENT == matchMode) {
             //使用数据的类型进行初始化
@@ -94,7 +99,15 @@ public abstract class BaseFileOutputer<T extends DataRow> implements FileOutpute
         DataRow row = data.getData();
         Map<String, DataField> dataFieldMap = transformRow2Map(row);
         this.out(dataFieldMap);
-        return false;
+        return true;
+    }
+
+    @Override
+    public boolean batchOutput(List<DataRecord<T>> dataRecords) throws Exception {
+        for (DataRecord<T> dataRecord : dataRecords) {
+            output(dataRecord);
+        }
+        return true;
     }
 
     private Map<String, DataField> transformRow2Map(DataRow row) {
@@ -112,6 +125,26 @@ public abstract class BaseFileOutputer<T extends DataRow> implements FileOutpute
         return res;
     }
 
+
+    /**
+     * 返回当前文件块大小(Bytes) 默认 1024 * 1024 * 1024 64M
+     * 默认实现
+     *
+     * @return
+     */
+    @Override
+    public Long getCurrentFileBlockSize() {
+        Path path = new Path(blockPath);
+        try {
+            if (fileSystem.exists(path) && fileSystem.isFile(path)) {
+                FileStatus fileStatus = fileSystem.getFileStatus(path);
+                return fileStatus.getLen();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return -1L;
+    }
 
     @Override
     public void close() {
@@ -219,5 +252,22 @@ public abstract class BaseFileOutputer<T extends DataRow> implements FileOutpute
 
     public void setFieldDelimiter(String fieldDelimiter) {
         this.fieldDelimiter = fieldDelimiter;
+    }
+
+
+    public boolean isBatchWriteMode() {
+        return isBatchWriteMode;
+    }
+
+    public void setBatchWriteMode(boolean batchWriteMode) {
+        isBatchWriteMode = batchWriteMode;
+    }
+
+    public int getBatchWriteSize() {
+        return batchWriteSize;
+    }
+
+    public void setBatchWriteSize(int batchWriteSize) {
+        this.batchWriteSize = batchWriteSize;
     }
 }

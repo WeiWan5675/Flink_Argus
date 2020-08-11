@@ -1,13 +1,17 @@
-package org.weiwan.argus.core.pub.output.hdfs;
+package org.weiwan.argus.core.utils;
 
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.serde2.io.DateWritable;
 import org.apache.hadoop.hive.serde2.io.DoubleWritable;
 import org.apache.hadoop.hive.serde2.io.HiveDecimalWritable;
 import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector;
 import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspectorFactory;
 import org.apache.hadoop.io.*;
-import org.weiwan.argus.common.utils.DateUtil;
+import org.weiwan.argus.common.utils.DateUtils;
+import org.weiwan.argus.core.pub.output.hdfs.ColumnType;
 
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
@@ -16,17 +20,17 @@ public class HdfsUtil {
     public static final String NULL_VALUE = "\\N";
 
     public static Object string2col(String str, String type, SimpleDateFormat customDateFormat) {
-        if (str == null || str.length() == 0){
+        if (str == null || str.length() == 0) {
             return null;
         }
 
-        if(type == null){
+        if (type == null) {
             return str;
         }
 
         ColumnType columnType = ColumnType.fromString(type.toUpperCase());
         Object ret;
-        switch(columnType) {
+        switch (columnType) {
             case TINYINT:
                 ret = Byte.valueOf(str.trim());
                 break;
@@ -49,9 +53,9 @@ public class HdfsUtil {
             case STRING:
             case VARCHAR:
             case CHAR:
-                if(customDateFormat != null){
-                    ret = DateUtil.columnToDate(str,customDateFormat);
-                    ret = DateUtil.timestampToString((Date)ret);
+                if (customDateFormat != null) {
+                    ret = DateUtils.columnToDate(str, customDateFormat);
+                    ret = DateUtils.timestampToString((Date) ret);
                 } else {
                     ret = str;
                 }
@@ -60,10 +64,10 @@ public class HdfsUtil {
                 ret = Boolean.valueOf(str.trim().toLowerCase());
                 break;
             case DATE:
-                ret = DateUtil.columnToDate(str,customDateFormat);
+                ret = DateUtils.columnToDate(str, customDateFormat);
                 break;
             case TIMESTAMP:
-                ret = DateUtil.columnToTimestamp(str,customDateFormat);
+                ret = DateUtils.columnToTimestamp(str, customDateFormat);
                 break;
             default:
                 throw new IllegalArgumentException("Unsupported field type:" + type);
@@ -76,17 +80,17 @@ public class HdfsUtil {
         Class<?> clz = writable.getClass();
         Object ret;
 
-        if(clz == IntWritable.class) {
+        if (clz == IntWritable.class) {
             ret = ((IntWritable) writable).get();
-        } else if(clz == Text.class) {
+        } else if (clz == Text.class) {
             ret = writable.toString();
-        } else if(clz == LongWritable.class) {
+        } else if (clz == LongWritable.class) {
             ret = ((LongWritable) writable).get();
-        } else if(clz == ByteWritable.class) {
+        } else if (clz == ByteWritable.class) {
             ret = ((ByteWritable) writable).get();
-        } else if(clz == DateWritable.class) {
+        } else if (clz == DateWritable.class) {
             ret = ((DateWritable) writable).get();
-        } else if(writable instanceof DoubleWritable){
+        } else if (writable instanceof DoubleWritable) {
             ret = ((DoubleWritable) writable).get();
         } else {
             ret = writable.toString();
@@ -97,7 +101,7 @@ public class HdfsUtil {
 
     public static ObjectInspector columnTypeToObjectInspetor(ColumnType columnType) {
         ObjectInspector objectInspector;
-        switch(columnType) {
+        switch (columnType) {
             case TINYINT:
                 objectInspector = ObjectInspectorFactory.getReflectionObjectInspector(Byte.class, ObjectInspectorFactory.ObjectInspectorOptions.JAVA);
                 break;
@@ -141,5 +145,44 @@ public class HdfsUtil {
         }
         return objectInspector;
     }
+
+
+    /**
+     * 移动文件块到target
+     *
+     * @param src       源文件
+     * @param dst       目标文件
+     * @param fs        文件操作对下
+     * @param overwrite 是否覆盖
+     * @throws IOException 操作文件时可能抛出此异常
+     */
+    public static void moveBlockToTarget(Path src, Path dst, FileSystem fs, boolean overwrite) throws IOException {
+        if (overwrite) {
+            try {
+                boolean exists = fs.exists(dst);
+                if (exists) {
+                    fs.delete(dst, true);
+                }
+                fs.rename(src, dst);
+            } catch (IOException e) {
+                e.printStackTrace();
+                throw e;
+            }
+        } else {
+            throw new RuntimeException("target block exists");
+        }
+    }
+
+
+    public static void deleteFile(Path dst, FileSystem fs, boolean recursive) {
+        try {
+            if (fs.exists(dst)) {
+                fs.delete(dst, recursive);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
 
 }

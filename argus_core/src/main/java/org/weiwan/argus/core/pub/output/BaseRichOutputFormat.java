@@ -31,7 +31,7 @@ public abstract class BaseRichOutputFormat<T extends DataRecord> extends RichOut
 
     protected List<T> batchRecords;
     protected boolean isBatchWriteMode;
-    private int batchWriteSize;
+    protected int batchWriteSize;
 
     private boolean isRestore;
 
@@ -65,7 +65,7 @@ public abstract class BaseRichOutputFormat<T extends DataRecord> extends RichOut
     /**
      * 关闭output,释放资源
      */
-    public abstract void colseOutput();
+    public abstract void colseOutput() throws IOException;
 
     /**
      * 进行快照前处理
@@ -114,9 +114,8 @@ public abstract class BaseRichOutputFormat<T extends DataRecord> extends RichOut
         if (isBatchWriteMode && batchWriteSize > 1) {
             //批处理模式
             batchRecords.add(record);
-            if (batchRecords.size() == batchWriteSize) {
+            if (batchRecords.size() == batchWriteSize)
                 writeRecords();
-            }
         } else {
             //逐条处理模式
             writerRecordInternal(record);
@@ -126,9 +125,6 @@ public abstract class BaseRichOutputFormat<T extends DataRecord> extends RichOut
     private void writeRecords() {
         try {
             batchWriteRecordsInternal(batchRecords);
-            if (batchRecords.size() > 0) {
-                batchRecords.forEach(this::writerRecordInternal);
-            }
         } catch (Exception e) {
             //写入异常
             e.printStackTrace();
