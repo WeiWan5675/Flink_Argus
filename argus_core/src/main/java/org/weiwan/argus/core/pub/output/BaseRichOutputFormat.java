@@ -65,7 +65,7 @@ public abstract class BaseRichOutputFormat<T extends DataRecord> extends RichOut
     /**
      * 关闭output,释放资源
      */
-    public abstract void colseOutput() throws IOException;
+    public abstract void closeOutput() throws IOException;
 
     /**
      * 进行快照前处理
@@ -141,7 +141,7 @@ public abstract class BaseRichOutputFormat<T extends DataRecord> extends RichOut
             //关闭前将批处理的都写出去
             writeRecords();
         }
-        colseOutput();
+        closeOutput();
     }
 
     public JobFormatState getSnapshotState() {

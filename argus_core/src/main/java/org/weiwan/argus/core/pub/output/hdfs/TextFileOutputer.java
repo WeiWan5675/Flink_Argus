@@ -79,7 +79,7 @@ public class TextFileOutputer extends BaseFileOutputer<DataRow> {
             DataField dataField = data.get(key);
             Object value = dataField.getValue();
             if (value == null) {
-                sb.append(HdfsUtil.NULL_VALUE);
+                sb.append(OutputerUtil.NULL_VALUE);
             }
             if (value == null || value.toString().length() < 1) {
                 sb.append("");

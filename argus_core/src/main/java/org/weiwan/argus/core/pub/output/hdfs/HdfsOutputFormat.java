@@ -125,8 +125,7 @@ public class HdfsOutputFormat<T extends DataRecord> extends BaseRichOutputFormat
                 HdfsUtil.deleteFile(new Path(targetPath), fileSystem, true);
             }
             //初始化文件夹/临时文件夹/临时文件/目标文件名称
-            nextFileBlock(taskNumber);
-            //完成的文件路径
+            String p = nextFileBlock(taskNumber);
             initOutputer();
 
         } catch (IOException e) {
@@ -229,7 +228,7 @@ public class HdfsOutputFormat<T extends DataRecord> extends BaseRichOutputFormat
      * 关闭output,释放资源
      */
     @Override
-    public void colseOutput() throws IOException {
+    public void closeOutput() throws IOException {
         //文件写入器先释放
         outPuter.close();
         //删除临时文件
@@ -274,20 +273,6 @@ public class HdfsOutputFormat<T extends DataRecord> extends BaseRichOutputFormat
         }
     }
 
-    private void moveCurrentBlockToCompleteBlock(Path src, Path dsc) throws IOException {
-        try {
-            boolean exists = fileSystem.exists(dsc);
-            if (exists) {
-                fileSystem.delete(dsc, true);
-            }
-            //将临时文件移动到目标文件
-            fileSystem.rename(src, dsc);
-        } catch (IOException e) {
-            //移动出现问题
-            e.printStackTrace();
-            throw e;
-        }
-    }
 
     /**
      * 进行快照前处理

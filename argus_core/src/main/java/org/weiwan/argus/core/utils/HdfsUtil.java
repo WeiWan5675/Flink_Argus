@@ -1,5 +1,8 @@
 package org.weiwan.argus.core.utils;
 
+import org.apache.commons.collections.MapUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.serde2.io.DateWritable;
@@ -8,143 +11,31 @@ import org.apache.hadoop.hive.serde2.io.HiveDecimalWritable;
 import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector;
 import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspectorFactory;
 import org.apache.hadoop.io.*;
+import org.apache.hadoop.security.UserGroupInformation;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.weiwan.argus.common.utils.DateUtils;
+import org.weiwan.argus.core.flink.pub.FlinkLogger;
 import org.weiwan.argus.core.pub.output.hdfs.ColumnType;
 
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
 public class HdfsUtil {
 
-    public static final String NULL_VALUE = "\\N";
 
-    public static Object string2col(String str, String type, SimpleDateFormat customDateFormat) {
-        if (str == null || str.length() == 0) {
-            return null;
-        }
-
-        if (type == null) {
-            return str;
-        }
-
-        ColumnType columnType = ColumnType.fromString(type.toUpperCase());
-        Object ret;
-        switch (columnType) {
-            case TINYINT:
-                ret = Byte.valueOf(str.trim());
-                break;
-            case SMALLINT:
-                ret = Short.valueOf(str.trim());
-                break;
-            case INT:
-                ret = Integer.valueOf(str.trim());
-                break;
-            case BIGINT:
-                ret = Long.valueOf(str.trim());
-                break;
-            case FLOAT:
-                ret = Float.valueOf(str.trim());
-                break;
-            case DOUBLE:
-            case DECIMAL:
-                ret = Double.valueOf(str.trim());
-                break;
-            case STRING:
-            case VARCHAR:
-            case CHAR:
-                if (customDateFormat != null) {
-                    ret = DateUtils.columnToDate(str, customDateFormat);
-                    ret = DateUtils.timestampToString((Date) ret);
-                } else {
-                    ret = str;
-                }
-                break;
-            case BOOLEAN:
-                ret = Boolean.valueOf(str.trim().toLowerCase());
-                break;
-            case DATE:
-                ret = DateUtils.columnToDate(str, customDateFormat);
-                break;
-            case TIMESTAMP:
-                ret = DateUtils.columnToTimestamp(str, customDateFormat);
-                break;
-            default:
-                throw new IllegalArgumentException("Unsupported field type:" + type);
-        }
-
-        return ret;
-    }
-
-    public static Object getWritableValue(Object writable) {
-        Class<?> clz = writable.getClass();
-        Object ret;
-
-        if (clz == IntWritable.class) {
-            ret = ((IntWritable) writable).get();
-        } else if (clz == Text.class) {
-            ret = writable.toString();
-        } else if (clz == LongWritable.class) {
-            ret = ((LongWritable) writable).get();
-        } else if (clz == ByteWritable.class) {
-            ret = ((ByteWritable) writable).get();
-        } else if (clz == DateWritable.class) {
-            ret = ((DateWritable) writable).get();
-        } else if (writable instanceof DoubleWritable) {
-            ret = ((DoubleWritable) writable).get();
-        } else {
-            ret = writable.toString();
-        }
-
-        return ret;
-    }
-
-    public static ObjectInspector columnTypeToObjectInspetor(ColumnType columnType) {
-        ObjectInspector objectInspector;
-        switch (columnType) {
-            case TINYINT:
-                objectInspector = ObjectInspectorFactory.getReflectionObjectInspector(Byte.class, ObjectInspectorFactory.ObjectInspectorOptions.JAVA);
-                break;
-            case SMALLINT:
-                objectInspector = ObjectInspectorFactory.getReflectionObjectInspector(Short.class, ObjectInspectorFactory.ObjectInspectorOptions.JAVA);
-                break;
-            case INT:
-                objectInspector = ObjectInspectorFactory.getReflectionObjectInspector(Integer.class, ObjectInspectorFactory.ObjectInspectorOptions.JAVA);
-                break;
-            case BIGINT:
-                objectInspector = ObjectInspectorFactory.getReflectionObjectInspector(Long.class, ObjectInspectorFactory.ObjectInspectorOptions.JAVA);
-                break;
-            case FLOAT:
-                objectInspector = ObjectInspectorFactory.getReflectionObjectInspector(Float.class, ObjectInspectorFactory.ObjectInspectorOptions.JAVA);
-                break;
-            case DOUBLE:
-                objectInspector = ObjectInspectorFactory.getReflectionObjectInspector(Double.class, ObjectInspectorFactory.ObjectInspectorOptions.JAVA);
-                break;
-            case DECIMAL:
-                objectInspector = ObjectInspectorFactory.getReflectionObjectInspector(HiveDecimalWritable.class, ObjectInspectorFactory.ObjectInspectorOptions.JAVA);
-                break;
-            case TIMESTAMP:
-                objectInspector = ObjectInspectorFactory.getReflectionObjectInspector(java.sql.Timestamp.class, ObjectInspectorFactory.ObjectInspectorOptions.JAVA);
-                break;
-            case DATE:
-                objectInspector = ObjectInspectorFactory.getReflectionObjectInspector(java.sql.Date.class, ObjectInspectorFactory.ObjectInspectorOptions.JAVA);
-                break;
-            case STRING:
-            case VARCHAR:
-            case CHAR:
-                objectInspector = ObjectInspectorFactory.getReflectionObjectInspector(String.class, ObjectInspectorFactory.ObjectInspectorOptions.JAVA);
-                break;
-            case BOOLEAN:
-                objectInspector = ObjectInspectorFactory.getReflectionObjectInspector(Boolean.class, ObjectInspectorFactory.ObjectInspectorOptions.JAVA);
-                break;
-            case BINARY:
-                objectInspector = ObjectInspectorFactory.getReflectionObjectInspector(BytesWritable.class, ObjectInspectorFactory.ObjectInspectorOptions.JAVA);
-                break;
-            default:
-                throw new IllegalArgumentException("You should not be here");
-        }
-        return objectInspector;
-    }
+    private static final String AUTHENTICATION_TYPE = "Kerberos";
+    private static final String KEY_HADOOP_SECURITY_AUTHORIZATION = "hadoop.security.authorization";
+    private static final String KEY_HADOOP_SECURITY_AUTHENTICATION = "hadoop.security.authentication";
+    private static final String KEY_DEFAULT_FS = "fs.default.name";
+    private static final String KEY_FS_HDFS_IMPL_DISABLE_CACHE = "fs.hdfs.impl.disable.cache";
+    private static final String KEY_HA_DEFAULT_FS = "fs.defaultFS";
+    private static final String KEY_DFS_NAMESERVICES = "dfs.nameservices";
+    private static final String KEY_HADOOP_USER_NAME = "hadoop.user.name";
+    private static final Logger LOG = LoggerFactory.getLogger(HdfsUtil.class);
 
 
     /**
@@ -181,6 +72,75 @@ public class HdfsUtil {
             }
         } catch (IOException e) {
             e.printStackTrace();
+        }
+    }
+
+
+    public static FileSystem getFileSystem(Configuration configuration, String defaultFs) throws IOException {
+        //
+        FileSystem fileSystem = FileSystem.get(configuration);
+
+        if (isOpenKerberos(configuration)) {
+            //开启了kerberos
+            return getFsWithKerberos(configuration, defaultFs);
+        }
+
+        return fileSystem;
+    }
+
+    private static FileSystem getFsWithKerberos(Configuration configuration, String defaultFs) {
+        return getFsWithNoAuth(configuration, defaultFs);
+    }
+
+    private static FileSystem getFsWithNoAuth(Configuration configuration, String defaultFs) {
+        URI uri = null;
+        try {
+            String _defaultFs = configuration.get(KEY_HA_DEFAULT_FS);
+
+            if (StringUtils.isNotEmpty(defaultFs) && defaultFs.equalsIgnoreCase(_defaultFs)) {
+                //是一样的两个defaultFs
+                return FileSystem.get(configuration);
+            } else {
+                uri = new URI(defaultFs);
+            }
+            return FileSystem.get(uri, configuration);
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (URISyntaxException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+
+    public static boolean isOpenKerberos(Configuration configuration) {
+        String enableAuth = configuration.get(KEY_HADOOP_SECURITY_AUTHORIZATION);
+        if (StringUtils.isNotBlank(enableAuth)) {
+            if (Boolean.valueOf(enableAuth)) {
+                //开启了权限
+                String authType = configuration.get(KEY_HADOOP_SECURITY_AUTHENTICATION);
+                if (StringUtils.isNotBlank(authType) && AUTHENTICATION_TYPE.equalsIgnoreCase(authType)) {
+                    //是Kerberos
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+
+    public static void setHadoopUserName(Configuration conf) {
+        String hadoopUserName = conf.get(KEY_HADOOP_USER_NAME);
+        if (org.apache.commons.lang.StringUtils.isEmpty(hadoopUserName)) {
+            return;
+        }
+
+        try {
+//            String ticketCachePath = conf.get("hadoop.security.kerberos.ticket.cache.path");
+//            UserGroupInformation ugi = UserGroupInformation.getBestUGI(ticketCachePath, hadoopUserName);
+//            UserGroupInformation.setLoginUser(ugi);
+        } catch (Exception e) {
+            LOG.warn("Set hadoop user name error:", e);
         }
     }
 

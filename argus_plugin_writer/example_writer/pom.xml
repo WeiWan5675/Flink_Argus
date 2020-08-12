@@ -3,20 +3,19 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
-        <artifactId>flink_argus</artifactId>
+        <artifactId>argus_plugin_writer</artifactId>
         <groupId>org.weiwan.argus</groupId>
         <version>1.0.0</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
-    <packaging>pom</packaging>
-    <artifactId>argus_plugin_channel</artifactId>
 
-    <modules>
-        <module>common_channel</module>
-        <module>example_channel</module>
-    </modules>
+    <artifactId>example_writer</artifactId>
 
-    <build>
-        <finalName>${project.name}</finalName>
-    </build>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.weiwan.argus</groupId>
+            <artifactId>argus_core</artifactId>
+        </dependency>
+    </dependencies>
 </project>

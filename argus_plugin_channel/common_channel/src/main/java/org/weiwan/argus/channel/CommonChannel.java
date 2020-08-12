@@ -21,7 +21,7 @@ public class CommonChannel extends BaseChannel<DataRecord, DataRecord> {
 
     @Override
     public ArgusChannelHandler getChannelHandler() {
-        CommonChannelHandler handler = new CommonChannelHandler();
+        CommonChannelHandler handler = new CommonChannelHandler(argusContext);
         return handler;
     }
 }

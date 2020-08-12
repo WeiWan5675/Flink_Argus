@@ -14,6 +14,7 @@
     <modules>
         <module>mysql_reader</module>
         <module>mongo_reader</module>
+        <module>example_reader</module>
     </modules>
 
 

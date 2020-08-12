@@ -32,37 +32,32 @@ flink:
 
 reader:
   type: stream # batch 批处理 stream
-  name: mysqlreader
-  class: org.weiwan.argus.reader.mysql.MysqlReader
-  jdbc:
-    url:
-    username:
-    password:
-    schema:
-    drive: com.mysql.jdbc.Driver
-  tableName: easylife_order
-  batchSize: #setFeachSize()的大小 每次从服务器取多少数据
-  queryTimeout:
-  splitField: #只支持数字类型 通过 sql mod N = 0 N = 1 N = 2 N = 3
-  sql:
-    filter: #a=3,b=5这样
-    columns: a,b,c,id
-    customSql: #如果指定了自定义SQL 那么filter columns 都不会生效 包括increment配置 适用拉取特殊数据时使用
-  increment:
-    incrField: #如果不指定,默认 select ${columns} from ${table} where 1 = 1 and ${filter} and [splitField mod N = I]
-    lastOffset: #如果指定了该字段,会直接使用,如果不指定,默认是全量拉取 时间类型得  默认值为 1970-01-01 08:00:00  数值型 默认 -1
-    enablePolling: #是否轮询 如果开启轮询 必须要指定increment的属性
-    pollingInterval: #轮询间隔
-
-
-
-
-writer:
-  type:
-  name: hivewriter
-  class: org.weiwan.argus.writer.hive.HiveWriter
+  name: examplereader
+  class: org.weiwan.argus.reader.ExampleReader
+  parallelism: 1
+  example:
+    endIndex: 1000
 
 channel:
   type:
-  name: commonchannel
-  class: org.weiwan.argus.channel.CommonChannel
+  name: examplechannle
+  class: org.weiwan.argus.channel.ExampleChannle
+  example:
+    channelVar: channel_var
+
+writer:
+  type: batch
+  name: examplewriter
+  class: org.weiwan.argus.writer.ExampleWriter
+  parallelism: 1
+  batchWriteMode: false #写出模式,是批量写出 还是逐条写出
+  batchWriteSize: 100 #批量写出的大小
+  example:
+    writerVar: writer_var
+
+
+
+hadoop:
+  defaultFs:
+  hadoopUser:
+  hadoopHome:

@@ -1,5 +1,6 @@
 package org.weiwan.argus.channel;
 
+import org.weiwan.argus.core.pub.config.ArgusContext;
 import org.weiwan.argus.core.pub.handler.ArgusChannelHandler;
 import org.weiwan.argus.core.pub.pojo.DataRecord;
 
@@ -11,6 +12,10 @@ import org.weiwan.argus.core.pub.pojo.DataRecord;
  * @Description:
  **/
 public class CommonChannelHandler extends ArgusChannelHandler<DataRecord, DataRecord> {
+    public CommonChannelHandler(ArgusContext context) {
+        super(context);
+    }
+
     @Override
     public DataRecord process(DataRecord value) {
 //        System.out.println("channel处理数据!!!!" + value.getData().toString());

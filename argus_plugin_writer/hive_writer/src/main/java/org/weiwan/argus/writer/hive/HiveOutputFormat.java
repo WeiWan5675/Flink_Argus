@@ -1,29 +1,15 @@
 package org.weiwan.argus.writer.hive;
 
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.HiveMetaStoreClient;
 import org.apache.hadoop.hive.metastore.api.*;
-import org.apache.thrift.TException;
-import org.weiwan.argus.core.pub.enums.CompressType;
-import org.weiwan.argus.core.pub.enums.FileType;
-import org.weiwan.argus.core.pub.output.BaseRichOutputFormat;
 import org.weiwan.argus.core.pub.output.hdfs.HdfsOutputFormat;
-import org.weiwan.argus.core.pub.output.hdfs.MatchMode;
 import org.weiwan.argus.core.pub.pojo.DataRow;
-import org.weiwan.argus.core.pub.pojo.JobFormatState;
 import org.weiwan.argus.core.pub.config.ArgusContext;
 import org.weiwan.argus.core.pub.pojo.DataRecord;
-import org.weiwan.argus.core.start.StartOptions;
-import org.weiwan.argus.core.utils.ClusterConfigLoader;
-import org.weiwan.argus.core.utils.JdbcFactory;
 
 import java.io.IOException;
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.util.List;
-import java.util.Map;
 
 /**
  * @Author: xiaozhennan
@@ -110,7 +96,7 @@ public class HiveOutputFormat extends HdfsOutputFormat<DataRecord<DataRow>> {
      * 关闭output,释放资源
      */
     @Override
-    public void colseOutput() throws IOException {
-        super.colseOutput();
+    public void closeOutput() throws IOException {
+        super.closeOutput();
     }
 }

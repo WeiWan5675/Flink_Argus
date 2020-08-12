@@ -46,7 +46,7 @@ public class StartOptions implements Serializable {
     private String hiveConf;
 
     @OptionField(
-            oweKeys = {"argusConf", "aconf","job"},
+            oweKeys = {"argusConf", "aconf", "job"},
             description = "Argus conf file")
     private String argusConf;
 
@@ -100,6 +100,19 @@ public class StartOptions implements Serializable {
     private String jobConf;
 
 
+    @OptionField(
+            oweKeys = "defaultArgusConf",
+            description = "default argus conf"
+    )
+    private String defaultArgusConf;
+
+    @OptionField(
+            oweKeys = "example",
+            description = "example mode",
+            hasArg = false
+    )
+    private boolean exampleMode;
+
     public String getJobConf() {
         return jobConf;
     }
@@ -111,7 +124,6 @@ public class StartOptions implements Serializable {
     public String getReaderPluginDir() {
         return readerPluginDir;
     }
-
 
 
     public void setReaderPluginDir(String readerPluginDir) {
@@ -223,5 +235,19 @@ public class StartOptions implements Serializable {
         this.hiveConf = hiveConf;
     }
 
+    public String getDefaultArgusConf() {
+        return defaultArgusConf;
+    }
 
+    public void setDefaultArgusConf(String defaultArgusConf) {
+        this.defaultArgusConf = defaultArgusConf;
+    }
+
+    public boolean isExampleMode() {
+        return exampleMode;
+    }
+
+    public void setExampleMode(boolean exampleMode) {
+        this.exampleMode = exampleMode;
+    }
 }

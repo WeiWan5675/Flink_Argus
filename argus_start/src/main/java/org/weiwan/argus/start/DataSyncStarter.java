@@ -8,7 +8,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.weiwan.argus.common.constans.Constans;
 import org.weiwan.argus.common.exception.ArgusCommonException;
+import org.weiwan.argus.common.utils.FileUtil;
 import org.weiwan.argus.common.utils.SystemUtil;
+import org.weiwan.argus.core.ArgusKey;
 import org.weiwan.argus.core.ArgusRun;
 import org.weiwan.argus.common.options.OptionParser;
 import org.weiwan.argus.core.start.StartOptions;
@@ -65,10 +67,12 @@ public class DataSyncStarter {
 
         String mode = options.getMode();
         setDefaultEnvPath(options);
-
+        readDefaultConf(options);
         //根据模式不同,组装不同的参数
         if (options.isCmdMode()) {
             //命令行模式
+        } else if (options.isExampleMode()) {
+            options.setJobConf(options.getDefaultArgusConf());
         } else {
             readingArgusConfig(options);
         }
@@ -103,6 +107,19 @@ public class DataSyncStarter {
 
     }
 
+    private static void readDefaultConf(StartOptions options) throws IOException {
+        String argusHome = options.getArgusHome();
+        if (StringUtils.isNotEmpty(argusHome)) {
+            //
+            String defaultConfDir =
+                    argusHome + File.separator + ArgusKey.DEFAULT_CONF_DIR
+                            + File.separator + ArgusKey.DEFAULT_CONF_FILENAME;
+            String defaultConfStr = FileUtil.readFileContent(defaultConfDir);
+            options.setDefaultArgusConf(defaultConfStr);
+        }
+
+    }
+
     private static String[] convertMap2Args(Map<String, Object> optionMap) {
         List<String> argsList = new ArrayList<>();
         for (String key : optionMap.keySet()) {
@@ -122,21 +139,12 @@ public class DataSyncStarter {
     private static void readingArgusConfig(StartOptions options) throws IOException {
         //配置文件模式
         String aConfPath = options.getArgusConf();
-        //读取配置文件  转化成json对象
-        File file = new File(aConfPath);
-        if (!file.exists() || file.isDirectory()) {
-            logger.error(String.format("Configuration file does not exist, please check, PATH:[%s]", file.getAbsolutePath()));
-            throw new ArgusCommonException("The configuration file does not exist, please check the configuration file path!");
-        }
-        FileInputStream in = new FileInputStream(file);
-        byte[] filecontent = new byte[(int) file.length()];
-        in.read(filecontent);
-        String arugsJobContext = new String(filecontent, Charsets.UTF_8.name());
-
+        String arugsJobContext = FileUtil.readFileContent(aConfPath);
         if (StringUtils.isNotEmpty(arugsJobContext.trim())) {
             options.setJobConf(arugsJobContext);
         }
     }
+
 
     private static boolean startFromYarnPerMode(StartOptions options) {
         return false;
@@ -160,7 +168,6 @@ public class DataSyncStarter {
 
 
         String argusHome = getArgusHomePath(options);
-
         String pluginsRootDir = options.getPluginsDir();
         if (StringUtils.isEmpty(pluginsRootDir)) {
             pluginsRootDir = argusHome + File.separator + KEY_PLUGINS_DIR;
