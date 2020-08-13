@@ -15,13 +15,13 @@ import org.weiwan.argus.core.pub.pojo.DataRecord;
  **/
 public class CommonChannel extends BaseChannel<DataRecord, DataRecord> {
 
+
     public CommonChannel(StreamExecutionEnvironment env, ArgusContext argusContext) {
         super(env, argusContext);
     }
 
     @Override
-    public ArgusChannelHandler getChannelHandler() {
-        CommonChannelHandler handler = new CommonChannelHandler(argusContext);
-        return handler;
+    public ArgusChannelHandler<DataRecord, DataRecord> getChannelHandler(ArgusContext argusContext) {
+        return new CommonChannelHandler(argusContext);
     }
 }

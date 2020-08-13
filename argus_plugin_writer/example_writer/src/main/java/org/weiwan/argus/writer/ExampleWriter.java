@@ -1,6 +1,5 @@
 package org.weiwan.argus.writer;
 
-import org.apache.flink.api.common.io.FileOutputFormat;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -10,8 +9,6 @@ import org.weiwan.argus.core.pub.output.BaseRichOutputFormat;
 import org.weiwan.argus.core.pub.pojo.DataField;
 import org.weiwan.argus.core.pub.pojo.DataRecord;
 import org.weiwan.argus.core.pub.pojo.DataRow;
-
-import java.io.IOException;
 
 /**
  * @Author: xiaozhennan
@@ -29,7 +26,7 @@ public class ExampleWriter extends BaseWriter<DataRecord<DataRow<DataField>>> {
     }
 
     @Override
-    public BaseRichOutputFormat<DataRecord<DataRow<DataField>>> getOutputFormat() {
+    public BaseRichOutputFormat<DataRecord<DataRow<DataField>>> getOutputFormat(ArgusContext argusContext) {
         logger.info("The method is called and returns the default Output Format");
         return new ExampleOutputFormat(argusContext);
     }

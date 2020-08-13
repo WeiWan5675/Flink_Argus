@@ -30,11 +30,11 @@ public abstract class BaseChannel<IN extends DataRecord, OUT extends DataRecord>
         this.channelName = channelConfig.getChannleName();
     }
 
-    public abstract ArgusChannelHandler getChannelHandler();
+    public abstract ArgusChannelHandler<IN, OUT> getChannelHandler(ArgusContext argusContext);
 
     @Override
     public DataStream<OUT> channel(DataStream<IN> dataStream) {
-        ArgusChannelHandler channelHandler = getChannelHandler();
+        ArgusChannelHandler channelHandler = getChannelHandler(argusContext);
         DataStream<OUT> stream = dataStream.map(channelHandler);
         return stream;
     }

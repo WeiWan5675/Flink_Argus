@@ -21,6 +21,6 @@ public class ArgusKey {
     public static final String KEY_CHANNEL_NAME = "channel.name";
     public static final String KEY_CHANNEL_TYPE = "channel.type";
     public static final String KEY_CHANNEL_CLASS_NAME = "channel.class";
-    public static final String DEFAULT_CONF_FILENAME = "argus-default.yaml";
+    public static final String DEFAULT_CONF_FILENAME = "argus-core.yaml";
     public static final String DEFAULT_CONF_DIR = "conf";
 }

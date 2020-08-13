@@ -1,5 +1,6 @@
 package org.weiwan.argus.core.start;
 
+import com.beust.jcommander.Parameter;
 import org.weiwan.argus.common.options.Option;
 import org.weiwan.argus.common.options.OptionField;
 
@@ -12,155 +13,59 @@ import java.io.Serializable;
  * @ClassName: DemoOptions
  * @Description:
  **/
-@Option("startOptions")
 public class StartOptions implements Serializable {
 
+    @Parameter(names = "-cmd", description = "client mode")
+    private boolean cmdMode = false;
 
-    @OptionField(
-            defaultValue = "false",
-            hasArg = false,
-            description = "client mode",
-            oweKeys = {"cmd"})
-    private boolean cmdMode;
+    @Parameter(names = {"-mode", "-m"}, required = true, description = "Flink task runing mode")
+    private String mode = "Local";
 
-    @OptionField(
-            defaultValue = "Local",
-            required = true,
-            oweKeys = {"mode", "m"},
-            description = "运行模式")
-    private String mode;
-
-    @OptionField(
-            oweKeys = {"flinkConf", "fconf"},
-            description = "Flink conf file path")
+    @Parameter(names = {"-flinkConf", "-fconf"}, description = "Flink conf file path")
     private String flinkConf;
 
-    @OptionField(
-            oweKeys = {"hadoopConf", "hconf"},
-            description = "Hadoop and yarn conf file path")
+    @Parameter(names = {"-hadoopConf", "-hconf"}, description = "Hadoop and yarn conf file path")
     private String hadoopConf;
 
-
-    @OptionField(oweKeys = {"hiveConf"},
-            description = "hive conf file path")
+    @Parameter(names = {"-hiveConf"}, description = "hive conf file path")
     private String hiveConf;
 
-    @OptionField(
-            oweKeys = {"argusConf", "aconf", "job"},
-            description = "Argus conf file")
-    private String argusConf;
-
-    @OptionField(
-            oweKeys = {"queue", "yq"},
-            description = "Yarn queue name")
+    @Parameter(names = {"-queue", "-yq"}, description = "Yarn queue name")
     private String yarnQueue = "default";
 
-    @OptionField(
-            oweKeys = {"p"},
-            description = "job parallelism setting")
-    private String parallelism = "1";
+    @Parameter(names = {"-p", "-parallelism"}, description = "job parallelism setting")
+    private Integer parallelism = 1;
 
-    @OptionField(
-            oweKeys = "sp",
-            description = "Save point path")
+    @Parameter(names = {"-sp"}, description = "Save point path")
     private String savePointPath;
 
-
-    @OptionField(
-            oweKeys = "pd",
-            description = "plugins path")
+    @Parameter(names = "-pd", description = "Plugins jar path")
     private String pluginsDir;
 
-    @OptionField(
-            oweKeys = "rd",
-            description = "reader plugin path")
+    @Parameter(names = "-rd", description = "reader plugins path")
     private String readerPluginDir;
 
-    @OptionField(
-            oweKeys = "wd",
-            description = "writer plugin path")
+    @Parameter(names = "-wd", description = "writer plugin path")
     private String writerPluginDir;
 
-    @OptionField(
-            oweKeys = "cd",
-            description = "channel plugin path")
+    @Parameter(names = "-cd", description = "channel plugin path")
     private String channelPluginDir;
 
-
-    @OptionField(
-            oweKeys = "appHome",
-            description = "argus root path")
+    @Parameter(names = "-appHome", description = "argus root path")
     private String argusHome;
 
+    //内部使用
+    @Parameter(names = "-jobDescJson", description = "argus job desc josn")
+    private String jobDescJson;
 
-    @OptionField(
-            oweKeys = "jobConf",
-            description = "job desc josn"
-    )
-    private String jobConf;
+    @Parameter(names = {"-argusConf", "-aconf", "-jobConf"}, description = "Argus Job Desc File Path")
+    private String argusConf;
 
+    @Parameter(names = "-defaultArgusConf", description = "default Argus job desc josn")
+    private String defaultJobConf;
 
-    @OptionField(
-            oweKeys = "defaultArgusConf",
-            description = "default argus conf"
-    )
-    private String defaultArgusConf;
-
-    @OptionField(
-            oweKeys = "example",
-            description = "example mode",
-            hasArg = false
-    )
-    private boolean exampleMode;
-
-    public String getJobConf() {
-        return jobConf;
-    }
-
-    public void setJobConf(String jobConf) {
-        this.jobConf = jobConf;
-    }
-
-    public String getReaderPluginDir() {
-        return readerPluginDir;
-    }
-
-
-    public void setReaderPluginDir(String readerPluginDir) {
-        this.readerPluginDir = readerPluginDir;
-    }
-
-    public String getWriterPluginDir() {
-        return writerPluginDir;
-    }
-
-    public void setWriterPluginDir(String writerPluginDir) {
-        this.writerPluginDir = writerPluginDir;
-    }
-
-    public String getChannelPluginDir() {
-        return channelPluginDir;
-    }
-
-    public void setChannelPluginDir(String channelPluginDir) {
-        this.channelPluginDir = channelPluginDir;
-    }
-
-    public String getArgusHome() {
-        return argusHome;
-    }
-
-    public void setArgusHome(String argusHome) {
-        this.argusHome = argusHome;
-    }
-
-    public String getPluginsDir() {
-        return pluginsDir;
-    }
-
-    public void setPluginsDir(String pluginsDir) {
-        this.pluginsDir = pluginsDir;
-    }
+    @Parameter(names = "-exampleMode", description = "run example!")
+    private boolean exampleMode = false;
 
     public boolean isCmdMode() {
         return cmdMode;
@@ -194,12 +99,12 @@ public class StartOptions implements Serializable {
         this.hadoopConf = hadoopConf;
     }
 
-    public String getArgusConf() {
-        return argusConf;
+    public String getHiveConf() {
+        return hiveConf;
     }
 
-    public void setArgusConf(String argusConf) {
-        this.argusConf = argusConf;
+    public void setHiveConf(String hiveConf) {
+        this.hiveConf = hiveConf;
     }
 
     public String getYarnQueue() {
@@ -210,11 +115,11 @@ public class StartOptions implements Serializable {
         this.yarnQueue = yarnQueue;
     }
 
-    public String getParallelism() {
+    public Integer getParallelism() {
         return parallelism;
     }
 
-    public void setParallelism(String parallelism) {
+    public void setParallelism(Integer parallelism) {
         this.parallelism = parallelism;
     }
 
@@ -226,21 +131,68 @@ public class StartOptions implements Serializable {
         this.savePointPath = savePointPath;
     }
 
-
-    public String getHiveConf() {
-        return hiveConf;
+    public String getPluginsDir() {
+        return pluginsDir;
     }
 
-    public void setHiveConf(String hiveConf) {
-        this.hiveConf = hiveConf;
+    public void setPluginsDir(String pluginsDir) {
+        this.pluginsDir = pluginsDir;
     }
 
-    public String getDefaultArgusConf() {
-        return defaultArgusConf;
+    public String getReaderPluginDir() {
+        return readerPluginDir;
     }
 
-    public void setDefaultArgusConf(String defaultArgusConf) {
-        this.defaultArgusConf = defaultArgusConf;
+    public void setReaderPluginDir(String readerPluginDir) {
+        this.readerPluginDir = readerPluginDir;
+    }
+
+    public String getWriterPluginDir() {
+        return writerPluginDir;
+    }
+
+    public void setWriterPluginDir(String writerPluginDir) {
+        this.writerPluginDir = writerPluginDir;
+    }
+
+    public String getChannelPluginDir() {
+        return channelPluginDir;
+    }
+
+    public void setChannelPluginDir(String channelPluginDir) {
+        this.channelPluginDir = channelPluginDir;
+    }
+
+    public String getArgusHome() {
+        return argusHome;
+    }
+
+    public void setArgusHome(String argusHome) {
+        this.argusHome = argusHome;
+    }
+
+    public String getJobDescJson() {
+        return jobDescJson;
+    }
+
+    public void setJobDescJson(String jobDescJson) {
+        this.jobDescJson = jobDescJson;
+    }
+
+    public String getArgusConf() {
+        return argusConf;
+    }
+
+    public void setArgusConf(String argusConf) {
+        this.argusConf = argusConf;
+    }
+
+    public String getDefaultJobConf() {
+        return defaultJobConf;
+    }
+
+    public void setDefaultJobConf(String defaultJobConf) {
+        this.defaultJobConf = defaultJobConf;
     }
 
     public boolean isExampleMode() {
@@ -249,5 +201,28 @@ public class StartOptions implements Serializable {
 
     public void setExampleMode(boolean exampleMode) {
         this.exampleMode = exampleMode;
+    }
+
+    @Override
+    public String toString() {
+        return "StartOptions{" +
+                "cmdMode=" + cmdMode +
+                ", mode='" + mode + '\'' +
+                ", flinkConf='" + flinkConf + '\'' +
+                ", hadoopConf='" + hadoopConf + '\'' +
+                ", hiveConf='" + hiveConf + '\'' +
+                ", yarnQueue='" + yarnQueue + '\'' +
+                ", parallelism=" + parallelism +
+                ", savePointPath='" + savePointPath + '\'' +
+                ", pluginsDir='" + pluginsDir + '\'' +
+                ", readerPluginDir='" + readerPluginDir + '\'' +
+                ", writerPluginDir='" + writerPluginDir + '\'' +
+                ", channelPluginDir='" + channelPluginDir + '\'' +
+                ", argusHome='" + argusHome + '\'' +
+                ", jobDescJson='" + jobDescJson + '\'' +
+                ", argusConf='" + argusConf + '\'' +
+                ", defaultJobConf='" + defaultJobConf + '\'' +
+                ", exampleMode=" + exampleMode +
+                '}';
     }
 }

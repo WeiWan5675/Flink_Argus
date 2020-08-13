@@ -56,6 +56,6 @@ done
 CLASS_NAME=org.weiwan.argus.start.DataSyncStarter
 
 echo "Flink Argus starting ..."
-$JAVA_RUN -cp $CLASS_PATH $CLASS_NAME $@
+$JAVA_RUN -cp $CLASS_PATH $CLASS_NAME -Dlogback.configurationFile="${ARGUS_HOME/conf/logback.xml}" $@
 #nohup $JAVA_RUN -cp $cp $CLASS_NAME $@ &
 echo "Flink Argus started ..."

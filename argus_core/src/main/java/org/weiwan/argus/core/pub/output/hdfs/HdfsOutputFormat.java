@@ -261,8 +261,12 @@ public class HdfsOutputFormat<T extends DataRecord> extends BaseRichOutputFormat
         int i = 0;
         //等待所有子任务完成
         for (; i < maxRetryTime; ++i) {
-            if (fileSystem.listStatus(finishedDir).length == numTasks) {
-                break;
+            try {
+                if (fileSystem.exists(finishedDir) && fileSystem.listStatus(finishedDir).length == numTasks) {
+                    break;
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
             }
             SystemUtil.sleep(3000);
         }

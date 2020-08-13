@@ -40,13 +40,13 @@ public abstract class BaseWriter<T extends DataRecord> implements ArgusWriter<T>
         this.argusContext = argusContext;
         this.jobConfig = argusContext.getJobConfig();
         this.writerConfig = argusContext.getJobConfig().getWriterConfig();
-        this.writerName = writerConfig.getWriterName();
+        this.writerName = writerConfig.getStringVal(KEY_WRITER_NAME,"argusWriter");
         this.writerClassName = writerConfig.getStringVal(KEY_WRITER_CLASS_NAME);
         this.writerType = writerConfig.getStringVal(KEY_WRITER_TYPE);
         this.writerParallelism = writerConfig.getIntVal(KEY_WRITER_PARALLELISM, 1);
     }
 
-    public abstract BaseRichOutputFormat<T> getOutputFormat();
+    public abstract BaseRichOutputFormat<T> getOutputFormat(ArgusContext argusContext);
 
     /**
      * 为什么要在这里有这个方法呢,output是并行得,但是有些前置条件要再并行任务执行前处理,所以提供这个方法
@@ -57,9 +57,10 @@ public abstract class BaseWriter<T extends DataRecord> implements ArgusWriter<T>
     @Override
     public DataStreamSink<T> writer(DataStream<T> dataStream) {
         DataStream<T> beforeWritingStream = beforeWriting(dataStream);
-        BaseRichOutputFormat<T> outputFormat = getOutputFormat();
+        BaseRichOutputFormat<T> outputFormat = getOutputFormat(argusContext);
         ArgusOutputFormatSink<T> outputFormatSink = new ArgusOutputFormatSink<T>(outputFormat);
         DataStreamSink<T> sink = beforeWritingStream.addSink(outputFormatSink);
+        sink.name(writerName);
         sink.setParallelism(writerParallelism);
         return sink;
     }

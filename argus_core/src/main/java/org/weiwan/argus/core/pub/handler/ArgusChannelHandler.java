@@ -27,8 +27,10 @@ public abstract class ArgusChannelHandler<T extends DataRecord, O extends DataRe
     public ArgusChannelHandler(ArgusContext context) {
         this.context = context;
         this.jobConfig = context.getJobConfig();
-        this.channelConfig = jobConfig.getChannelConfig();
+        this.channelConfig = context.getJobConfig().getChannelConfig();
+    }
 
+    public ArgusChannelHandler() {
     }
 
     @Override

@@ -29,7 +29,7 @@ public class ExampleReader extends BaseReader<DataRecord<DataRow<DataField>>> {
     @Override
     public BaseRichInputFormat getInputFormat(ArgusContext context) {
         logger.info("this Method Returns InputFormat");
-        return new ExampleInputFormat();
+        return new ExampleInputFormat(context);
     }
 
     @Override

@@ -4,7 +4,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.weiwan.argus.core.pub.config.ArgusContext;
 import org.weiwan.argus.core.pub.handler.ArgusChannelHandler;
+import org.weiwan.argus.core.pub.pojo.DataField;
 import org.weiwan.argus.core.pub.pojo.DataRecord;
+import org.weiwan.argus.core.pub.pojo.DataRow;
 
 /**
  * @Author: xiaozhennan
@@ -13,19 +15,19 @@ import org.weiwan.argus.core.pub.pojo.DataRecord;
  * @ClassName: ExampleChannelHandler
  * @Description:
  **/
-public class ExampleChannelHandler extends ArgusChannelHandler {
+public class ExampleChannelHandler extends ArgusChannelHandler<DataRecord<DataRow<DataField>>, DataRecord<DataRow<DataField>>> {
 
     private String channelVar;
 
-    public ExampleChannelHandler(ArgusContext context) {
-        super(context);
-        this.channelVar = channelConfig.getStringVal("channel.example.channelVar");
+    public ExampleChannelHandler(ArgusContext argusContext) {
+        super(argusContext);
+        this.channelVar = argusContext.getJobConfig().getChannelConfig().getStringVal("channel.example.channelVar");
     }
 
+
     @Override
-    public DataRecord process(DataRecord value) {
+    public DataRecord<DataRow<DataField>> process(DataRecord<DataRow<DataField>> value) {
         System.out.println("ExampleChannelHandler处理数据:" + value.toString());
         return value;
     }
-
 }

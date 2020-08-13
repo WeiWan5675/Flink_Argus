@@ -1,171 +1,87 @@
-/*
- * Licensed to the Apache Software Foundation (ASF) under one
- * or more contributor license agreements.  See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership.  The ASF licenses this file
- * to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License.  You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.weiwan.argus.common.options;
 
-import org.apache.commons.cli.BasicParser;
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.Options;
+import com.beust.jcommander.JCommander;
+import com.beust.jcommander.Parameter;
 import org.apache.commons.lang3.StringUtils;
 import org.weiwan.argus.common.utils.ReflectUtil;
 
-
 import java.lang.reflect.Field;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
- * The Parser of Launcher commandline options
- * <p>
- * Company: www.dtstack.com
- *
- * @author huyifan.zju@163.com
- */
+ * @Author: xiaozhennan
+ * @Date: 2020/8/13 13:36
+ * @Package: org.weiwan.argus.common.options.OptionParser
+ * @ClassName: OptionParser
+ * @Description:
+ **/
 public class OptionParser {
 
-    private Options options = new Options();
-
-    private BasicParser parser = new BasicParser();
-
-    private Class<?> optionTemplate;
-
-    private CommandLine commandLine;
-
     private String[] args;
-    private boolean inited;
-
+    private JCommander jCommander;
 
     public OptionParser(String[] args) {
+        jCommander = new JCommander();
         this.args = args;
     }
 
 
-    public <E> E parse(Class<E> eClass) throws Exception {
-        E e = null;
+    public <T> T parse(Class<T> tClass) {
+        T options = null;
         try {
-            if (!inited) {
-                initOptions(eClass);
-            }
-
-            e = (E) optionTemplate.newInstance();
-            Field[] fields = e.getClass().getDeclaredFields();
-            for (Field field : fields) {
-                OptionField optionField = field.getAnnotation(OptionField.class);
-                //兼容字段名字的形式,和简写Key
-                String[] optionNames = optionField.oweKeys();
-                String fieldName = field.getName();
-                String value = null;
-                for (String optionName : optionNames) {
-                    value = commandLine.getOptionValue(optionName);
-                    if (value != null) {
-                        break;
-                    }
-
-                    if (!optionField.hasArg()) {
-                        //没参数
-                        value = String.valueOf(commandLine.hasOption(optionName));
-                    }
-                }
-
-                if (value == null) {
-                    value = commandLine.getOptionValue(fieldName);
-                }
-
-
-                //如果参数不能为空,但是命令行为空,抛出异常
-                if (optionField != null) {
-                    if (optionField.required() && StringUtils.isBlank(value)) {
-                        throw new RuntimeException(String.format("parameters of %s is required", fieldName));
-                    }
-                }
-
-                //给反射的对象设置属性
-                field.setAccessible(true);
-                if (StringUtils.isBlank(value)) {
-                    value = optionField.defaultValue();
-                    if (value == null || value.equalsIgnoreCase("")) {
-                        //默认值为空 TODO 默认值为空,这里需要拿到实体类的默认值
-                        Object fieldValue = ReflectUtil.getFieldStrValue(e, field);
-                        if (fieldValue != null) {
-                            value = String.valueOf(fieldValue);
-                        }
-                    }
-                }
-
-
-                if (!optionField.hasArg() && value != null) {
-                    field.setBoolean(e, Boolean.valueOf(value));
-                } else {
-                    field.set(e, value);
-                }
-            }
-        } catch (Exception exception) {
-            exception.printStackTrace();
-            throw exception;
+            options = tClass.newInstance();
+        } catch (InstantiationException e) {
+            e.printStackTrace();
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
         }
-        return e;
-    }
-
-    private <E> void initOptions(Class<E> eClass) throws Exception {
-        this.optionTemplate = eClass;
-        Field[] fields = optionTemplate.getDeclaredFields();
-        Option annotation = optionTemplate.getAnnotation(Option.class);
-        if (annotation == null) {
-            throw new RuntimeException(String.format(" option Class %s must haveing @Option annotation", optionTemplate.getName()));
-        }
-        for (Field field : fields) {
-            String fieldName = field.getName();
-            OptionField optionField = field.getAnnotation(OptionField.class);
-            if (optionField != null) {
-                String opKey = null;
-                String[] oweKeys = optionField.oweKeys();
-                for (String oweKey : oweKeys) {
-                    opKey = oweKey;
-                    if (opKey != null) {
-                        options.addOption(opKey, optionField.hasArg(), optionField.description());
-                    }
-                }
-                if (opKey == null) {
-                    opKey = fieldName;
-                    options.addOption(opKey, optionField.hasArg(), optionField.description());
-                }
-            }
-        }
-        this.commandLine = parser.parse(this.options, args, true);
-        inited = true;
+        jCommander.addObject(options);
+        jCommander.parse(args);
+        return options;
     }
 
 
-    public Map<String, Object> optionToMap(Object options, Class<?> clazz) throws Exception {
-        Field[] declaredFields = clazz.getDeclaredFields();
+    public static <T> String[] optionToArgs(T options) throws Exception {
+        Map<String, Object> optionToMap = optionToMap(options);
+        List<String> argsList = new ArrayList<>();
+        for (String key : optionToMap.keySet()) {
+            String var = String.valueOf(optionToMap.get(key));
+            if (StringUtils.isNotEmpty(var)) {
+                argsList.add(key);
+                if ("false".equalsIgnoreCase(var) || "true".equalsIgnoreCase(var)) {
+                    continue;
+                }
+                argsList.add(var);
+            }
+        }
+
+        String[] argsAll = argsList.toArray(new String[argsList.size()]);
+        return argsAll;
+    }
+
+
+    public static <T> Map<String, Object> optionToMap(T options) throws Exception {
+        Field[] declaredFields = options.getClass().getDeclaredFields();
         Map<String, Object> res = new HashMap();
         for (Field field : declaredFields) {
             Object fieldValue = ReflectUtil.getObjectValue(options, field);
-            OptionField optionField = field.getAnnotation(OptionField.class);
-            String[] oweKeys = optionField.oweKeys();
+            Parameter optionField = field.getAnnotation(Parameter.class);
+            String[] oweKeys = optionField.names();
             if (oweKeys.length > 0) {
                 //取oweKeys的数据
                 res.put(oweKeys[0], fieldValue);
-            } else {
-                //取字段名称作为Key
-                res.put(field.getName(), fieldValue);
             }
         }
         return res;
     }
+
+
+//        public static void main(String[] args) {
+//        OptionParser objectOptionParserV2 = new OptionParser(args);
+//        JCommanderTest parse = objectOptionParserV2.parse(JCommanderTest.class);
+//        System.out.println(parse);
+//    }
 }

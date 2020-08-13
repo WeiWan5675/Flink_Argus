@@ -25,8 +25,9 @@ public class ExampleOutputFormat extends BaseRichOutputFormat<DataRecord<DataRow
     public ExampleOutputFormat(ArgusContext argusContext) {
         super(argusContext);
     }
-
     public static final Logger logger = LoggerFactory.getLogger(ExampleOutputFormat.class);
+
+    private String exampleVar;
 
     /**
      * 打开数据源
@@ -37,7 +38,7 @@ public class ExampleOutputFormat extends BaseRichOutputFormat<DataRecord<DataRow
      */
     @Override
     public void openOutput(int taskNumber, int numTasks, ArgusContext argusContext) {
-        String stringVal = writerConfig.getStringVal("writer.example.writerVar");
+        exampleVar = writerConfig.getStringVal("writer.example.writerVar");
         logger.info("example output format open");
     }
 
@@ -48,7 +49,7 @@ public class ExampleOutputFormat extends BaseRichOutputFormat<DataRecord<DataRow
      */
     @Override
     public void writerRecordInternal(DataRecord<DataRow<DataField>> record) {
-        System.out.println(record.toString());
+        System.out.println("ExampleOutputFormat处理数据:" + record.toString());
     }
 
     /**

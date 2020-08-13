@@ -21,7 +21,7 @@ public class HiveWriter extends BaseWriter<DataRecord<DataRow>> {
     }
 
     @Override
-    public BaseRichOutputFormat getOutputFormat() {
+    public BaseRichOutputFormat getOutputFormat(ArgusContext argusContext) {
         HiveOutputFormat hiveOutputFormat = new HiveOutputFormat(argusContext);
         return hiveOutputFormat;
     }

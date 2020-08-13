@@ -23,6 +23,7 @@
         <dependency>
             <groupId>org.weiwan.argus</groupId>
             <artifactId>hdfs_writer</artifactId>
+            <version>${hdfs_writer.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.hive</groupId>

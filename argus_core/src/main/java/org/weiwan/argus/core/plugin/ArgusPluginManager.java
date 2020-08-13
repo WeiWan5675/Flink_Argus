@@ -31,6 +31,9 @@ public class ArgusPluginManager {
     }
 
     public <T> T loadPlugin(List<URL> urls, String className, Class<T> tClass) throws Exception {
+        for (URL url : urls) {
+            System.out.println(url);
+        }
         return ClassLoaderManager.newInstance(new HashSet<>(urls), cl -> {
             Class<?> aClass = cl.loadClass(className);
             Constructor<?> constructor = aClass.getConstructor(StreamExecutionEnvironment.class, ArgusContext.class);

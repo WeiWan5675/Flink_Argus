@@ -152,7 +152,7 @@ public abstract class BaseRichInputFormat<OT, T extends InputSplit> extends Rich
 
     @Override
     public void close() throws IOException {
-
+        closeInput();
     }
 
     public JobFormatState getSnapshotState() {

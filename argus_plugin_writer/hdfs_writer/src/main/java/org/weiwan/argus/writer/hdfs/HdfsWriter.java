@@ -22,7 +22,7 @@ public class HdfsWriter extends BaseWriter<DataRecord<DataRow>> {
     }
 
     @Override
-    public BaseRichOutputFormat<DataRecord<DataRow>> getOutputFormat() {
+    public BaseRichOutputFormat<DataRecord<DataRow>> getOutputFormat(ArgusContext argusContext) {
         HdfsOutputFormat hdfsOutputFormat = new HdfsOutputFormat(argusContext);
         return hdfsOutputFormat;
     }

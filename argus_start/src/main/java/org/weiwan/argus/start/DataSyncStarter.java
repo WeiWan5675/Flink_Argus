@@ -2,23 +2,36 @@ package org.weiwan.argus.start;
 
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.LoggerContext;
-import org.apache.commons.codec.Charsets;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.Appender;
+import ch.qos.logback.core.Context;
+import ch.qos.logback.core.FileAppender;
+import ch.qos.logback.core.LogbackException;
+import ch.qos.logback.core.encoder.Encoder;
+import ch.qos.logback.core.filter.Filter;
+import ch.qos.logback.core.rolling.RollingFileAppender;
+import ch.qos.logback.core.rolling.TimeBasedRollingPolicy;
+import ch.qos.logback.core.spi.FilterReply;
+import ch.qos.logback.core.status.Status;
+import com.alibaba.fastjson.JSONObject;
+import com.beust.jcommander.JCommander;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.weiwan.argus.common.constans.Constans;
-import org.weiwan.argus.common.exception.ArgusCommonException;
+import org.weiwan.argus.common.log.EasyPatternLayout;
+import org.weiwan.argus.common.options.OptionParser;
 import org.weiwan.argus.common.utils.FileUtil;
 import org.weiwan.argus.common.utils.SystemUtil;
+import org.weiwan.argus.common.utils.YamlUtils;
 import org.weiwan.argus.core.ArgusKey;
 import org.weiwan.argus.core.ArgusRun;
-import org.weiwan.argus.common.options.OptionParser;
+import org.weiwan.argus.common.options.OptionParserV1;
 import org.weiwan.argus.core.start.StartOptions;
 import org.weiwan.argus.core.utils.CommonUtil;
 import org.weiwan.argus.start.enums.JobMode;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -53,33 +66,45 @@ public class DataSyncStarter {
     public static void main(String[] args) throws Exception {
 //        args = new String[]{
 //                "-mode", "Local",
-//                "-aconf", "F:\\Project\\Flink_Argus\\argus_start\\src\\main\\resources\\argus-default.yaml"
+//                "-aconf", "F:\\Project\\Flink_Argus\\argus_start\\src\\main\\resources\\argus-core.yaml"
 //        };
 
-        LoggerContext loggerContext = (LoggerContext) LoggerFactory.getILoggerFactory();
-
-        ch.qos.logback.classic.Logger root = loggerContext.getLogger("root");
-        root.setLevel(Level.INFO);
 
         OptionParser optionParser = new OptionParser(args);
         StartOptions options = optionParser.parse(StartOptions.class);
         //命令对象 转化成List对象
-
         String mode = options.getMode();
         setDefaultEnvPath(options);
-        readDefaultConf(options);
+        //读取默认配置文件
+        readDefaultJobConf(options);
+        //读取用户配置文件
+        readArgusJobConf(options);
+        //使用用户配置文件覆盖默认配置文件 形成最终配置文件
+        String userJobConf = options.getArgusConf();
+        String defaultJobConf = options.getDefaultJobConf();
+        mergeUserAndDefault(options, userJobConf, defaultJobConf);
+
+
+        /**
+         * 默认配置文件
+         * 1. FlinkEnv配置
+         * 2. 日志相关配置
+         * 3. Hadoop/Hbase/Hive/HDFS相关配置
+         * 4. 默认CHANNEL READER WRITER
+         * 5. job-yaml中可以重写argus-cord的相关配置
+         */
+
+
         //根据模式不同,组装不同的参数
         if (options.isCmdMode()) {
             //命令行模式
         } else if (options.isExampleMode()) {
-            options.setJobConf(options.getDefaultArgusConf());
+            options.setJobDescJson(options.getDefaultJobConf());
         } else {
-            readingArgusConfig(options);
-        }
-        Map<String, Object> optionMap = optionParser.optionToMap(options, StartOptions.class);
 
-        String[] argsAll;
-        argsAll = convertMap2Args(optionMap);
+        }
+
+        String[] argsAll = OptionParser.optionToArgs(options);
         boolean startFlag = false;
         switch (JobMode.valueOf(mode.toLowerCase())) {
             case local:
@@ -107,41 +132,39 @@ public class DataSyncStarter {
 
     }
 
-    private static void readDefaultConf(StartOptions options) throws IOException {
+    private static void mergeUserAndDefault(StartOptions options, String userJobConf, String defaultJobConf) {
+        Map<String, String> userJobMap = YamlUtils.loadYamlStr(userJobConf);
+        Map<String, String> defaultJobMap = YamlUtils.loadYamlStr(defaultJobConf);
+        for (String key : userJobMap.keySet()) {
+            defaultJobMap.put(key, userJobMap.get(key));
+        }
+        String jobJson = JSONObject.toJSONString(defaultJobMap);
+        options.setJobDescJson(jobJson);
+    }
+
+    private static void readDefaultJobConf(StartOptions options) throws IOException {
         String argusHome = options.getArgusHome();
-        if (StringUtils.isNotEmpty(argusHome)) {
-            //
+        String defaultJobConf = options.getDefaultJobConf();
+        String defaultConfStr;
+        if (StringUtils.isNotEmpty(defaultJobConf)) {
+            defaultConfStr = FileUtil.readFileContent(defaultJobConf);
+            options.setDefaultJobConf(defaultConfStr);
+        } else {
             String defaultConfDir =
                     argusHome + File.separator + ArgusKey.DEFAULT_CONF_DIR
                             + File.separator + ArgusKey.DEFAULT_CONF_FILENAME;
-            String defaultConfStr = FileUtil.readFileContent(defaultConfDir);
-            options.setDefaultArgusConf(defaultConfStr);
+            defaultConfStr = FileUtil.readFileContent(defaultConfDir);
         }
-
-    }
-
-    private static String[] convertMap2Args(Map<String, Object> optionMap) {
-        List<String> argsList = new ArrayList<>();
-        for (String key : optionMap.keySet()) {
-            String cmdKey = Constans.SIGN_HORIZONTAL + key;
-            String var = String.valueOf(optionMap.get(key));
-            if (StringUtils.isNotEmpty(var)) {
-                argsList.add(cmdKey);
-                argsList.add(var);
-            }
-        }
-
-        String[] argsAll = argsList.toArray(new String[argsList.size()]);
-        return argsAll;
+        options.setDefaultJobConf(defaultConfStr);
     }
 
 
-    private static void readingArgusConfig(StartOptions options) throws IOException {
+    private static void readArgusJobConf(StartOptions options) throws IOException {
         //配置文件模式
         String aConfPath = options.getArgusConf();
         String arugsJobContext = FileUtil.readFileContent(aConfPath);
         if (StringUtils.isNotEmpty(arugsJobContext.trim())) {
-            options.setJobConf(arugsJobContext);
+            options.setArgusConf(arugsJobContext);
         }
     }
 
@@ -209,6 +232,7 @@ public class DataSyncStarter {
             File file = new File(appPath);
             argusHome = file.getParent();
         }
+        options.setArgusHome(argusHome);
         logger.info(String.format("ARGUS_HOME is [%s]", argusHome));
         return argusHome;
     }

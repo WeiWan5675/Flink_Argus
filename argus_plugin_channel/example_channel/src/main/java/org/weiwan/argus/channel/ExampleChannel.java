@@ -19,13 +19,12 @@ import org.weiwan.argus.core.pub.pojo.DataRow;
  **/
 public class ExampleChannel extends BaseChannel<DataRecord<DataRow<DataField>>, DataRecord<DataRow<DataField>>> {
     public static final Logger logger = LoggerFactory.getLogger(ExampleChannel.class);
-
     public ExampleChannel(StreamExecutionEnvironment env, ArgusContext argusContext) {
         super(env, argusContext);
     }
 
     @Override
-    public ArgusChannelHandler getChannelHandler() {
+    public ArgusChannelHandler<DataRecord<DataRow<DataField>>, DataRecord<DataRow<DataField>>> getChannelHandler(ArgusContext argusContext) {
         logger.info("this Method Returns ExampleChannel");
         return new ExampleChannelHandler(argusContext);
     }

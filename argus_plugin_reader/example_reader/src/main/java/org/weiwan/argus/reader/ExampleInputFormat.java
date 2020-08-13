@@ -3,6 +3,7 @@ package org.weiwan.argus.reader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.weiwan.argus.common.utils.DateUtils;
+import org.weiwan.argus.core.pub.config.ArgusContext;
 import org.weiwan.argus.core.pub.input.BaseRichInputFormat;
 import org.weiwan.argus.core.pub.output.hdfs.ColumnType;
 import org.weiwan.argus.core.pub.pojo.DataField;
@@ -26,6 +27,10 @@ public class ExampleInputFormat extends BaseRichInputFormat<DataRecord<DataRow<D
     int endIndex = 1000;
     int currentIndex = 0;
 
+    public ExampleInputFormat(ArgusContext context) {
+        super(context);
+    }
+
     /**
      * 打开InputFormat,根据split读取数据
      *
@@ -45,7 +50,13 @@ public class ExampleInputFormat extends BaseRichInputFormat<DataRecord<DataRow<D
      */
     @Override
     public ExampleInputSplit[] getInputSpliter(int minNumSplits) {
-        return new ExampleInputSplit[minNumSplits];
+
+        ExampleInputSplit[] splits = new ExampleInputSplit[minNumSplits];
+        for (int i = 0; i < minNumSplits; i++){
+            ExampleInputSplit exampleInputSplit = new ExampleInputSplit(i, minNumSplits);
+            splits[i] = exampleInputSplit;
+        }
+        return splits;
     }
 
     /**
@@ -72,6 +83,7 @@ public class ExampleInputFormat extends BaseRichInputFormat<DataRecord<DataRow<D
         if (currentIndex++ == endIndex) {
             isComplete(true);
         }
+        System.out.println("ExampleInputFormat处理数据:" + dataRecord.toString());
         return dataRecord;
     }
 

@@ -30,34 +30,16 @@ flink:
       path:  #支持hdfs路径 或者本地文件路径 hdfs://namenode:40010/flink/checkpoints  file:///data/flink/checkpoints
 
 
-reader:
-  type: stream # batch 批处理 stream
-  name: examplereader
-  class: org.weiwan.argus.reader.ExampleReader
-  parallelism: 1
-  example:
-    endIndex: 1000
-
-channel:
-  type:
-  name: examplechannle
-  class: org.weiwan.argus.channel.ExampleChannle
-  example:
-    channelVar: channel_var
-
-writer:
-  type: batch
-  name: examplewriter
-  class: org.weiwan.argus.writer.ExampleWriter
-  parallelism: 1
-  batchWriteMode: false #写出模式,是批量写出 还是逐条写出
-  batchWriteSize: 100 #批量写出的大小
-  example:
-    writerVar: writer_var
-
-
+log:
+  level: info
+  logPath:
 
 hadoop:
+  home:
   defaultFs:
-  hadoopUser:
-  hadoopHome:
+  user:
+
+hive:
+  jdbcUrl:
+  username:
+  password:

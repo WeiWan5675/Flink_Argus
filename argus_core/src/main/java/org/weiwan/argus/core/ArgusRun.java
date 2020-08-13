@@ -1,5 +1,6 @@
 package org.weiwan.argus.core;
 
+import com.alibaba.fastjson.JSONObject;
 import org.apache.flink.api.common.JobExecutionResult;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.datastream.DataStreamSink;
@@ -7,7 +8,7 @@ import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.weiwan.argus.common.options.OptionParser;
-import org.weiwan.argus.common.utils.YamlUtils;
+import org.weiwan.argus.common.options.OptionParserV1;
 import org.weiwan.argus.core.flink.pub.FlinkContext;
 import org.weiwan.argus.core.flink.utils.FlinkContextUtil;
 import org.weiwan.argus.core.plugin.ArgusPluginManager;
@@ -37,11 +38,12 @@ public class ArgusRun {
         OptionParser optionParser = new OptionParser(args);
         StartOptions options = optionParser.parse(StartOptions.class);
 
-        Map<String, Object> optionToMap = optionParser.optionToMap(options, StartOptions.class);
-
+        Map<String, Object> optionToMap = optionParser.optionToMap(options);
         //读取job描述文件 json
-        String jobConfContent = options.getJobConf();
-        Map<String, String> jobMap = YamlUtils.loadYamlStr(jobConfContent);
+        String jobConfContent = options.getJobDescJson();
+//        Map<String, String> jobMap = YamlUtils.loadYamlStr(jobConfContent);
+        Map<String, String> jobMap = JSONObject.parseObject(jobConfContent, Map.class);
+
         printEnvInfo(optionToMap, jobMap);
         Map<String, Object> tmpObj = new HashMap<>();
         tmpObj.putAll(jobMap);
