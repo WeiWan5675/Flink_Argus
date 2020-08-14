@@ -49,9 +49,6 @@ public class DataSyncStarter {
 
 
     private static final Logger logger = LoggerFactory.getLogger(DataSyncStarter.class);
-    private static final String KEY_FLINK_HOME = "FLINK_HOME";
-    private static final String KEY_ARGUS_HOME = "ARGUS_HOME";
-    private static final String KEY_HADOOP_HOME = "HADOOP_HOME";
 
 
     private static final String KEY_PLUGINS_DIR = "plugins";
@@ -74,10 +71,13 @@ public class DataSyncStarter {
         StartOptions options = optionParser.parse(StartOptions.class);
         //命令对象 转化成List对象
         String mode = options.getMode();
-        setDefaultEnvPath(options);
-        //读取默认配置文件
+        //设置ArgusHome路径
+        setArgusHomePath(options);
+        //读取argus-core.yaml配置文件
         readDefaultJobConf(options);
-        //读取用户配置文件
+        //设置默认路径
+        setDefaultEnvPath(options);
+        //读取job配置文件
         readArgusJobConf(options);
         //使用用户配置文件覆盖默认配置文件 形成最终配置文件
         String userJobConf = options.getArgusConf();
@@ -189,41 +189,89 @@ public class DataSyncStarter {
 
     private static void setDefaultEnvPath(StartOptions options) {
 
-
-        String argusHome = getArgusHomePath(options);
+        String argusHome = options.getArgusHome();
+        String defaultJobContent = options.getDefaultJobConf();
+        Map<String, String> defaultMap = YamlUtils.loadYamlStr(defaultJobContent);
         String pluginsRootDir = options.getPluginsDir();
+        String defaultPluginsDir = defaultMap.getOrDefault(ArgusKey.KEY_ARGUS_PLUGINS_DIR, KEY_PLUGINS_DIR);
+        if (!FileUtil.isAbsolutePath(defaultPluginsDir)) {
+            //是相对路径,需要拼接argusHome
+            defaultPluginsDir = argusHome + File.separator + defaultPluginsDir;
+        }
         if (StringUtils.isEmpty(pluginsRootDir)) {
-            pluginsRootDir = argusHome + File.separator + KEY_PLUGINS_DIR;
+            pluginsRootDir = defaultPluginsDir;
+        }
+
+
+        //设置插件目录
+        options.setPluginsDir(pluginsRootDir);
+        String readerPluginDir = defaultMap.getOrDefault(ArgusKey.KEY_ARGUS_PLUGINS_READER_DIR, KEY_READER_PLUGIN_DIR);
+        String channelPluginDir = defaultMap.getOrDefault(ArgusKey.KEY_ARGUS_PLUGINS_CHANNEL_DIR, KEY_CHANNEL_PLUGIN_DIR);
+        String writerPluginDir = defaultMap.getOrDefault(ArgusKey.KEY_ARGUS_PLUGINS_WRITER_DIR, KEY_WRITER_PLUGIN_DIR);
+        if (StringUtils.isEmpty(options.getReaderPluginDir())) {
+            if (FileUtil.isAbsolutePath(readerPluginDir)) {
+                options.setReaderPluginDir(readerPluginDir);
+            } else {
+                options.setReaderPluginDir(argusHome + File.separator + DataSyncStarter.KEY_READER_PLUGIN_DIR);
+            }
+        }
+        if (StringUtils.isEmpty(options.getChannelPluginDir())) {
+            if (FileUtil.isAbsolutePath(channelPluginDir)) {
+                options.setChannelPluginDir(channelPluginDir);
+            } else {
+                options.setChannelPluginDir(argusHome + File.separator + DataSyncStarter.KEY_CHANNEL_PLUGIN_DIR);
+            }
+        }
+        if (StringUtils.isEmpty(options.getWriterPluginDir())) {
+            if (FileUtil.isAbsolutePath(writerPluginDir)) {
+                options.setWriterPluginDir(writerPluginDir);
+            } else {
+                options.setWriterPluginDir(argusHome + File.separator + DataSyncStarter.KEY_WRITER_PLUGIN_DIR);
+            }
+        }
+
+
+        //获得flink环境变量
+        String flinkHome = SystemUtil.getSystemVar(ArgusKey.KEY_FLINK_HOME);
+        String defaultFilnkHome = defaultMap.get(ArgusKey.KEY_FLINK_HOME);
+        if (StringUtils.isEmpty(defaultFilnkHome)) {
+            //配置文件为空
+            options.setFlinkConf(flinkHome + File.separator + "conf");
+        } else {
+            //配置文件不为空
+            options.setFlinkConf(defaultFilnkHome + File.separator + "conf");
+        }
+
+
+        //获得flink环境变量
+        String hadoopHome = SystemUtil.getSystemVar(ArgusKey.KEY_HADOOP_HOME);
+        String defaultHadoopHome = defaultMap.get(ArgusKey.KEY_HADOOP_HOME);
+        if (StringUtils.isEmpty(defaultHadoopHome)) {
+            //配置文件为空
+            options.setHadoopConf(hadoopHome + File.separator + "conf");
+        } else {
+            //配置文件不为空
+            options.setHadoopConf(defaultHadoopHome + File.separator + "etc/hadoop");
         }
 
         //获得flink环境变量
-        String flinkHome = SystemUtil.getSystemVar(DataSyncStarter.KEY_FLINK_HOME);
-        //设置Flink目录
-        options.setFlinkConf(flinkHome + File.separator + "conf");
-        //获得hadoop环境变量
-        String hadoopHome = SystemUtil.getSystemVar(DataSyncStarter.KEY_HADOOP_HOME);
-        //设置Hadoop目录
-        options.setHadoopConf(hadoopHome + File.separator + "etc/hadoop");
-        //设置插件目录
-        options.setPluginsDir(pluginsRootDir);
-        if (StringUtils.isEmpty(options.getReaderPluginDir())) {
-            options.setReaderPluginDir(pluginsRootDir + File.separator + DataSyncStarter.KEY_READER_PLUGIN_DIR);
+        String hiveHome = SystemUtil.getSystemVar(ArgusKey.KEY_HIVE_HOME);
+        String defaultHiveHome = defaultMap.get(ArgusKey.KEY_HIVE_HOME);
+        if (StringUtils.isEmpty(defaultHiveHome)) {
+            //配置文件为空
+            options.setHiveConf(hiveHome + File.separator + "conf");
+        } else {
+            //配置文件不为空
+            options.setHiveConf(defaultHiveHome + File.separator + "conf");
         }
-        if (StringUtils.isEmpty(options.getWriterPluginDir())) {
-            options.setWriterPluginDir(pluginsRootDir + File.separator + DataSyncStarter.KEY_WRITER_PLUGIN_DIR);
-        }
-        if (StringUtils.isEmpty(options.getChannelPluginDir())) {
-            options.setChannelPluginDir(pluginsRootDir + File.separator + DataSyncStarter.KEY_CHANNEL_PLUGIN_DIR);
-        }
-
 
     }
 
-    private static String getArgusHomePath(StartOptions options) {
+    private static String setArgusHomePath(StartOptions options) {
         String argusHome = options.getArgusHome();
 
         if (StringUtils.isEmpty(argusHome)) {
-            argusHome = SystemUtil.getSystemVar(DataSyncStarter.KEY_ARGUS_HOME);
+            argusHome = SystemUtil.getSystemVar(ArgusKey.KEY_ARGUS_HOME);
         }
         if (StringUtils.isEmpty(argusHome)) {
             logger.warn("The ARUGS_HOME environment variable was not found, use the launcher root directory!");

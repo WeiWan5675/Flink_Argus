@@ -94,7 +94,9 @@ public class YamlUtils {
             if (entry.getValue() instanceof Map) {
                 eachYaml(entry.getKey(), (Map<String, Object>) entry.getValue(), result);
             } else {
-                result.put(entry.getKey(), entry.getValue().toString());
+                if(entry.getValue() != null){
+                    result.put(entry.getKey(), entry.getValue().toString());
+                }
             }
         }
         return result;

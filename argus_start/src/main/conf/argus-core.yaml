@@ -1,3 +1,26 @@
+##########################################################
+# FlinkArgus默认配置文件,包含以下内容:
+# 1. ARGUS相关变量配置
+# 2. 大数据组件的ENV变量配置
+# 3. Flink任务相关参数设置
+# 4. HDFS相关连接参数
+# 5. Hive相关连接参数
+# 6. zookeeper连接参数
+# 7. 其它
+##########################################################
+
+ARGUS_PLUGINS_DIR: plugins
+ARGUS_PLUGINS_READER_DIR: plugins/reader
+ARGUS_PLUGINS_CHANNEL_DIR: plugins/channel
+ARGUS_PLUGINS_WRITER_DIR: plugins/writer
+ARGUS_LIB_DIR: lib
+ARGUS_EXT_LIB_DIR: extlib
+ARGUS_LOG_DIR: logs
+HADOOP_HOME:
+HIVE_HOME:
+FLINK_HOME:
+HBASE_HOME:
+
 flink:
   task:
     name: flinkApp
@@ -30,16 +53,26 @@ flink:
       path:  #支持hdfs路径 或者本地文件路径 hdfs://namenode:40010/flink/checkpoints  file:///data/flink/checkpoints
 
 
-log:
-  level: info
-  logPath:
 
-hadoop:
-  home:
+
+HDFS:
   defaultFs:
-  user:
+  nameservices:
+  loginUser:
+
 
 hive:
   jdbcUrl:
+  server:
+  port:
   username:
   password:
+
+
+kerberos:
+  krbFilePath:
+
+zookeeper:
+  zkServer:
+  zkPort:
+

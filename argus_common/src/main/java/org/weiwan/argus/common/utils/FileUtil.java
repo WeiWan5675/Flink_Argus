@@ -20,7 +20,7 @@ public class FileUtil {
         //读取配置文件  转化成json对象
         File file = new File(path);
         if (!file.exists() || file.isDirectory()) {
-            throw new ArgusCommonException(String.format("The configuration file %s does not exist, please check the configuration file path!",file.getAbsolutePath()));
+            throw new ArgusCommonException(String.format("The configuration file %s does not exist, please check the configuration file path!", file.getAbsolutePath()));
         }
         FileInputStream in = new FileInputStream(file);
         byte[] filecontent = new byte[(int) file.length()];
@@ -28,4 +28,20 @@ public class FileUtil {
         return new String(filecontent, Charsets.UTF_8.name());
     }
 
+    public static boolean isAbsolutePath(String path) {
+        if (path != null && !path.equalsIgnoreCase("")) {
+            if (path.startsWith("/")) {
+                return true;
+            }
+            if (path.startsWith(":", 1)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public static boolean isDir(String path) {
+        File file = new File(path);
+        return file.isDirectory();
+    }
 }
