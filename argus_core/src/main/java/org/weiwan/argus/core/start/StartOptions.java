@@ -1,10 +1,14 @@
 package org.weiwan.argus.core.start;
 
+import com.beust.jcommander.DynamicParameter;
+import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import org.weiwan.argus.common.options.Option;
 import org.weiwan.argus.common.options.OptionField;
 
 import java.io.Serializable;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * @Author: xiaozhennan
@@ -26,6 +30,13 @@ public class StartOptions implements Serializable {
 
     @Parameter(names = {"-hadoopConf", "-hconf"}, description = "Hadoop and yarn conf file path")
     private String hadoopConf;
+
+    @Parameter(names = {"yarnConf", "yconf"}, description = "Yarn conf path")
+    private String yarnConf;
+
+    public boolean isCmdMode() {
+        return cmdMode;
+    }
 
     @Parameter(names = {"-hiveConf"}, description = "hive conf file path")
     private String hiveConf;
@@ -53,8 +64,8 @@ public class StartOptions implements Serializable {
 
     @Parameter(names = "-appHome", description = "argus root path")
     private String argusHome;
-
     //内部使用
+
     @Parameter(names = "-jobDescJson", description = "argus job desc josn")
     private String jobDescJson;
 
@@ -67,9 +78,18 @@ public class StartOptions implements Serializable {
     @Parameter(names = "-exampleMode", description = "run example!")
     private boolean exampleMode = false;
 
-    public boolean isCmdMode() {
-        return cmdMode;
-    }
+    @Parameter(names = "appId",description = "application job id")
+    private String appId;
+
+    @Parameter(names = "-logLevel", description = "log level setting")
+    private String logLevel = "info";
+
+    @Parameter(names = "--help", help = true, order = 5)
+    private boolean help;
+
+
+    @DynamicParameter(names = "-D", description = "Dynamic parameters go here")
+    private Map<String, String> params = new HashMap<String, String>();
 
     public void setCmdMode(boolean cmdMode) {
         this.cmdMode = cmdMode;
@@ -203,26 +223,43 @@ public class StartOptions implements Serializable {
         this.exampleMode = exampleMode;
     }
 
-    @Override
-    public String toString() {
-        return "StartOptions{" +
-                "cmdMode=" + cmdMode +
-                ", mode='" + mode + '\'' +
-                ", flinkConf='" + flinkConf + '\'' +
-                ", hadoopConf='" + hadoopConf + '\'' +
-                ", hiveConf='" + hiveConf + '\'' +
-                ", yarnQueue='" + yarnQueue + '\'' +
-                ", parallelism=" + parallelism +
-                ", savePointPath='" + savePointPath + '\'' +
-                ", pluginsDir='" + pluginsDir + '\'' +
-                ", readerPluginDir='" + readerPluginDir + '\'' +
-                ", writerPluginDir='" + writerPluginDir + '\'' +
-                ", channelPluginDir='" + channelPluginDir + '\'' +
-                ", argusHome='" + argusHome + '\'' +
-                ", jobDescJson='" + jobDescJson + '\'' +
-                ", argusConf='" + argusConf + '\'' +
-                ", defaultJobConf='" + defaultJobConf + '\'' +
-                ", exampleMode=" + exampleMode +
-                '}';
+    public String getLogLevel() {
+        return logLevel;
+    }
+
+    public void setLogLevel(String logLevel) {
+        this.logLevel = logLevel;
+    }
+
+    public boolean isHelp() {
+        return help;
+    }
+
+    public void setHelp(boolean help) {
+        this.help = help;
+    }
+
+    public Map<String, String> getParams() {
+        return params;
+    }
+
+    public void setParams(Map<String, String> params) {
+        this.params = params;
+    }
+
+    public String getYarnConf() {
+        return yarnConf;
+    }
+
+    public void setYarnConf(String yarnConf) {
+        this.yarnConf = yarnConf;
+    }
+
+    public String getAppId() {
+        return appId;
+    }
+
+    public void setAppId(String appId) {
+        this.appId = appId;
     }
 }

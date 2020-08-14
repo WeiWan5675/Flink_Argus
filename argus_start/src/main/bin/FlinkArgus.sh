@@ -25,7 +25,7 @@ else
     exit 1
   fi
 fi
-
+JAVA_RUN=$JAVA_RUN" -Dlogback.configurationFile="${ARGUS_HOME/conf/logback.xml}""
 JAR_HOME=$ARGUS_HOME/lib
 PLUGINS_DIR=$ARGUS_HOME/plugins
 READER_PLUGINS_DIR=$PLUGINS_DIR/reader
@@ -56,6 +56,6 @@ done
 CLASS_NAME=org.weiwan.argus.start.DataSyncStarter
 
 echo "Flink Argus starting ..."
-$JAVA_RUN -cp $CLASS_PATH $CLASS_NAME -Dlogback.configurationFile="${ARGUS_HOME/conf/logback.xml}" $@
+$JAVA_RUN -cp $CLASS_PATH $CLASS_NAME $@
 #nohup $JAVA_RUN -cp $cp $CLASS_NAME $@ &
 echo "Flink Argus started ..."

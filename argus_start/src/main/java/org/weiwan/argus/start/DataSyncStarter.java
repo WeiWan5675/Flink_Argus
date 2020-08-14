@@ -286,7 +286,6 @@ public class DataSyncStarter {
     }
 
     private static boolean startFromStandaloneMode(StartOptions options) {
-
         return false;
     }
 

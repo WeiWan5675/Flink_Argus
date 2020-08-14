@@ -53,22 +53,6 @@ flink:
       path:  #支持hdfs路径 或者本地文件路径 hdfs://namenode:40010/flink/checkpoints  file:///data/flink/checkpoints
 
 
-
-
-HDFS:
-  defaultFs:
-  nameservices:
-  loginUser:
-
-
-hive:
-  jdbcUrl:
-  server:
-  port:
-  username:
-  password:
-
-
 kerberos:
   krbFilePath:
 
