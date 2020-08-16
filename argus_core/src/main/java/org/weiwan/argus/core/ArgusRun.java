@@ -15,6 +15,7 @@ import org.weiwan.argus.core.plugin.ArgusPluginManager;
 import org.weiwan.argus.core.pub.api.*;
 import org.weiwan.argus.core.pub.config.*;
 import org.weiwan.argus.core.start.StartOptions;
+import org.weiwan.argus.core.utils.CommonUtil;
 
 import java.io.File;
 import java.io.FilenameFilter;
@@ -37,7 +38,7 @@ public class ArgusRun {
         //args的参数已经经过了启动器处理,所以可以直接使用OptionsParser进行解析工作
         OptionParser optionParser = new OptionParser(args);
         StartOptions options = optionParser.parse(StartOptions.class);
-
+        CommonUtil.useCommandLogLevel(options.getLogLevel());
         Map<String, Object> optionToMap = optionParser.optionToMap(options);
         //读取job描述文件 json
         String jobConfContent = options.getJobDescJson();
@@ -94,7 +95,7 @@ public class ArgusRun {
         List<URL> _Urls = findJarsInDir(file);
         urls.addAll(_Urls);
         for (URL url : urls) {
-            System.out.println(url);
+            logger.info(url.getPath());
         }
         return urls;
     }
@@ -117,18 +118,15 @@ public class ArgusRun {
     }
 
     private static void printEnvInfo(Map<String, Object> optionToMap, Map<String, String> jobMap) {
-        System.out.println("Environmental Startup Parameters");
-        System.out.println("==============================================================");
+        logger.debug("Environmental Startup Parameters");
+        logger.debug("==============================================================");
         for (String key : optionToMap.keySet()) {
-            System.out.println(String.format("key: [%s], value: [%s]", key, optionToMap.get(key)));
+            logger.debug(String.format("key: [%s], value: [%s]", key, optionToMap.get(key)));
         }
-        System.out.println();
-        System.out.println();
-        System.out.println();
-        System.out.println("Job Deploy Parameters");
-        System.out.println("==============================================================");
+        logger.debug("Job Deploy Parameters");
+        logger.debug("==============================================================");
         for (String key : jobMap.keySet()) {
-            System.out.println(String.format("key: [%s], value: [%s]", key, jobMap.get(key)));
+            logger.debug(String.format("key: [%s], value: [%s]", key, jobMap.get(key)));
         }
     }
 

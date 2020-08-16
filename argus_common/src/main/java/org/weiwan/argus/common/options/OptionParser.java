@@ -69,10 +69,12 @@ public class OptionParser {
         for (Field field : declaredFields) {
             Object fieldValue = ReflectUtil.getObjectValue(options, field);
             Parameter optionField = field.getAnnotation(Parameter.class);
-            String[] oweKeys = optionField.names();
-            if (oweKeys.length > 0) {
-                //取oweKeys的数据
-                res.put(oweKeys[0], fieldValue);
+            if (optionField != null) {
+                String[] oweKeys = optionField.names();
+                if (oweKeys.length > 0) {
+                    //取oweKeys的数据
+                    res.put(oweKeys[0], fieldValue);
+                }
             }
         }
         return res;

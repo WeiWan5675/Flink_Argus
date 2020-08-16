@@ -4,10 +4,10 @@ package org.weiwan.argus.start.enums;
  * @Author: xiaozhennan
  * @Date: 2020/7/14 20:13
  * @Package: org.weiwan.argus.common.options
- * @ClassName: org.weiwan.argus.start.enums.JobMode
+ * @ClassName: org.weiwan.argus.start.enums.RunMode
  * @Description:
  **/
-public enum JobMode {
+public enum RunMode {
 
     local("Local", "本地Main方法模式"),
     yarnpre("YarnPer", "在yarn上启动flinkSession运行"),
@@ -17,7 +17,7 @@ public enum JobMode {
     private String msg;
 
 
-    JobMode(String mode, String msg) {
+    RunMode(String mode, String msg) {
         this.mode = mode;
         this.msg = msg;
     }

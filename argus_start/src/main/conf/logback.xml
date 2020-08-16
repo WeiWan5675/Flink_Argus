@@ -150,7 +150,7 @@
     </appender>
 
     <!-- 五、子节点<logger>：用来设置某一个包或具体的某一个类的日志打印级别、以及指定<appender>。<loger>仅有一个name属性，一个可选的level和一个可选的addtivity属性。可以包含零个或多个<appender-ref>元素，标识这个appender将会添加到这个loger-->
-    <logger name="org.weiwan.argus.core" level="INFO"/>
+    <logger name="org.weiwan.argus.core" level="${LEVEL}"/>
     <!-- 六、子节点<root>:它也是<logger>元素，但是它是根logger,是所有<logger>的上级。只有一个level属性，因为name已经被命名为"root",且已经是最上级了。-->
 
     <!-- 生产环境下，将此级别配置为适合的级别，以免日志文件太多或影响程序性能 -->
