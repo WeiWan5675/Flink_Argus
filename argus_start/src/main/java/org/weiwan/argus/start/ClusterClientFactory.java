@@ -18,9 +18,9 @@
 
 package org.weiwan.argus.start;
 
-import org.apache.commons.lang.StringUtils;
-import org.apache.flink.client.deployment.StandaloneClusterDescriptor;
-import org.apache.flink.client.deployment.StandaloneClusterId;
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.flink.client.deployment.*;
 import org.apache.flink.client.program.ClusterClient;
 import org.apache.flink.client.program.rest.RestClusterClient;
 import org.apache.flink.configuration.*;
@@ -29,30 +29,23 @@ import org.apache.flink.runtime.akka.AkkaUtils;
 import org.apache.flink.runtime.jobmanager.HighAvailabilityMode;
 import org.apache.flink.runtime.util.LeaderConnectionInfo;
 import org.apache.flink.runtime.util.LeaderRetrievalUtils;
+import org.apache.flink.util.ShutdownHookUtil;
 import org.apache.flink.yarn.AbstractYarnClusterDescriptor;
 import org.apache.flink.yarn.YarnClusterDescriptor;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
-import org.apache.hadoop.yarn.api.records.ApplicationReport;
-import org.apache.hadoop.yarn.api.records.YarnApplicationState;
+
 import org.apache.hadoop.yarn.client.api.YarnClient;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.apache.hadoop.yarn.util.ConverterUtils;
 import org.weiwan.argus.core.start.StartOptions;
+import org.weiwan.argus.core.utils.ClusterConfigLoader;
 import org.weiwan.argus.start.enums.RunMode;
 
-import java.io.File;
-import java.net.InetSocketAddress;
-import java.net.URL;
-import java.util.*;
 
-/**
- * The Factory of ClusterClient
- * <p>
- * Company: www.dtstack.com
- *
- * @author huyifanzju@163.com
- */
+import java.net.InetSocketAddress;
+
+
 public class ClusterClientFactory {
 
     public static ClusterClient createClusterClient(StartOptions launcherOptions) throws Exception {
@@ -60,7 +53,7 @@ public class ClusterClientFactory {
         if (mode.equals(RunMode.standalone.name())) {
             return createStandaloneClient(launcherOptions);
         } else if (mode.equals(RunMode.yarn.name())) {
-            return createYarnClient(launcherOptions);
+//            return createYarnClient(launcherOptions);
         }
 
         throw new IllegalArgumentException("Unsupported cluster client type: ");
@@ -79,80 +72,52 @@ public class ClusterClientFactory {
         return clusterClient;
     }
 
-    public static ClusterClient createYarnClient(StartOptions launcherOptions) {
-        Configuration flinkConfig = GlobalConfiguration.loadConfiguration(launcherOptions.getFlinkConf());
-        String yarnConfDir = launcherOptions.getYarnConf();
-        if (StringUtils.isNotBlank(yarnConfDir)) {
-            try {
-                flinkConfig.setString(ConfigConstants.PATH_HADOOP_CONFIG, yarnConfDir);
-                FileSystem.initialize(flinkConfig);
 
-                YarnConfiguration yarnConf = YarnConfLoader.getYarnConf(yarnConfDir);
-                YarnClient yarnClient = YarnClient.createYarnClient();
-                yarnClient.init(yarnConf);
-                yarnClient.start();
-                ApplicationId applicationId;
+    public ClusterClient createYarnCusterClient(StartOptions startOptions) throws ClusterRetrieveException, ClusterDeploymentException {
 
-                if (StringUtils.isEmpty(launcherOptions.getAppId())) {
-                    applicationId = getAppIdFromYarn(yarnClient);
-                    if (applicationId != null && StringUtils.isEmpty(applicationId.toString())) {
-                        throw new RuntimeException("No flink session found on yarn cluster.");
-                    }
-                } else {
-                    applicationId = ConverterUtils.toApplicationId(launcherOptions.getAppId());
-                }
-                AbstractYarnClusterDescriptor yarnClusterDescriptor = getClusterDescriptor(launcherOptions, yarnClient, yarnConf, flinkConfig);
-                ClusterClient clusterClient = yarnClusterDescriptor.retrieve(applicationId);
-                clusterClient.setDetached(true);
-                return clusterClient;
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
+        ClusterClient client = null;
+        String flinkConf = startOptions.getFlinkConf();
+        Configuration configuration = ClusterConfigLoader.loadFlinkConfig(flinkConf);
+        String yarnConf = startOptions.getYarnConf();
+        YarnConfiguration yarnConfig = ClusterConfigLoader.loadYarnConfig(yarnConf);
+        String clusterIdStr = "Flink Session Cluster";
+        ApplicationId clusterId = ConverterUtils.toApplicationId(clusterIdStr);
+        AbstractYarnClusterDescriptor clusterDescriptor = getClusterDescriptor(configuration, yarnConfig, flinkConf);
+
+        if (RunMode.yarn == RunMode.valueOf(startOptions.getMode().toLowerCase())) {
+            client = clusterDescriptor.retrieve(clusterId);
+        } else if (RunMode.yarn == RunMode.valueOf(startOptions.getMode().toLowerCase())) {
+            ClusterSpecification clusterSpecification = new ClusterSpecification.ClusterSpecificationBuilder()
+                    .setMasterMemoryMB(512)
+                    .setTaskManagerMemoryMB(512)
+                    .setNumberTaskManagers(2)
+                    .setSlotsPerTaskManager(2)
+                    .createClusterSpecification();
+
+            client = clusterDescriptor.deploySessionCluster(clusterSpecification);
+
+        } else {
+
         }
 
-        throw new UnsupportedOperationException("Haven't been developed yet!");
+
+
+        return null;
     }
 
-    private static AbstractYarnClusterDescriptor getClusterDescriptor(StartOptions launcherOptions,
-                                                                      YarnClient yarnClient,
-                                                                      YarnConfiguration yarnConf,
-                                                                      Configuration flinkConfig) throws Exception {
-        AbstractYarnClusterDescriptor yarnClusterDescriptor = new YarnClusterDescriptor(flinkConfig, yarnConf, "", yarnClient, true);
+    private AbstractYarnClusterDescriptor getClusterDescriptor(
+            Configuration configuration,
+            YarnConfiguration yarnConfiguration,
+            String configurationDirectory) {
+        final YarnClient yarnClient = YarnClient.createYarnClient();
+        yarnClient.init(yarnConfiguration);
+        yarnClient.start();
 
-        yarnClusterDescriptor.setName(launcherOptions.getAppId());
-        return yarnClusterDescriptor;
-    }
-
-    private static ApplicationId getAppIdFromYarn(YarnClient yarnClient) throws Exception {
-        Set<String> set = new HashSet<>();
-        set.add("Apache Flink");
-        EnumSet<YarnApplicationState> enumSet = EnumSet.noneOf(YarnApplicationState.class);
-        enumSet.add(YarnApplicationState.RUNNING);
-        List<ApplicationReport> reportList = yarnClient.getApplications(set, enumSet);
-
-        ApplicationId applicationId = null;
-        int maxMemory = -1;
-        int maxCores = -1;
-        for (ApplicationReport report : reportList) {
-            if (!report.getName().startsWith("Flink session")) {
-                continue;
-            }
-
-            if (!report.getYarnApplicationState().equals(YarnApplicationState.RUNNING)) {
-                continue;
-            }
-
-            int thisMemory = report.getApplicationResourceUsageReport().getNeededResources().getMemory();
-            int thisCores = report.getApplicationResourceUsageReport().getNeededResources().getVirtualCores();
-
-            boolean isOverMaxResource = thisMemory > maxMemory || thisMemory == maxMemory && thisCores > maxCores;
-            if (isOverMaxResource) {
-                maxMemory = thisMemory;
-                maxCores = thisCores;
-                applicationId = report.getApplicationId();
-            }
-        }
-
-        return applicationId;
+        return new YarnClusterDescriptor(
+                configuration,
+                yarnConfiguration,
+                configurationDirectory,
+                yarnClient,
+                false);
     }
 }

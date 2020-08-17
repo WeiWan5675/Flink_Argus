@@ -226,15 +226,30 @@ public class DataSyncStarter {
     }
 
 
+    /**
+     * 独占模式,单独一个YarnSession
+     * @param options
+     * @return
+     */
     private static boolean startFromYarnPerMode(StartOptions options) {
         return false;
     }
 
+
+    /**
+     * 提交到YarnSession中,默认的YarnSession名称为Flink Session Cluster
+     * @param options
+     * @param coreJarFile
+     * @param urlList
+     * @param argsAll
+     * @return
+     * @throws Exception
+     */
     private static boolean startFromYarnMode(StartOptions options, File coreJarFile, List<URL> urlList, String[] argsAll) throws Exception {
-        ClusterClient clusterClient = ClusterClientFactory.createYarnClient(options);
-        PackagedProgram program = new PackagedProgram(coreJarFile, urlList, "org.weiwan.argus.core.ArgusRun", argsAll);
-        clusterClient.run(program, options.getParallelism());
-        clusterClient.shutdown();
+//        ClusterClient clusterClient = ClusterClientFactory.createYarnClient(options);
+//        PackagedProgram program = new PackagedProgram(coreJarFile, urlList, "org.weiwan.argus.core.ArgusRun", argsAll);
+//        clusterClient.run(program, options.getParallelism());
+//        clusterClient.shutdown();
         return true;
     }
 
@@ -385,10 +400,6 @@ public class DataSyncStarter {
 }
 
 
-//转化脚本启动的options为Main方法可以识别的参数
-//pluginPath
-//配置分两种
-
 /**
  * -1. 解析参数
  * 0. 初始化 hadoop yarn flink 配置文件夹
@@ -400,31 +411,3 @@ public class DataSyncStarter {
  * 6. 提交任务
  * 8. 关闭资源
  */
-
-
-//启动方式分为两种 1. CMD方式  通过识别options中-cmd
-
-//配置文件的方式  支持的参数很多 支持覆盖flink-conf的配置  设置任务级别的配置
-
-
-//CMD的方式  支持简单的参数配置  支持简单的
-
-//FlinkArgus -aconf "./argus-conf.yaml" -fconf "./flink-conf.yaml" -queue -yq
-
-//提交任务就可以了  不需要考虑其它的  初始化参数  插件加载  都放到任务里去
-
-//一种是插件配置
-
-//一种是mysql
-//ReaderPluginName
-//WriterPluginName
-
-//ReaderPluginClassName
-//WriterPluginClassName
-
-
-//Flink自身运行的一些参数
-
-//任务的配置文件
-
-//
