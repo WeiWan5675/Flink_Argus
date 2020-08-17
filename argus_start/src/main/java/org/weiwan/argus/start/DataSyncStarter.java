@@ -4,6 +4,20 @@ import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.LoggerContext;
 import com.alibaba.fastjson.JSONObject;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.flink.client.deployment.StandaloneClusterDescriptor;
+import org.apache.flink.client.deployment.StandaloneClusterId;
+import org.apache.flink.client.program.ClusterClient;
+import org.apache.flink.client.program.PackagedProgram;
+import org.apache.flink.client.program.ProgramInvocationException;
+import org.apache.flink.client.program.ProgramMissingJobException;
+import org.apache.flink.client.program.rest.RestClusterClient;
+import org.apache.flink.configuration.Configuration;
+import org.apache.flink.configuration.GlobalConfiguration;
+import org.apache.flink.configuration.JobManagerOptions;
+import org.apache.flink.runtime.akka.AkkaUtils;
+import org.apache.flink.runtime.jobgraph.SavepointRestoreSettings;
+import org.apache.flink.runtime.util.LeaderConnectionInfo;
+import org.reflections.vfs.Vfs;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.weiwan.argus.common.options.OptionParser;
@@ -17,7 +31,14 @@ import org.weiwan.argus.core.utils.CommonUtil;
 import org.weiwan.argus.start.enums.RunMode;
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FilenameFilter;
 import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 
@@ -70,6 +91,16 @@ public class DataSyncStarter {
 
 
         String[] argsAll = OptionParser.optionToArgs(options);
+        String pluginRoot = options.getPluginsDir();
+        String libDir = options.getLibDir();
+        String extLibDir = options.getExtLibDir();
+        String readerPluginDir = options.getReaderPluginDir();
+        String channelPluginDir = options.getChannelPluginDir();
+        String writerPluginDir = options.getWriterPluginDir();
+        List<URL> urlList = findLibJar(libDir, extLibDir, pluginRoot, readerPluginDir, channelPluginDir, writerPluginDir);
+        String coreJarFileName = findCoreJarFile(libDir);
+        File coreJarFile = new File(libDir + File.separator + coreJarFileName);
+
         boolean startFlag = false;
         switch (RunMode.valueOf(mode.toLowerCase())) {
             case local:
@@ -78,11 +109,11 @@ public class DataSyncStarter {
                 break;
             case standalone:
                 logger.info("RunMode:" + RunMode.standalone.toString());
-                startFlag = startFromStandaloneMode(options);
+                startFlag = startFromStandaloneMode(options, coreJarFile, urlList, argsAll);
                 break;
             case yarn:
                 logger.info("RunMode:" + RunMode.yarn.toString());
-                startFlag = startFromYarnMode(options);
+                startFlag = startFromYarnMode(options, coreJarFile, urlList, argsAll);
                 break;
             case yarnpre:
                 logger.info("RunMode:" + RunMode.yarnpre.toString());
@@ -95,6 +126,58 @@ public class DataSyncStarter {
         logger.info(startFlag ? "APP RUN SUCCESS!" : "APP RUN FAILED");
 
 
+    }
+
+
+    public static ClusterClient createStandaloneClient(StartOptions options) throws Exception {
+        Configuration config = GlobalConfiguration.loadConfiguration(options.getFlinkConf());
+        StandaloneClusterDescriptor standaloneClusterDescriptor = new StandaloneClusterDescriptor(config);
+        RestClusterClient clusterClient = standaloneClusterDescriptor.retrieve(StandaloneClusterId.getInstance());
+        LeaderConnectionInfo connectionInfo = clusterClient.getClusterConnectionInfo();
+        InetSocketAddress address = AkkaUtils.getInetSocketAddressFromAkkaURL(connectionInfo.getAddress());
+        config.setString(JobManagerOptions.ADDRESS, address.getAddress().getHostName());
+        config.setInteger(JobManagerOptions.PORT, address.getPort());
+        clusterClient.setDetached(true);
+        return clusterClient;
+    }
+
+    private static List<URL> findLibJar(String... libDirs) throws MalformedURLException {
+        List<URL> urls = new ArrayList<>();
+
+        if (libDirs.length < 1) {
+            return urls;
+        }
+
+        for (String dir : libDirs) {
+            File libDir = new File(dir);
+            if (libDir.exists() && libDir.isDirectory()) {
+                List<URL> jarsInDir = SystemUtil.findJarsInDir(libDir);
+                urls.addAll(jarsInDir);
+            }
+        }
+        return urls;
+    }
+
+    private static String findCoreJarFile(String libDir) throws FileNotFoundException {
+        String coreJarFileName = null;
+        File libPath = new File(libDir);
+        if (libPath.exists() && libPath.isDirectory()) {
+            File[] jarFiles = libPath.listFiles(new FilenameFilter() {
+                @Override
+                public boolean accept(File dir, String name) {
+                    return name.toLowerCase().startsWith("argus_core") && name.toLowerCase().endsWith(".jar");
+                }
+            });
+
+            if (jarFiles != null && jarFiles.length > 0) {
+                coreJarFileName = jarFiles[0].getName();
+            }
+        }
+
+        if (org.apache.commons.lang.StringUtils.isEmpty(coreJarFileName)) {
+            throw new FileNotFoundException("Can not find core jar file in path:" + libDir);
+        }
+        return coreJarFileName;
     }
 
 
@@ -147,9 +230,12 @@ public class DataSyncStarter {
         return false;
     }
 
-    private static boolean startFromYarnMode(StartOptions options) {
-
-        return false;
+    private static boolean startFromYarnMode(StartOptions options, File coreJarFile, List<URL> urlList, String[] argsAll) throws Exception {
+        ClusterClient clusterClient = ClusterClientFactory.createYarnClient(options);
+        PackagedProgram program = new PackagedProgram(coreJarFile, urlList, "org.weiwan.argus.core.ArgusRun", argsAll);
+        clusterClient.run(program, options.getParallelism());
+        clusterClient.shutdown();
+        return true;
     }
 
     private static boolean startFromLocalMode(String[] argsAll, StartOptions options) throws Exception {
@@ -170,6 +256,19 @@ public class DataSyncStarter {
         if (StringUtils.isEmpty(pluginsRootDir)) {
             pluginsRootDir = defaultPluginsDir;
         }
+
+        //设置依赖目录
+        String libDir = options.getLibDir();
+        if (StringUtils.isEmpty(libDir)) {
+            options.setLibDir(argusHome + File.separator + "lib");
+        }
+        String extLibDir = options.getExtLibDir();
+        if (StringUtils.isEmpty(extLibDir)) {
+            options.setExtLibDir(argusHome + File.separator + "extLib");
+        }
+
+        //设置扩展依赖目录
+
         logger.info("argus plugins root dir is: {}", pluginsRootDir);
         //设置插件目录
         options.setPluginsDir(pluginsRootDir);
@@ -178,7 +277,9 @@ public class DataSyncStarter {
         String writerPluginDir = defaultMap.getOrDefault(ArgusKey.KEY_ARGUS_PLUGINS_WRITER_DIR, KEY_WRITER_PLUGIN_DIR);
         if (StringUtils.isEmpty(options.getReaderPluginDir())) {
             if (!FileUtil.isAbsolutePath(readerPluginDir)) {
-                readerPluginDir = argusHome + File.separator + DataSyncStarter.KEY_READER_PLUGIN_DIR;
+                readerPluginDir = argusHome + File.separator +
+                        DataSyncStarter.KEY_PLUGINS_DIR + File.separator +
+                        DataSyncStarter.KEY_READER_PLUGIN_DIR;
             }
             options.setReaderPluginDir(readerPluginDir);
         } else {
@@ -189,7 +290,9 @@ public class DataSyncStarter {
 
         if (StringUtils.isEmpty(options.getChannelPluginDir())) {
             if (!FileUtil.isAbsolutePath(channelPluginDir)) {
-                channelPluginDir = argusHome + File.separator + DataSyncStarter.KEY_CHANNEL_PLUGIN_DIR;
+                channelPluginDir = argusHome + File.separator +
+                        DataSyncStarter.KEY_PLUGINS_DIR + File.separator +
+                        DataSyncStarter.KEY_CHANNEL_PLUGIN_DIR;
             }
             options.setChannelPluginDir(channelPluginDir);
         } else {
@@ -199,7 +302,9 @@ public class DataSyncStarter {
 
         if (StringUtils.isEmpty(options.getWriterPluginDir())) {
             if (!FileUtil.isAbsolutePath(writerPluginDir)) {
-                writerPluginDir = argusHome + File.separator + DataSyncStarter.KEY_WRITER_PLUGIN_DIR;
+                writerPluginDir = argusHome + File.separator +
+                        DataSyncStarter.KEY_PLUGINS_DIR + File.separator +
+                        DataSyncStarter.KEY_WRITER_PLUGIN_DIR;
             }
             options.setWriterPluginDir(writerPluginDir);
         } else {
@@ -268,8 +373,12 @@ public class DataSyncStarter {
         return argusHome;
     }
 
-    private static boolean startFromStandaloneMode(StartOptions options) {
-        return false;
+    private static boolean startFromStandaloneMode(StartOptions options, File coreJarFile, List<URL> urlList, String... argsAll) throws Exception {
+        ClusterClient clusterClient = ClusterClientFactory.createStandaloneClient(options);
+        PackagedProgram program = new PackagedProgram(coreJarFile, urlList, "org.weiwan.argus.core.ArgusRun", argsAll);
+        clusterClient.run(program, options.getParallelism());
+        clusterClient.shutdown();
+        return true;
     }
 
 

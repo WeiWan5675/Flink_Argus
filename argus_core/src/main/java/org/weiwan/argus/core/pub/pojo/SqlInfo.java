@@ -1,5 +1,7 @@
 package org.weiwan.argus.core.pub.pojo;
 
+import java.io.Serializable;
+
 /**
  * @Author: xiaozhennan
  * @Date: 2020/7/23 14:19
@@ -7,7 +9,7 @@ package org.weiwan.argus.core.pub.pojo;
  * @ClassName: SqlInfo
  * @Description:
  **/
-public class SqlInfo {
+public class SqlInfo implements Serializable {
     private String tableName;
     //增量字段
     private String incrField;
@@ -139,7 +141,7 @@ public class SqlInfo {
             return this;
         }
 
-        public Builder customSql(String val){
+        public Builder customSql(String val) {
             customSql = val;
             return this;
         }

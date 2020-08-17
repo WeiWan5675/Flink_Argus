@@ -98,4 +98,6 @@ public class DataRecord<T> implements Serializable {
                 ", data=" + data +
                 '}';
     }
+
+
 }

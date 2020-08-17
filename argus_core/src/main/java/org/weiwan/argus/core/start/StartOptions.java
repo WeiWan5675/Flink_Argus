@@ -31,12 +31,8 @@ public class StartOptions implements Serializable {
     @Parameter(names = {"-hadoopConf", "-hconf"}, description = "Hadoop and yarn conf file path")
     private String hadoopConf;
 
-    @Parameter(names = {"yarnConf", "yconf"}, description = "Yarn conf path")
+    @Parameter(names = {"-yarnConf", "yconf"}, description = "Yarn conf path")
     private String yarnConf;
-
-    public boolean isCmdMode() {
-        return cmdMode;
-    }
 
     @Parameter(names = {"-hiveConf"}, description = "hive conf file path")
     private String hiveConf;
@@ -78,7 +74,7 @@ public class StartOptions implements Serializable {
     @Parameter(names = "-exampleMode", description = "run example!")
     private boolean exampleMode = false;
 
-    @Parameter(names = "appId",description = "application job id")
+    @Parameter(names = "-appId", description = "application job id")
     private String appId;
 
     @Parameter(names = "-logLevel", description = "log level setting")
@@ -87,9 +83,31 @@ public class StartOptions implements Serializable {
     @Parameter(names = "--help", help = true, order = 5)
     private boolean help;
 
+    @Parameter(names = "-libDir", description = "lib jar dir")
+    private String libDir;
+
+    @Parameter(names = "-extLibDir", description = "ext lib jar dir")
+    private String extLibDir;
+
 
     @DynamicParameter(names = "-D", description = "Dynamic parameters go here")
     private Map<String, String> params = new HashMap<String, String>();
+
+    @Parameter(names = "-extLibJar" , description = "ext lib jar file")
+    private String extLibFile;
+
+
+    public String getExtLibFile() {
+        return extLibFile;
+    }
+
+    public void setExtLibFile(String extLibFile) {
+        this.extLibFile = extLibFile;
+    }
+
+    public boolean isCmdMode() {
+        return cmdMode;
+    }
 
     public void setCmdMode(boolean cmdMode) {
         this.cmdMode = cmdMode;
@@ -261,5 +279,21 @@ public class StartOptions implements Serializable {
 
     public void setAppId(String appId) {
         this.appId = appId;
+    }
+
+    public String getLibDir() {
+        return libDir;
+    }
+
+    public void setLibDir(String libDir) {
+        this.libDir = libDir;
+    }
+
+    public String getExtLibDir() {
+        return extLibDir;
+    }
+
+    public void setExtLibDir(String extLibDir) {
+        this.extLibDir = extLibDir;
     }
 }
