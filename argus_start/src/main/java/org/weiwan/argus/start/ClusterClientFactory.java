@@ -18,21 +18,13 @@
 
 package org.weiwan.argus.start;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.flink.client.deployment.*;
 import org.apache.flink.client.program.ClusterClient;
 import org.apache.flink.client.program.rest.RestClusterClient;
 import org.apache.flink.configuration.*;
-import org.apache.flink.core.fs.FileSystem;
 import org.apache.flink.runtime.akka.AkkaUtils;
-import org.apache.flink.runtime.jobmanager.HighAvailabilityMode;
 import org.apache.flink.runtime.util.LeaderConnectionInfo;
-import org.apache.flink.runtime.util.LeaderRetrievalUtils;
-import org.apache.flink.util.ShutdownHookUtil;
-import org.apache.flink.yarn.AbstractYarnClusterDescriptor;
 import org.apache.flink.yarn.YarnClusterDescriptor;
-import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
 
 import org.apache.hadoop.yarn.client.api.YarnClient;
@@ -59,65 +51,18 @@ public class ClusterClientFactory {
         throw new IllegalArgumentException("Unsupported cluster client type: ");
     }
 
-    public static ClusterClient createStandaloneClient(StartOptions launcherOptions) throws Exception {
-        String flinkConfDir = launcherOptions.getFlinkConf();
-        Configuration config = GlobalConfiguration.loadConfiguration(flinkConfDir);
+    public static ClusterClient createStandaloneClient(StartOptions options) throws Exception {
+        String flinkConfDir = options.getFlinkConf();
+        Configuration config = ClusterConfigLoader.loadFlinkConfig(flinkConfDir);
         StandaloneClusterDescriptor standaloneClusterDescriptor = new StandaloneClusterDescriptor(config);
-        RestClusterClient clusterClient = standaloneClusterDescriptor.retrieve(StandaloneClusterId.getInstance());
-        LeaderConnectionInfo connectionInfo = clusterClient.getClusterConnectionInfo();
-        InetSocketAddress address = AkkaUtils.getInetSocketAddressFromAkkaURL(connectionInfo.getAddress());
-        config.setString(JobManagerOptions.ADDRESS, address.getAddress().getHostName());
-        config.setInteger(JobManagerOptions.PORT, address.getPort());
-        clusterClient.setDetached(true);
+        ClusterClient clusterClient = standaloneClusterDescriptor.retrieve(StandaloneClusterId.getInstance()).getClusterClient();
         return clusterClient;
     }
 
 
-    public ClusterClient createYarnCusterClient(StartOptions startOptions) throws ClusterRetrieveException, ClusterDeploymentException {
-
-        ClusterClient client = null;
-        String flinkConf = startOptions.getFlinkConf();
-        Configuration configuration = ClusterConfigLoader.loadFlinkConfig(flinkConf);
-        String yarnConf = startOptions.getYarnConf();
-        YarnConfiguration yarnConfig = ClusterConfigLoader.loadYarnConfig(yarnConf);
-        String clusterIdStr = "Flink Session Cluster";
-        ApplicationId clusterId = ConverterUtils.toApplicationId(clusterIdStr);
-        AbstractYarnClusterDescriptor clusterDescriptor = getClusterDescriptor(configuration, yarnConfig, flinkConf);
-
-        if (RunMode.yarn == RunMode.valueOf(startOptions.getMode().toLowerCase())) {
-            client = clusterDescriptor.retrieve(clusterId);
-        } else if (RunMode.yarn == RunMode.valueOf(startOptions.getMode().toLowerCase())) {
-            ClusterSpecification clusterSpecification = new ClusterSpecification.ClusterSpecificationBuilder()
-                    .setMasterMemoryMB(512)
-                    .setTaskManagerMemoryMB(512)
-                    .setNumberTaskManagers(2)
-                    .setSlotsPerTaskManager(2)
-                    .createClusterSpecification();
-
-            client = clusterDescriptor.deploySessionCluster(clusterSpecification);
-
-        } else {
-
-        }
-
+    public static ClusterClient createYarnClusterClient(StartOptions options) {
 
 
         return null;
-    }
-
-    private AbstractYarnClusterDescriptor getClusterDescriptor(
-            Configuration configuration,
-            YarnConfiguration yarnConfiguration,
-            String configurationDirectory) {
-        final YarnClient yarnClient = YarnClient.createYarnClient();
-        yarnClient.init(yarnConfiguration);
-        yarnClient.start();
-
-        return new YarnClusterDescriptor(
-                configuration,
-                yarnConfiguration,
-                configurationDirectory,
-                yarnClient,
-                false);
     }
 }

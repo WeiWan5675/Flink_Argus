@@ -4,17 +4,16 @@ import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.LoggerContext;
 import com.alibaba.fastjson.JSONObject;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.flink.client.ClientUtils;
 import org.apache.flink.client.deployment.StandaloneClusterDescriptor;
 import org.apache.flink.client.deployment.StandaloneClusterId;
-import org.apache.flink.client.program.ClusterClient;
-import org.apache.flink.client.program.PackagedProgram;
-import org.apache.flink.client.program.ProgramInvocationException;
-import org.apache.flink.client.program.ProgramMissingJobException;
+import org.apache.flink.client.program.*;
 import org.apache.flink.client.program.rest.RestClusterClient;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.configuration.GlobalConfiguration;
 import org.apache.flink.configuration.JobManagerOptions;
 import org.apache.flink.runtime.akka.AkkaUtils;
+import org.apache.flink.runtime.jobgraph.JobGraph;
 import org.apache.flink.runtime.jobgraph.SavepointRestoreSettings;
 import org.apache.flink.runtime.util.LeaderConnectionInfo;
 import org.reflections.vfs.Vfs;
@@ -27,6 +26,7 @@ import org.weiwan.argus.common.utils.YamlUtils;
 import org.weiwan.argus.core.ArgusKey;
 import org.weiwan.argus.core.ArgusRun;
 import org.weiwan.argus.core.start.StartOptions;
+import org.weiwan.argus.core.utils.ClusterConfigLoader;
 import org.weiwan.argus.core.utils.CommonUtil;
 import org.weiwan.argus.start.enums.RunMode;
 
@@ -57,6 +57,8 @@ public class DataSyncStarter {
     private static final String KEY_READER_PLUGIN_DIR = "reader";
     private static final String KEY_WRITER_PLUGIN_DIR = "writer";
     private static final String KEY_CHANNEL_PLUGIN_DIR = "channel";
+
+    private static final String ARGUS_CORE_RUN_CLASS = "org.weiwan.argus.core.ArgusRun";
 
 
     public static void main(String[] args) throws Exception {
@@ -128,18 +130,6 @@ public class DataSyncStarter {
 
     }
 
-
-    public static ClusterClient createStandaloneClient(StartOptions options) throws Exception {
-        Configuration config = GlobalConfiguration.loadConfiguration(options.getFlinkConf());
-        StandaloneClusterDescriptor standaloneClusterDescriptor = new StandaloneClusterDescriptor(config);
-        RestClusterClient clusterClient = standaloneClusterDescriptor.retrieve(StandaloneClusterId.getInstance());
-        LeaderConnectionInfo connectionInfo = clusterClient.getClusterConnectionInfo();
-        InetSocketAddress address = AkkaUtils.getInetSocketAddressFromAkkaURL(connectionInfo.getAddress());
-        config.setString(JobManagerOptions.ADDRESS, address.getAddress().getHostName());
-        config.setInteger(JobManagerOptions.PORT, address.getPort());
-        clusterClient.setDetached(true);
-        return clusterClient;
-    }
 
     private static List<URL> findLibJar(String... libDirs) throws MalformedURLException {
         List<URL> urls = new ArrayList<>();
@@ -228,6 +218,7 @@ public class DataSyncStarter {
 
     /**
      * 独占模式,单独一个YarnSession
+     *
      * @param options
      * @return
      */
@@ -238,6 +229,7 @@ public class DataSyncStarter {
 
     /**
      * 提交到YarnSession中,默认的YarnSession名称为Flink Session Cluster
+     *
      * @param options
      * @param coreJarFile
      * @param urlList
@@ -390,13 +382,32 @@ public class DataSyncStarter {
 
     private static boolean startFromStandaloneMode(StartOptions options, File coreJarFile, List<URL> urlList, String... argsAll) throws Exception {
         ClusterClient clusterClient = ClusterClientFactory.createStandaloneClient(options);
-        PackagedProgram program = new PackagedProgram(coreJarFile, urlList, "org.weiwan.argus.core.ArgusRun", argsAll);
-        clusterClient.run(program, options.getParallelism());
-        clusterClient.shutdown();
+        String[] args = new String[argsAll.length + 2];
+        for (int i = 0; i < args.length; i++) {
+            args[i] = argsAll[i];
+        }
+        args[args.length - 1] = "-monitor";
+        args[args.length - 2] = clusterClient.getWebInterfaceURL();
+        JobGraph jobGraph = buildJobGraph(options, coreJarFile, urlList, argsAll);
+        ClientUtils.submitJob(clusterClient, jobGraph);
         return true;
     }
 
 
+    private static JobGraph buildJobGraph(StartOptions options, File coreJarFile, List<URL> urls, String[] argsAll) throws Exception {
+
+        String flinkConf = options.getFlinkConf();
+        Configuration configuration = ClusterConfigLoader.loadFlinkConfig(flinkConf);
+        PackagedProgram program = PackagedProgram.newBuilder()
+                .setJarFile(coreJarFile)
+                .setUserClassPaths(urls)
+                .setEntryPointClassName(ARGUS_CORE_RUN_CLASS)
+                .setConfiguration(configuration)
+                .setArguments(argsAll)
+                .build();
+        return PackagedProgramUtils.createJobGraph(program, configuration, options.getParallelism(), false);
+
+    }
 }
 
 
