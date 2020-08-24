@@ -388,9 +388,10 @@ public class DataSyncStarter {
         return true;
     }
 
-    private static String[] addMonitorToArgs(ClusterClient clusterClient, String[] argsAll) {
-        String[] args = new String[argsAll.length + 2];
-        for (int i = 0; i < args.length; i++) {
+    public static String[] addMonitorToArgs(ClusterClient clusterClient, String[] argsAll) {
+        String[] args = new String[argsAll.length + 1];
+        System.out.println(args.length);
+        for (int i = 0; i < argsAll.length; i++) {
             args[i] = argsAll[i];
         }
         args[args.length - 1] = "-monitor";
