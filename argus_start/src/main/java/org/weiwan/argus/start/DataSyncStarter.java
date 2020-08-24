@@ -238,10 +238,10 @@ public class DataSyncStarter {
      * @throws Exception
      */
     private static boolean startFromYarnMode(StartOptions options, File coreJarFile, List<URL> urlList, String[] argsAll) throws Exception {
-//        ClusterClient clusterClient = ClusterClientFactory.createYarnClient(options);
-//        PackagedProgram program = new PackagedProgram(coreJarFile, urlList, "org.weiwan.argus.core.ArgusRun", argsAll);
-//        clusterClient.run(program, options.getParallelism());
-//        clusterClient.shutdown();
+        ClusterClient clusterClient = ClusterClientFactory.createClusterClient(options);
+        addMonitorToArgs(clusterClient, argsAll);
+        JobGraph jobGraph = buildJobGraph(options, coreJarFile, urlList, argsAll);
+        ClientUtils.submitJob(clusterClient,jobGraph);
         return true;
     }
 
@@ -382,20 +382,24 @@ public class DataSyncStarter {
 
     private static boolean startFromStandaloneMode(StartOptions options, File coreJarFile, List<URL> urlList, String... argsAll) throws Exception {
         ClusterClient clusterClient = ClusterClientFactory.createStandaloneClient(options);
+        String[] args = addMonitorToArgs(clusterClient, argsAll);
+        JobGraph jobGraph = buildJobGraph(options, coreJarFile, urlList, args);
+        ClientUtils.submitJob(clusterClient, jobGraph);
+        return true;
+    }
+
+    private static String[] addMonitorToArgs(ClusterClient clusterClient, String[] argsAll) {
         String[] args = new String[argsAll.length + 2];
         for (int i = 0; i < args.length; i++) {
             args[i] = argsAll[i];
         }
         args[args.length - 1] = "-monitor";
         args[args.length - 2] = clusterClient.getWebInterfaceURL();
-        JobGraph jobGraph = buildJobGraph(options, coreJarFile, urlList, argsAll);
-        ClientUtils.submitJob(clusterClient, jobGraph);
-        return true;
+        return args;
     }
 
 
     private static JobGraph buildJobGraph(StartOptions options, File coreJarFile, List<URL> urls, String[] argsAll) throws Exception {
-
         String flinkConf = options.getFlinkConf();
         Configuration configuration = ClusterConfigLoader.loadFlinkConfig(flinkConf);
         PackagedProgram program = PackagedProgram.newBuilder()
