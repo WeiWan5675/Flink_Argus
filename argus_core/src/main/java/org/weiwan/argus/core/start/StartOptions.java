@@ -86,6 +86,9 @@ public class StartOptions implements Serializable {
     @Parameter(names = "-libDir", description = "lib jar dir")
     private String libDir;
 
+    @Parameter(names = "-flinkLibDir", description = "flink lib dir")
+    private String flinkLibDir;
+
     @Parameter(names = "-extLibDir", description = "ext lib jar dir")
     private String extLibDir;
 
@@ -96,7 +99,46 @@ public class StartOptions implements Serializable {
     @Parameter(names = "-extLibJar" , description = "ext lib jar file")
     private String extLibFile;
 
+    @Parameter(names = "-pluginLoadMode", description = "plugin load mode")
+    private String pluginLoadMode = "classpath";
 
+    @Parameter(names = "-flinkHome", description = "flink home path")
+    private String flinkHome;
+    @Parameter(names = "-hadoopHome", description = "hadoop home path")
+    private String hadoopHome;
+
+
+    public String getFlinkLibDir() {
+        return flinkLibDir;
+    }
+
+    public void setFlinkLibDir(String flinkLibDir) {
+        this.flinkLibDir = flinkLibDir;
+    }
+
+    public String getFlinkHome() {
+        return flinkHome;
+    }
+
+    public void setFlinkHome(String flinkHome) {
+        this.flinkHome = flinkHome;
+    }
+
+    public String getHadoopHome() {
+        return hadoopHome;
+    }
+
+    public void setHadoopHome(String hadoopHome) {
+        this.hadoopHome = hadoopHome;
+    }
+
+    public String getPluginLoadMode() {
+        return pluginLoadMode;
+    }
+
+    public void setPluginLoadMode(String pluginLoadMode) {
+        this.pluginLoadMode = pluginLoadMode;
+    }
 
     public String getExtLibFile() {
         return extLibFile;

@@ -35,7 +35,6 @@ import java.io.File;
 import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Properties;
 
 /**
  * Date: 2019/09/11
@@ -52,16 +51,15 @@ public class PerJobClusterClientBuilder {
 
     private Configuration flinkConfig;
 
-    public void init(StartOptions startOptions, Properties conProp) throws Exception {
+    public void init(StartOptions startOptions) throws Exception {
         String yarnConfDir = startOptions.getYarnConf();
         if (StringUtils.isBlank(yarnConfDir)) {
             throw new RuntimeException("parameters of yarn is required");
         }
-        flinkConfig = ClusterConfigLoader.loadFlinkConfig(startOptions.getFlinkConf());
-        conProp.forEach((key, val) -> flinkConfig.setString(key.toString(), val.toString()));
+        flinkConfig = ClusterConfigLoader.loadFlinkConfig(startOptions);
         SecurityUtils.install(new SecurityConfiguration(flinkConfig));
 
-        yarnConf = ClusterConfigLoader.loadYarnConfig(yarnConfDir);
+        yarnConf = ClusterConfigLoader.loadYarnConfig(startOptions);
         yarnClient = YarnClient.createYarnClient();
         yarnClient.init(yarnConf);
         yarnClient.start();
@@ -71,7 +69,7 @@ public class PerJobClusterClientBuilder {
 
 
     public YarnClusterDescriptor createPerJobClusterDescriptor(StartOptions options) throws MalformedURLException {
-        String flinkJarPath = options.getLibDir();
+        String flinkJarPath = options.getFlinkLibDir();
         String flinkConf = options.getFlinkConf();
         if (StringUtils.isNotBlank(flinkJarPath)) {
             if (!new File(flinkJarPath).exists()) {

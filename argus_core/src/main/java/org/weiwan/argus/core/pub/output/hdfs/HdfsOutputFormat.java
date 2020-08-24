@@ -111,9 +111,8 @@ public class HdfsOutputFormat<T extends DataRecord> extends BaseRichOutputFormat
     @Override
     public void openOutput(int taskNumber, int numTasks, ArgusContext argusContext) {
         StartOptions startOptions = argusContext.getStartOptions();
-        String hadoopConfDir = startOptions.getHadoopConf();
         System.setProperty("HADOOP_USER_NAME", "hdfs");
-        this.configuration = ClusterConfigLoader.loadHadoopConfig(hadoopConfDir);
+        this.configuration = ClusterConfigLoader.loadHadoopConfig(startOptions);
         configuration.set("dfs.socket.timeout", "6000000");
 
         try {

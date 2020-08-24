@@ -53,12 +53,12 @@ public class DataSyncStarter {
 
     private static final Logger logger = LoggerFactory.getLogger(DataSyncStarter.class);
 
-    private static final String KEY_PLUGINS_DIR = "plugins";
-    private static final String KEY_READER_PLUGIN_DIR = "reader";
-    private static final String KEY_WRITER_PLUGIN_DIR = "writer";
-    private static final String KEY_CHANNEL_PLUGIN_DIR = "channel";
+    public static final String KEY_PLUGINS_DIR = "plugins";
+    public static final String KEY_READER_PLUGIN_DIR = "reader";
+    public static final String KEY_WRITER_PLUGIN_DIR = "writer";
+    public static final String KEY_CHANNEL_PLUGIN_DIR = "channel";
 
-    private static final String ARGUS_CORE_RUN_CLASS = "org.weiwan.argus.core.ArgusRun";
+    public static final String ARGUS_CORE_RUN_CLASS = "org.weiwan.argus.core.ArgusRun";
 
 
     public static void main(String[] args) throws Exception {
@@ -117,9 +117,9 @@ public class DataSyncStarter {
                 logger.info("RunMode:" + RunMode.yarn.toString());
                 startFlag = startFromYarnMode(options, coreJarFile, urlList, argsAll);
                 break;
-            case yarnpre:
-                logger.info("RunMode:" + RunMode.yarnpre.toString());
-                startFlag = startFromYarnPerMode(options);
+            case yarnper:
+                logger.info("RunMode:" + RunMode.yarnper.toString());
+                startFlag = startFromYarnPerMode(options, coreJarFile, urlList, argsAll);
                 break;
             default:
                 logger.info(String.format("No Match RunMode of %s !", mode));
@@ -220,10 +220,19 @@ public class DataSyncStarter {
      * 独占模式,单独一个YarnSession
      *
      * @param options
+     * @param coreJarFile
+     * @param urlList
+     * @param argsAll
      * @return
      */
-    private static boolean startFromYarnPerMode(StartOptions options) {
-        return false;
+    private static boolean startFromYarnPerMode(StartOptions options, File coreJarFile, List<URL> urlList, String[] argsAll) throws Exception {
+        String libJar = options.getLibDir();
+        if (StringUtils.isBlank(libJar)) {
+            throw new IllegalArgumentException("per-job mode must have flink lib path!");
+        }
+        addMonitorToArgs(argsAll, "");
+        PerJobSubmitter.submit(options, new JobGraph(), coreJarFile, urlList, argsAll);
+        return true;
     }
 
 
@@ -239,9 +248,10 @@ public class DataSyncStarter {
      */
     private static boolean startFromYarnMode(StartOptions options, File coreJarFile, List<URL> urlList, String[] argsAll) throws Exception {
         ClusterClient clusterClient = ClusterClientFactory.createClusterClient(options);
-        addMonitorToArgs(clusterClient, argsAll);
+        String webInterfaceURL = clusterClient.getWebInterfaceURL();
+        addMonitorToArgs(argsAll, webInterfaceURL);
         JobGraph jobGraph = buildJobGraph(options, coreJarFile, urlList, argsAll);
-        ClientUtils.submitJob(clusterClient,jobGraph);
+        ClientUtils.submitJob(clusterClient, jobGraph);
         return true;
     }
 
@@ -331,6 +341,8 @@ public class DataSyncStarter {
             flinkHome = defaultFilnkHome;
             options.setFlinkConf(defaultFilnkHome + File.separator + "conf");
         }
+        options.setFlinkHome(flinkHome);
+        options.setFlinkLibDir(flinkHome + File.separator + "lib");
         logger.info("FLINK_HOME path is: {}", flinkHome);
         //获得flink环境变量
         String hadoopHome = SystemUtil.getSystemVar(ArgusKey.KEY_HADOOP_HOME);
@@ -344,6 +356,7 @@ public class DataSyncStarter {
             hadoopHome = defaultHadoopHome;
             options.setHadoopConf(defaultHadoopHome + File.separator + "etc/hadoop");
         }
+        options.setHadoopHome(hadoopHome);
         logger.info("HADOOP_HOME path is: {}", hadoopHome);
         //获得flink环境变量
         String hiveHome = SystemUtil.getSystemVar(ArgusKey.KEY_HIVE_HOME);
@@ -382,27 +395,28 @@ public class DataSyncStarter {
 
     private static boolean startFromStandaloneMode(StartOptions options, File coreJarFile, List<URL> urlList, String... argsAll) throws Exception {
         ClusterClient clusterClient = ClusterClientFactory.createStandaloneClient(options);
-        String[] args = addMonitorToArgs(clusterClient, argsAll);
+        String webInterfaceURL = clusterClient.getWebInterfaceURL();
+        String[] args = addMonitorToArgs(argsAll, webInterfaceURL);
         JobGraph jobGraph = buildJobGraph(options, coreJarFile, urlList, args);
         ClientUtils.submitJob(clusterClient, jobGraph);
         return true;
     }
 
-    public static String[] addMonitorToArgs(ClusterClient clusterClient, String[] argsAll) {
+    public static String[] addMonitorToArgs(String[] argsAll, String rul) {
         String[] args = new String[argsAll.length + 1];
         System.out.println(args.length);
         for (int i = 0; i < argsAll.length; i++) {
             args[i] = argsAll[i];
         }
         args[args.length - 1] = "-monitor";
-        args[args.length - 2] = clusterClient.getWebInterfaceURL();
+        args[args.length - 2] = rul;
         return args;
     }
 
 
     private static JobGraph buildJobGraph(StartOptions options, File coreJarFile, List<URL> urls, String[] argsAll) throws Exception {
         String flinkConf = options.getFlinkConf();
-        Configuration configuration = ClusterConfigLoader.loadFlinkConfig(flinkConf);
+        Configuration configuration = ClusterConfigLoader.loadFlinkConfig(options);
         PackagedProgram program = PackagedProgram.newBuilder()
                 .setJarFile(coreJarFile)
                 .setUserClassPaths(urls)

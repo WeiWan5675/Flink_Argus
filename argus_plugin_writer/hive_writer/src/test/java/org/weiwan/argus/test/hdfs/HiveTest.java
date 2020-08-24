@@ -4,6 +4,7 @@ import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.HiveMetaStoreClient;
 import org.apache.hadoop.hive.metastore.api.*;
 import org.apache.thrift.TException;
+import org.weiwan.argus.core.start.StartOptions;
 import org.weiwan.argus.core.utils.ClusterConfigLoader;
 
 import java.util.List;
@@ -20,7 +21,9 @@ public class HiveTest {
 
     public static void main(String[] args) throws Exception {
         String confDir = "F:\\hadoop-common-2.6.0-bin\\etc\\hadoop";
-        HiveConf hiveConf = ClusterConfigLoader.loadHiveConfig(confDir);
+        StartOptions startOptions = new StartOptions();
+        startOptions.setHiveConf(confDir);
+        HiveConf hiveConf = ClusterConfigLoader.loadHiveConfig(startOptions);
 
         HiveMetaStoreClient client = new HiveMetaStoreClient(hiveConf);
 

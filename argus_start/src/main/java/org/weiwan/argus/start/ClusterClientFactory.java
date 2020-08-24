@@ -21,12 +21,9 @@ package org.weiwan.argus.start;
 import org.apache.commons.lang.StringUtils;
 import org.apache.flink.client.deployment.*;
 import org.apache.flink.client.program.ClusterClient;
-import org.apache.flink.client.program.rest.RestClusterClient;
 import org.apache.flink.configuration.*;
 import org.apache.flink.core.fs.FileSystem;
-import org.apache.flink.runtime.akka.AkkaUtils;
 import org.apache.flink.runtime.jobmanager.HighAvailabilityMode;
-import org.apache.flink.runtime.util.LeaderConnectionInfo;
 import org.apache.flink.yarn.YarnClientYarnClusterInformationRetriever;
 import org.apache.flink.yarn.YarnClusterDescriptor;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
@@ -41,7 +38,6 @@ import org.weiwan.argus.core.utils.ClusterConfigLoader;
 import org.weiwan.argus.start.enums.RunMode;
 
 
-import java.net.InetSocketAddress;
 import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
@@ -64,7 +60,7 @@ public class ClusterClientFactory {
 
     public static ClusterClient createStandaloneClient(StartOptions options) throws Exception {
         String flinkConfDir = options.getFlinkConf();
-        Configuration config = ClusterConfigLoader.loadFlinkConfig(flinkConfDir);
+        Configuration config = ClusterConfigLoader.loadFlinkConfig(options);
         StandaloneClusterDescriptor standaloneClusterDescriptor = new StandaloneClusterDescriptor(config);
         ClusterClient clusterClient = standaloneClusterDescriptor.retrieve(StandaloneClusterId.getInstance()).getClusterClient();
         return clusterClient;
@@ -75,12 +71,12 @@ public class ClusterClientFactory {
         String flinkConfDir = options.getFlinkConf();
         String yarnConfDir = options.getYarnConf();
 
-        Configuration flinkConfiguration = ClusterConfigLoader.loadFlinkConfig(flinkConfDir);
+        Configuration flinkConfiguration = ClusterConfigLoader.loadFlinkConfig(options);
         if (StringUtils.isNotBlank(flinkConfDir)) {
             try {
                 FileSystem.initialize(flinkConfiguration);
 
-                YarnConfiguration yarnConf = ClusterConfigLoader.loadYarnConfig(yarnConfDir);
+                YarnConfiguration yarnConf = ClusterConfigLoader.loadYarnConfig(options);
                 YarnClient yarnClient = YarnClient.createYarnClient();
                 yarnClient.init(yarnConf);
                 yarnClient.start();
