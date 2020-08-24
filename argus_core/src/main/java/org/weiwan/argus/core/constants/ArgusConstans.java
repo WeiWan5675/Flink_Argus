@@ -46,6 +46,9 @@ public class ArgusConstans {
 
     public static final String CLASSLOADER_CHILD_FIRST = "child-first";
     public static final String CLASSLOADER_PARENT_FIRST = "parent-first";
+    public static final String ARGUS_CORE_RUN_CLASS = "org.weiwan.argus.core.ArgusRun";
+
+
 
     public static final ConfigOption<String> FLINK_PLUGIN_LOAD_MODE_KEY = ConfigOptions
             .key("pluginLoadMode")

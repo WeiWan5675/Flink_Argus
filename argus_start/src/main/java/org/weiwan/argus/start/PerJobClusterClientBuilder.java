@@ -33,6 +33,7 @@ import org.weiwan.argus.core.utils.ClusterConfigLoader;
 
 import java.io.File;
 import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -68,7 +69,7 @@ public class PerJobClusterClientBuilder {
     }
 
 
-    public YarnClusterDescriptor createPerJobClusterDescriptor(StartOptions options) throws MalformedURLException {
+    public YarnClusterDescriptor createPerJobClusterDescriptor(StartOptions options, List<URL> urlList) throws MalformedURLException {
         String flinkJarPath = options.getFlinkLibDir();
         String flinkConf = options.getFlinkConf();
         if (StringUtils.isNotBlank(flinkJarPath)) {

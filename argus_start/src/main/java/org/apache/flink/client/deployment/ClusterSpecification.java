@@ -19,10 +19,7 @@
 package org.apache.flink.client.deployment;
 
 import org.apache.flink.client.program.PackagedProgram;
-import org.apache.flink.configuration.ConfigConstants;
 import org.apache.flink.configuration.Configuration;
-import org.apache.flink.configuration.JobManagerOptions;
-import org.apache.flink.configuration.TaskManagerOptions;
 import org.apache.flink.runtime.jobgraph.JobGraph;
 import org.apache.flink.runtime.jobgraph.SavepointRestoreSettings;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
@@ -35,215 +32,166 @@ import java.util.List;
  * Description of the cluster to start by the {@link ClusterDescriptor}.
  */
 public final class ClusterSpecification {
-    private final int masterMemoryMB;
-    private final int taskManagerMemoryMB;
-    private final int numberTaskManagers;
-    private final int slotsPerTaskManager;
-    private final int priority;
+	private final int masterMemoryMB;
+	private final int taskManagerMemoryMB;
+	private final int slotsPerTaskManager;
 
-    private int parallelism;
-    private Configuration configuration;
-    private YarnConfiguration yarnConfiguration;
-    private JobGraph jobGraph;
-    private SavepointRestoreSettings spSetting = SavepointRestoreSettings.none();
-    private List<URL> classpaths;
-    private String entryPointClass;
-    private String[] programArgs;
-    private File jarFile;
-    private boolean createProgramDelay = false;
-    private PackagedProgram program;
+	private int parallelism;
+	private Configuration configuration;
+	private YarnConfiguration yarnConfiguration;
+	private JobGraph jobGraph;
+	private SavepointRestoreSettings spSetting = SavepointRestoreSettings.none();
+	private List<URL> classpaths;
+	private String entryPointClass;
+	private String[] programArgs;
+	private File jarFile;
+	private boolean createProgramDelay = false;
+	private PackagedProgram program;
 
-    private ClusterSpecification(int masterMemoryMB, int taskManagerMemoryMB, int numberTaskManagers, int slotsPerTaskManager, int parallelism, int priority) {
-        this.masterMemoryMB = masterMemoryMB;
-        this.taskManagerMemoryMB = taskManagerMemoryMB;
-        this.numberTaskManagers = numberTaskManagers;
-        this.slotsPerTaskManager = slotsPerTaskManager;
-        this.parallelism = parallelism;
-        this.priority = priority;
-    }
 
-    public PackagedProgram getProgram() {
-        return program;
-    }
+	private ClusterSpecification(int masterMemoryMB, int taskManagerMemoryMB, int slotsPerTaskManager) {
+		this.masterMemoryMB = masterMemoryMB;
+		this.taskManagerMemoryMB = taskManagerMemoryMB;
+		this.slotsPerTaskManager = slotsPerTaskManager;
+	}
 
-    public void setProgram(PackagedProgram program) {
-        this.program = program;
-    }
+	public int getMasterMemoryMB() {
+		return masterMemoryMB;
+	}
 
-    public YarnConfiguration getYarnConfiguration() {
-        return yarnConfiguration;
-    }
+	public int getTaskManagerMemoryMB() {
+		return taskManagerMemoryMB;
+	}
 
-    public void setYarnConfiguration(YarnConfiguration yarnConfiguration) {
-        this.yarnConfiguration = yarnConfiguration;
-    }
+	public int getSlotsPerTaskManager() {
+		return slotsPerTaskManager;
+	}
 
-    public JobGraph getJobGraph() {
-        return jobGraph;
-    }
+	@Override
+	public String toString() {
+		return "ClusterSpecification{" +
+			"masterMemoryMB=" + masterMemoryMB +
+			", taskManagerMemoryMB=" + taskManagerMemoryMB +
+			", slotsPerTaskManager=" + slotsPerTaskManager +
+			'}';
+	}
 
-    public void setJobGraph(JobGraph jobGraph) {
-        this.jobGraph = jobGraph;
-    }
+	/**
+	 * Builder for the {@link ClusterSpecification} instance.
+	 */
+	public static class ClusterSpecificationBuilder {
+		private int masterMemoryMB = 768;
+		private int taskManagerMemoryMB = 1024;
+		private int slotsPerTaskManager = 1;
 
-    public int getParallelism() {
-        return parallelism;
-    }
+		public ClusterSpecificationBuilder setMasterMemoryMB(int masterMemoryMB) {
+			this.masterMemoryMB = masterMemoryMB;
+			return this;
+		}
 
-    public void setParallelism(int parallelism) {
-        this.parallelism = parallelism;
-    }
+		public ClusterSpecificationBuilder setTaskManagerMemoryMB(int taskManagerMemoryMB) {
+			this.taskManagerMemoryMB = taskManagerMemoryMB;
+			return this;
+		}
 
-    public Configuration getConfiguration() {
-        return configuration;
-    }
+		public ClusterSpecificationBuilder setSlotsPerTaskManager(int slotsPerTaskManager) {
+			this.slotsPerTaskManager = slotsPerTaskManager;
+			return this;
+		}
 
-    public void setConfiguration(Configuration configuration) {
-        this.configuration = configuration;
-    }
+		public ClusterSpecification createClusterSpecification() {
+			return new ClusterSpecification(
+				masterMemoryMB,
+				taskManagerMemoryMB,
+				slotsPerTaskManager);
+		}
+	}
 
-    public int getMasterMemoryMB() {
-        return masterMemoryMB;
-    }
+	public int getParallelism() {
+		return parallelism;
+	}
 
-    public int getTaskManagerMemoryMB() {
-        return taskManagerMemoryMB;
-    }
+	public void setParallelism(int parallelism) {
+		this.parallelism = parallelism;
+	}
 
-    public int getNumberTaskManagers() {
-        return numberTaskManagers;
-    }
+	public Configuration getConfiguration() {
+		return configuration;
+	}
 
-    public int getSlotsPerTaskManager() {
-        return slotsPerTaskManager;
-    }
+	public void setConfiguration(Configuration configuration) {
+		this.configuration = configuration;
+	}
 
-    public int getPriority(){
-        return priority;
-    }
+	public YarnConfiguration getYarnConfiguration() {
+		return yarnConfiguration;
+	}
 
-    public SavepointRestoreSettings getSpSetting() {
-        return spSetting;
-    }
+	public void setYarnConfiguration(YarnConfiguration yarnConfiguration) {
+		this.yarnConfiguration = yarnConfiguration;
+	}
 
-    public void setSpSetting(SavepointRestoreSettings spSetting) {
-        this.spSetting = spSetting;
-    }
+	public JobGraph getJobGraph() {
+		return jobGraph;
+	}
 
-    public List<URL> getClasspaths() {
-        return classpaths;
-    }
+	public void setJobGraph(JobGraph jobGraph) {
+		this.jobGraph = jobGraph;
+	}
 
-    public void setClasspaths(List<URL> classpaths) {
-        this.classpaths = classpaths;
-    }
+	public SavepointRestoreSettings getSpSetting() {
+		return spSetting;
+	}
 
-    public String getEntryPointClass() {
-        return entryPointClass;
-    }
+	public void setSpSetting(SavepointRestoreSettings spSetting) {
+		this.spSetting = spSetting;
+	}
 
-    public void setEntryPointClass(String entryPointClass) {
-        this.entryPointClass = entryPointClass;
-    }
+	public List<URL> getClasspaths() {
+		return classpaths;
+	}
 
-    public String[] getProgramArgs() {
-        return programArgs;
-    }
+	public void setClasspaths(List<URL> classpaths) {
+		this.classpaths = classpaths;
+	}
 
-    public void setProgramArgs(String[] programArgs) {
-        this.programArgs = programArgs;
-    }
+	public String getEntryPointClass() {
+		return entryPointClass;
+	}
 
-    public File getJarFile() {
-        return jarFile;
-    }
+	public void setEntryPointClass(String entryPointClass) {
+		this.entryPointClass = entryPointClass;
+	}
 
-    public void setJarFile(File jarFile) {
-        this.jarFile = jarFile;
-    }
+	public String[] getProgramArgs() {
+		return programArgs;
+	}
 
-    public boolean isCreateProgramDelay() {
-        return createProgramDelay;
-    }
+	public void setProgramArgs(String[] programArgs) {
+		this.programArgs = programArgs;
+	}
 
-    public void setCreateProgramDelay(boolean createProgramDelay) {
-        this.createProgramDelay = createProgramDelay;
-    }
+	public File getJarFile() {
+		return jarFile;
+	}
 
-    @Override
-    public String toString() {
-        return "ClusterSpecification{" +
-                "masterMemoryMB=" + masterMemoryMB +
-                ", taskManagerMemoryMB=" + taskManagerMemoryMB +
-                ", numberTaskManagers=" + numberTaskManagers +
-                ", slotsPerTaskManager=" + slotsPerTaskManager +
-                ", priority=" + priority +
-                '}';
-    }
+	public void setJarFile(File jarFile) {
+		this.jarFile = jarFile;
+	}
 
-    public static ClusterSpecification fromConfiguration(Configuration configuration) {
-        int slots = configuration.getInteger(ConfigConstants.TASK_MANAGER_NUM_TASK_SLOTS, 1);
+	public boolean isCreateProgramDelay() {
+		return createProgramDelay;
+	}
 
-        int jobManagerMemoryMb = configuration.getInteger(JobManagerOptions.JOB_MANAGER_HEAP_MEMORY_MB);
-        int taskManagerMemoryMb = configuration.getInteger(TaskManagerOptions.TASK_MANAGER_HEAP_MEMORY_MB);
+	public void setCreateProgramDelay(boolean createProgramDelay) {
+		this.createProgramDelay = createProgramDelay;
+	}
 
-        return new ClusterSpecificationBuilder()
-                .setMasterMemoryMB(jobManagerMemoryMb)
-                .setTaskManagerMemoryMB(taskManagerMemoryMb)
-                .setNumberTaskManagers(1)
-                .setSlotsPerTaskManager(slots)
-                .createClusterSpecification();
-    }
+	public PackagedProgram getProgram() {
+		return program;
+	}
 
-    /**
-     * Builder for the {@link ClusterSpecification} instance.
-     */
-    public static class ClusterSpecificationBuilder {
-        private int masterMemoryMB = 768;
-        private int taskManagerMemoryMB = 768;
-        private int numberTaskManagers = 1;
-        private int slotsPerTaskManager = 1;
-        private int parallelism = 1;
-        private int priority = 0;
-
-        public ClusterSpecificationBuilder setMasterMemoryMB(int masterMemoryMB) {
-            this.masterMemoryMB = masterMemoryMB;
-            return this;
-        }
-
-        public ClusterSpecificationBuilder setTaskManagerMemoryMB(int taskManagerMemoryMB) {
-            this.taskManagerMemoryMB = taskManagerMemoryMB;
-            return this;
-        }
-
-        public ClusterSpecificationBuilder setNumberTaskManagers(int numberTaskManagers) {
-            this.numberTaskManagers = numberTaskManagers;
-            return this;
-        }
-
-        public ClusterSpecificationBuilder setSlotsPerTaskManager(int slotsPerTaskManager) {
-            this.slotsPerTaskManager = slotsPerTaskManager;
-            return this;
-        }
-
-        public ClusterSpecificationBuilder setPriority(int priority){
-            this.priority = priority;
-            return this;
-        }
-
-        public ClusterSpecificationBuilder setParallelism(int parallelism) {
-            this.parallelism = parallelism;
-            return this;
-        }
-
-        public ClusterSpecification createClusterSpecification() {
-            return new ClusterSpecification(
-                    masterMemoryMB,
-                    taskManagerMemoryMB,
-                    numberTaskManagers,
-                    slotsPerTaskManager,
-                    parallelism,
-                    priority);
-        }
-    }
+	public void setProgram(PackagedProgram program) {
+		this.program = program;
+	}
 }

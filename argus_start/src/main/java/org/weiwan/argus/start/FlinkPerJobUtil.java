@@ -19,17 +19,13 @@ package org.weiwan.argus.start;
 
 import org.apache.flink.client.deployment.ClusterSpecification;
 import org.apache.flink.client.program.PackagedProgram;
-import org.apache.flink.configuration.ConfigOption;
-import org.apache.flink.configuration.ConfigOptions;
 import org.apache.hadoop.yarn.client.api.YarnClient;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.weiwan.argus.common.utils.ExceptionUtil;
-import org.weiwan.argus.core.constants.ArgusConstans;
 
 import java.lang.reflect.Field;
-import java.util.Properties;
 
 
 /**
@@ -68,6 +64,7 @@ public class FlinkPerJobUtil {
                 .setSlotsPerTaskManager(slotsPerTaskManager)
                 .createClusterSpecification();
     }
+
 
     public static String getUrlFormat(YarnConfiguration yarnConf, YarnClient yarnClient) {
         String url = "";

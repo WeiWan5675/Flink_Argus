@@ -18,17 +18,17 @@
 
 package org.weiwan.argus.start;
 
-import org.apache.commons.lang.StringUtils;
 import org.apache.flink.client.deployment.ClusterSpecification;
 import org.apache.flink.client.program.ClusterClientProvider;
 import org.apache.flink.configuration.Configuration;
+import org.apache.flink.core.fs.Path;
 import org.apache.flink.runtime.jobgraph.JobGraph;
-import org.apache.flink.runtime.jobgraph.SavepointRestoreSettings;
 import org.apache.flink.yarn.YarnClusterDescriptor;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.weiwan.argus.core.constants.ArgusConstans;
 import org.weiwan.argus.core.start.StartOptions;
 import org.weiwan.argus.core.utils.ClusterConfigLoader;
 
@@ -55,22 +55,25 @@ public class PerJobSubmitter {
         Configuration configuration = ClusterConfigLoader.loadFlinkConfig(options);
         YarnConfiguration yarnConfig = ClusterConfigLoader.loadYarnConfig(options);
         ClusterSpecification clusterSpecification = createClusterSpecification();
+
+        clusterSpecification.setProgramArgs(remoteArgs);
+        clusterSpecification.setEntryPointClass(ArgusConstans.ARGUS_CORE_RUN_CLASS);
+        clusterSpecification.setJarFile(coreJarFile);
+        clusterSpecification.setYarnConfiguration(yarnConfig);
         clusterSpecification.setConfiguration(configuration);
         clusterSpecification.setClasspaths(urlList);
-        clusterSpecification.setEntryPointClass(DataSyncStarter.ARGUS_CORE_RUN_CLASS);
-        clusterSpecification.setJarFile(coreJarFile);
-
+        clusterSpecification.setCreateProgramDelay(true);
 //        if (StringUtils.isNotEmpty(launcherOptions.getS())) {
 //            clusterSpecification.setSpSetting(SavepointRestoreSettings.forPath(launcherOptions.getS()));
 //        }
-        clusterSpecification.setProgramArgs(remoteArgs);
-        clusterSpecification.setCreateProgramDelay(true);
-        clusterSpecification.setYarnConfiguration(yarnConfig);
 
         PerJobClusterClientBuilder perJobClusterClientBuilder = new PerJobClusterClientBuilder();
+        //初始化yarn-client
         perJobClusterClientBuilder.init(options);
+        //添加flink-dist jar
+        YarnClusterDescriptor descriptor = perJobClusterClientBuilder.createPerJobClusterDescriptor(options,urlList);
 
-        YarnClusterDescriptor descriptor = perJobClusterClientBuilder.createPerJobClusterDescriptor(options);
+        //部署 jobGraph是空的
         ClusterClientProvider<ApplicationId> provider = descriptor.deployJobCluster(clusterSpecification, jobGraph, true);
         String applicationId = provider.getClusterClient().getClusterId().toString();
         String flinkJobId = jobGraph.getJobID().toString();

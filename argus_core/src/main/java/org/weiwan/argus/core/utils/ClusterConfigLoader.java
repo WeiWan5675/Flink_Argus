@@ -125,6 +125,7 @@ public class ClusterConfigLoader {
             String flinkConf = options.getFlinkConf();
             String yarnConf = options.getYarnConf();
             String yarnQueue = options.getYarnQueue();
+            //设置插件加载模式用
             String pluginLoadMode = options.getPluginLoadMode();
             String appId = options.getAppId();
 
@@ -149,6 +150,8 @@ public class ClusterConfigLoader {
                 flinkConfiguration.setString("fs.hdfs.hadoopconf", yarnConf);
             }
             ConfigOption<String> CLASSLOADER_RESOLVE_ORDER = ConfigOptions.key("classloader.resolve-order").defaultValue("child-first").withDescription("Defines the class resolution strategy when loading classes from user code, meaning whether to first check the user code jar (\"child-first\") or the application classpath (\"parent-first\"). The default settings indicate to load classes first from the user code jar, which means that user code jars can include and load different dependencies than Flink uses (transitively).");
+
+            //设置插件加载模式
             if (CLASS_PATH_PLUGIN_LOAD_MODE.equalsIgnoreCase(pluginLoadMode)) {
                 flinkConfiguration.setString(CLASSLOADER_RESOLVE_ORDER, CLASSLOADER_CHILD_FIRST);
             } else {

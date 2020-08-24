@@ -1,32 +1,11 @@
 package org.weiwan.argus.start;
 
-import ch.qos.logback.classic.Level;
-import ch.qos.logback.classic.LoggerContext;
 import com.alibaba.fastjson.JSONObject;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.flink.client.ClientUtils;
-import org.apache.flink.client.deployment.ClusterDeploymentException;
-import org.apache.flink.client.deployment.ClusterSpecification;
-import org.apache.flink.client.deployment.StandaloneClusterDescriptor;
-import org.apache.flink.client.deployment.StandaloneClusterId;
-import org.apache.flink.client.deployment.application.ApplicationConfiguration;
 import org.apache.flink.client.program.*;
-import org.apache.flink.client.program.rest.RestClusterClient;
 import org.apache.flink.configuration.*;
-import org.apache.flink.runtime.akka.AkkaUtils;
 import org.apache.flink.runtime.jobgraph.JobGraph;
-import org.apache.flink.runtime.jobgraph.SavepointRestoreSettings;
-import org.apache.flink.runtime.util.LeaderConnectionInfo;
-import org.apache.flink.yarn.YarnClientYarnClusterInformationRetriever;
-import org.apache.flink.yarn.YarnClusterDescriptor;
-import org.apache.flink.yarn.YarnClusterInformationRetriever;
-import org.apache.flink.yarn.configuration.YarnConfigOptions;
-import org.apache.flink.yarn.configuration.YarnDeploymentTarget;
-import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.yarn.api.records.ApplicationId;
-import org.apache.hadoop.yarn.client.api.YarnClient;
-import org.apache.hadoop.yarn.conf.YarnConfiguration;
-import org.reflections.vfs.Vfs;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.weiwan.argus.common.options.OptionParser;
@@ -35,6 +14,7 @@ import org.weiwan.argus.common.utils.SystemUtil;
 import org.weiwan.argus.common.utils.YamlUtils;
 import org.weiwan.argus.core.ArgusKey;
 import org.weiwan.argus.core.ArgusRun;
+import org.weiwan.argus.core.constants.ArgusConstans;
 import org.weiwan.argus.core.start.StartOptions;
 import org.weiwan.argus.core.utils.ClusterConfigLoader;
 import org.weiwan.argus.core.utils.CommonUtil;
@@ -44,11 +24,9 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FilenameFilter;
 import java.io.IOException;
-import java.net.InetSocketAddress;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -69,7 +47,6 @@ public class DataSyncStarter {
     public static final String KEY_WRITER_PLUGIN_DIR = "writer";
     public static final String KEY_CHANNEL_PLUGIN_DIR = "channel";
 
-    public static final String ARGUS_CORE_RUN_CLASS = "org.weiwan.argus.core.ArgusRun";
 
 
     public static void main(String[] args) throws Exception {
@@ -146,71 +123,6 @@ public class DataSyncStarter {
 
     private static boolean startFromApplicationMode(StartOptions options, File coreJarFile, List<URL> urlList, String[] argsAll) {
 
-        String userJarPath = options.getLibDir();
-
-        String flinkLibDir = options.getFlinkLibDir();
-        String flinkDistJar = options.getFlinkLibDir() + "/" + "flink-dist_2.11-1.11-SNAPSHOT.jar";
-        String flinkConf = options.getFlinkConf();
-        YarnClient yarnClient = YarnClient.createYarnClient();
-        YarnConfiguration yarnConfig = ClusterConfigLoader.loadYarnConfig(options);
-        yarnClient.init(yarnConfig);
-        yarnClient.start();
-        YarnClusterInformationRetriever clusterInformationRetriever = YarnClientYarnClusterInformationRetriever
-                .create(yarnClient);
-
-        //获取flink的配置
-        Configuration flinkConfiguration = ClusterConfigLoader.loadFlinkConfig(options);
-        flinkConfiguration.set(CheckpointingOptions.INCREMENTAL_CHECKPOINTS, true);
-        flinkConfiguration.set(
-                PipelineOptions.JARS,
-                Collections.singletonList(
-                        userJarPath));
-
-        Path remoteLib = new Path(flinkLibDir);
-        flinkConfiguration.set(
-                YarnConfigOptions.PROVIDED_LIB_DIRS,
-                Collections.singletonList(remoteLib.toString()));
-
-        flinkConfiguration.set(
-                YarnConfigOptions.FLINK_DIST_JAR,
-                flinkDistJar);
-        //设置为application模式
-        flinkConfiguration.set(
-                DeploymentOptions.TARGET,
-                YarnDeploymentTarget.APPLICATION.getName());
-        //yarn application name
-        flinkConfiguration.set(YarnConfigOptions.APPLICATION_NAME, "jobName");
-
-
-        ClusterSpecification clusterSpecification = new ClusterSpecification.ClusterSpecificationBuilder()
-                .createClusterSpecification();
-        clusterSpecification.setClasspaths(urlList);
-        clusterSpecification.setJarFile(coreJarFile);
-        clusterSpecification.setEntryPointClass("org.weiwan.argus.core.ArgusRun");
-        clusterSpecification.setProgramArgs(argsAll);
-
-//		设置用户jar的参数和主类
-        ApplicationConfiguration appConfig = new ApplicationConfiguration(argsAll, "org.weiwan.argus.core.ArgusRun");
-
-
-        YarnClusterDescriptor yarnClusterDescriptor = new YarnClusterDescriptor(
-                flinkConfiguration,
-                yarnConfig,
-                yarnClient,
-                clusterInformationRetriever,
-                true);
-        ClusterClientProvider<ApplicationId> clusterClientProvider = null;
-        try {
-            clusterClientProvider = yarnClusterDescriptor.deployApplicationCluster(
-                    clusterSpecification,
-                    appConfig);
-        } catch (ClusterDeploymentException e){
-            e.printStackTrace();
-        }
-
-        ClusterClient<ApplicationId> clusterClient = clusterClientProvider.getClusterClient();
-        ApplicationId applicationId = clusterClient.getClusterId();
-        System.out.println(applicationId);
         return false;
     }
 
@@ -504,7 +416,7 @@ public class DataSyncStarter {
         PackagedProgram program = PackagedProgram.newBuilder()
                 .setJarFile(coreJarFile)
                 .setUserClassPaths(urls)
-                .setEntryPointClassName(ARGUS_CORE_RUN_CLASS)
+                .setEntryPointClassName(ArgusConstans.ARGUS_CORE_RUN_CLASS)
                 .setConfiguration(configuration)
                 .setArguments(argsAll)
                 .build();
