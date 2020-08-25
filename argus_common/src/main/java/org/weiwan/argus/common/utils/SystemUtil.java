@@ -55,4 +55,8 @@ public class SystemUtil {
 
         return urlList;
     }
+
+    public static void setSystemVar(String key, String var) {
+        System.setProperty(key, var);
+    }
 }

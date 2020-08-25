@@ -88,20 +88,7 @@ public class DataSyncStarter {
         String readerPluginDir = options.getReaderPluginDir();
         String channelPluginDir = options.getChannelPluginDir();
         String writerPluginDir = options.getWriterPluginDir();
-        List<URL> hdfsLib = findLibJar(libDir);
-        List<URL> localLib = findLibJar(extLibDir, pluginRoot, readerPluginDir, channelPluginDir, writerPluginDir);
-        List<URL> urlList = new ArrayList<>();
-
-        for (URL url : hdfsLib) {
-            String filePath = url.toString();
-            int i = filePath.lastIndexOf("/");
-            String ss = "hdfs://flink/flink_argus/lib" + File.separator + filePath.substring(i + 1);
-            URL hdfsUrl = new URL(ss);
-            localLib.add(hdfsUrl);
-        }
-
-        urlList.addAll(localLib);
-
+        List<URL> urlList = findLibJar(libDir, extLibDir, pluginRoot, readerPluginDir, channelPluginDir, writerPluginDir);
         String coreJarFileName = findCoreJarFile(libDir);
         File coreJarFile = new File(libDir + File.separator + coreJarFileName);
 
@@ -389,6 +376,14 @@ public class DataSyncStarter {
         }
         logger.info("HIVE_HOME path is: {}", hiveHome);
 
+
+        String hadoopUserName = SystemUtil.getSystemVar("HADOOP_USER_NAME");
+        String defaultHadoopUserName = defaultMap.get("HADOOP_USER_NAME");
+        if (!defaultHadoopUserName.equalsIgnoreCase(hadoopUserName)) {
+            SystemUtil.setSystemVar("HADOOP_USER_NAME", defaultHadoopUserName);
+            hadoopUserName = defaultHadoopUserName;
+        }
+        options.setHadoopUserName(hadoopUserName);
     }
 
     private static String setArgusHomePath(StartOptions options) {

@@ -105,15 +105,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URLDecoder;
 import java.nio.charset.Charset;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static org.apache.flink.configuration.ConfigConstants.DEFAULT_FLINK_USR_LIB_DIR;
@@ -538,20 +530,17 @@ public class YarnClusterDescriptor implements ClusterDescriptor<ApplicationId> {
 			//使用的是hadoop config自带的插件加载配置
 			String pluginLoadMode = clusterSpecification.getConfiguration().getString(FLINK_PLUGIN_LOAD_MODE_KEY);
 			if(StringUtils.equalsIgnoreCase(pluginLoadMode, SHIP_FILE_PLUGIN_LOAD_MODE)){
-
+				List<File> tmpShipFIls = new ArrayList<>();
 				jobGraph.getClasspaths().forEach(jarFile -> {
 					try {
-						String s = jarFile.toString();
-						if(s.startsWith("file")){
-							shipFiles.add(new File(jarFile.toURI()));
-						}
+						tmpShipFIls.add(new File(jarFile.toURI()));
 					} catch (URISyntaxException e) {
 						throw new IllegalArgumentException("Couldn't add local user jar: " + jarFile
 								+ " Currently only file:/// URLs are supported.");
 					}
 				});
 				jobGraph.getClasspaths().clear();
-				addShipFiles(shipFiles);
+				addShipFiles(tmpShipFIls);
 			}
 			clusterSpecification.setJobGraph(jobGraph);
 		}

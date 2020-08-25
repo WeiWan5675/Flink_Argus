@@ -107,6 +107,17 @@ public class StartOptions implements Serializable {
     @Parameter(names = "-hadoopHome", description = "hadoop home path")
     private String hadoopHome;
 
+    @Parameter(names = "-hadoopUserName", description = "hadoop user name")
+    private String hadoopUserName;
+
+
+    public String getHadoopUserName() {
+        return hadoopUserName;
+    }
+
+    public void setHadoopUserName(String hadoopUserName) {
+        this.hadoopUserName = hadoopUserName;
+    }
 
     public String getFlinkLibDir() {
         return flinkLibDir;

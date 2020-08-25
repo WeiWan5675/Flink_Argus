@@ -20,7 +20,7 @@ HADOOP_HOME:
 HIVE_HOME:
 FLINK_HOME:
 HBASE_HOME:
-
+HADOOP_USER_NAME: hdfs
 flink:
   task:
     name: flinkApp
