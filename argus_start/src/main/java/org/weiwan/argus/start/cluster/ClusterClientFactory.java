@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package org.weiwan.argus.start;
+package org.weiwan.argus.start.cluster;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.flink.client.deployment.*;
@@ -35,7 +35,7 @@ import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.apache.hadoop.yarn.util.ConverterUtils;
 import org.weiwan.argus.core.start.StartOptions;
 import org.weiwan.argus.core.utils.ClusterConfigLoader;
-import org.weiwan.argus.start.enums.RunMode;
+import org.weiwan.argus.core.enums.RunMode;
 
 
 import java.util.EnumSet;

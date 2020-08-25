@@ -16,12 +16,11 @@
  * limitations under the License.
  */
 
-package org.weiwan.argus.start;
+package org.weiwan.argus.start.perjob;
 
 import org.apache.flink.client.deployment.ClusterSpecification;
 import org.apache.flink.client.program.ClusterClientProvider;
 import org.apache.flink.configuration.Configuration;
-import org.apache.flink.core.fs.Path;
 import org.apache.flink.runtime.jobgraph.JobGraph;
 import org.apache.flink.yarn.YarnClusterDescriptor;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
@@ -36,7 +35,7 @@ import java.io.File;
 import java.net.URL;
 import java.util.List;
 
-import static org.weiwan.argus.start.FlinkPerJobUtil.createClusterSpecification;
+import static org.weiwan.argus.start.perjob.FlinkPerJobUtil.createClusterSpecification;
 
 /**
  * Date: 2019/09/11

@@ -1,10 +1,10 @@
-package org.weiwan.argus.start.enums;
+package org.weiwan.argus.core.enums;
 
 /**
  * @Author: xiaozhennan
  * @Date: 2020/7/14 20:13
  * @Package: org.weiwan.argus.common.options
- * @ClassName: org.weiwan.argus.start.enums.RunMode
+ * @ClassName: org.weiwan.argus.core.enums.RunMode
  * @Description:
  **/
 public enum RunMode {

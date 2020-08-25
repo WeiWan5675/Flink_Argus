@@ -124,8 +124,8 @@ import static org.apache.flink.util.Preconditions.checkNotNull;
 import static org.apache.flink.yarn.YarnConfigKeys.LOCAL_RESOURCE_DESCRIPTOR_SEPARATOR;
 import static org.weiwan.argus.core.constants.ArgusConstans.FLINK_PLUGIN_LOAD_MODE_KEY;
 import static org.weiwan.argus.core.constants.ArgusConstans.SHIP_FILE_PLUGIN_LOAD_MODE;
-import static org.weiwan.argus.start.FlinkPerJobUtil.buildProgram;
-import static org.weiwan.argus.start.FlinkPerJobUtil.getUrlFormat;
+import static org.weiwan.argus.start.perjob.FlinkPerJobUtil.buildProgram;
+import static org.weiwan.argus.start.perjob.FlinkPerJobUtil.getUrlFormat;
 
 /**
  * The descriptor with deployment information for deploying a Flink cluster on Yarn.
@@ -538,9 +538,13 @@ public class YarnClusterDescriptor implements ClusterDescriptor<ApplicationId> {
 			//使用的是hadoop config自带的插件加载配置
 			String pluginLoadMode = clusterSpecification.getConfiguration().getString(FLINK_PLUGIN_LOAD_MODE_KEY);
 			if(StringUtils.equalsIgnoreCase(pluginLoadMode, SHIP_FILE_PLUGIN_LOAD_MODE)){
+
 				jobGraph.getClasspaths().forEach(jarFile -> {
 					try {
-						shipFiles.add(new File(jarFile.toURI()));
+						String s = jarFile.toString();
+						if(s.startsWith("file")){
+							shipFiles.add(new File(jarFile.toURI()));
+						}
 					} catch (URISyntaxException e) {
 						throw new IllegalArgumentException("Couldn't add local user jar: " + jarFile
 								+ " Currently only file:/// URLs are supported.");

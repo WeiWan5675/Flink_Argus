@@ -18,7 +18,9 @@ import org.weiwan.argus.core.constants.ArgusConstans;
 import org.weiwan.argus.core.start.StartOptions;
 import org.weiwan.argus.core.utils.ClusterConfigLoader;
 import org.weiwan.argus.core.utils.CommonUtil;
-import org.weiwan.argus.start.enums.RunMode;
+import org.weiwan.argus.start.cluster.ClusterClientFactory;
+import org.weiwan.argus.core.enums.RunMode;
+import org.weiwan.argus.start.perjob.PerJobSubmitter;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -46,7 +48,6 @@ public class DataSyncStarter {
     public static final String KEY_READER_PLUGIN_DIR = "reader";
     public static final String KEY_WRITER_PLUGIN_DIR = "writer";
     public static final String KEY_CHANNEL_PLUGIN_DIR = "channel";
-
 
 
     public static void main(String[] args) throws Exception {
@@ -87,7 +88,20 @@ public class DataSyncStarter {
         String readerPluginDir = options.getReaderPluginDir();
         String channelPluginDir = options.getChannelPluginDir();
         String writerPluginDir = options.getWriterPluginDir();
-        List<URL> urlList = findLibJar(libDir, extLibDir, pluginRoot, readerPluginDir, channelPluginDir, writerPluginDir);
+        List<URL> hdfsLib = findLibJar(libDir);
+        List<URL> localLib = findLibJar(extLibDir, pluginRoot, readerPluginDir, channelPluginDir, writerPluginDir);
+        List<URL> urlList = new ArrayList<>();
+
+        for (URL url : hdfsLib) {
+            String filePath = url.toString();
+            int i = filePath.lastIndexOf("/");
+            String ss = "hdfs://flink/flink_argus/lib" + File.separator + filePath.substring(i + 1);
+            URL hdfsUrl = new URL(ss);
+            localLib.add(hdfsUrl);
+        }
+
+        urlList.addAll(localLib);
+
         String coreJarFileName = findCoreJarFile(libDir);
         File coreJarFile = new File(libDir + File.separator + coreJarFileName);
 
@@ -111,7 +125,7 @@ public class DataSyncStarter {
                 break;
             case application:
                 logger.info("RunMode:" + RunMode.application.toString());
-                startFlag = startFromApplicationMode(options,coreJarFile,urlList,argsAll);
+                startFlag = startFromApplicationMode(options, coreJarFile, urlList, argsAll);
             default:
                 logger.info(String.format("No Match RunMode of %s !", mode));
         }
@@ -231,6 +245,13 @@ public class DataSyncStarter {
         return true;
     }
 
+/**
+ * 1. 判断是否是yarn模式
+ * 2. 如果是yarn模式,检查classpath配置
+ * 3. 如果是hdfs的classpath,检查hdfsclasspath是否正常
+ * 4. 使用hdfsclasspath
+ * 5. hdfs classpath hdfs://flink/flink_argus/lib
+ */
 
     /**
      * 提交到YarnSession中,默认的YarnSession名称为Flink Session Cluster
