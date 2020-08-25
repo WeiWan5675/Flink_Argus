@@ -542,7 +542,7 @@ public class YarnClusterDescriptor implements ClusterDescriptor<ApplicationId> {
 				jobGraph.getClasspaths().clear();
 				addShipFiles(tmpShipFIls);
 			}
-			clusterSpecification.setJobGraph(jobGraph);
+			validClusterSpecification.setJobGraph(jobGraph);
 		}
 
 		ApplicationReport report = startAppMaster(
@@ -617,6 +617,7 @@ public class YarnClusterDescriptor implements ClusterDescriptor<ApplicationId> {
 				.setMasterMemoryMB(jobManagerMemoryMb)
 				.setTaskManagerMemoryMB(taskManagerMemoryMb)
 				.setSlotsPerTaskManager(clusterSpecification.getSlotsPerTaskManager())
+				.setClassPath(clusterSpecification.getClasspaths())
 				.createClusterSpecification();
 
 	}

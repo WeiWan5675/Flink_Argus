@@ -83,6 +83,22 @@ public final class ClusterSpecification {
 		private int masterMemoryMB = 768;
 		private int taskManagerMemoryMB = 1024;
 		private int slotsPerTaskManager = 1;
+		private int parallelism;
+		private Configuration configuration;
+		private YarnConfiguration yarnConfiguration;
+		private JobGraph jobGraph;
+		private SavepointRestoreSettings spSetting = SavepointRestoreSettings.none();
+		private List<URL> classpaths;
+		private String entryPointClass;
+		private String[] programArgs;
+		private File jarFile;
+		private boolean createProgramDelay = false;
+		private PackagedProgram program;
+
+		public ClusterSpecificationBuilder setClassPath(List<URL> classpaths){
+			this.classpaths = classpaths;
+			return this;
+		}
 
 		public ClusterSpecificationBuilder setMasterMemoryMB(int masterMemoryMB) {
 			this.masterMemoryMB = masterMemoryMB;
