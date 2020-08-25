@@ -69,7 +69,7 @@ public class PerJobClusterClientBuilder {
     }
 
 
-    public YarnClusterDescriptor createPerJobClusterDescriptor(StartOptions options, List<URL> urlList) throws MalformedURLException {
+    public YarnClusterDescriptor createPerJobClusterDescriptor(StartOptions options) throws MalformedURLException {
         String flinkJarPath = options.getFlinkLibDir();
         String flinkConf = options.getFlinkConf();
         if (StringUtils.isNotBlank(flinkJarPath)) {

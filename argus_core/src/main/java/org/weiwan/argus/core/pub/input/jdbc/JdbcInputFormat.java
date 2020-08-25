@@ -2,7 +2,6 @@ package org.weiwan.argus.core.pub.input.jdbc;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.flink.configuration.Configuration;
-import org.apache.flink.table.types.DataType;
 import org.weiwan.argus.common.utils.DateUtils;
 import org.weiwan.argus.core.pub.input.BaseRichInputFormat;
 import org.weiwan.argus.core.pub.output.hdfs.ColumnType;

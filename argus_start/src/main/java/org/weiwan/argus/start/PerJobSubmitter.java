@@ -71,7 +71,7 @@ public class PerJobSubmitter {
         //初始化yarn-client
         perJobClusterClientBuilder.init(options);
         //添加flink-dist jar
-        YarnClusterDescriptor descriptor = perJobClusterClientBuilder.createPerJobClusterDescriptor(options,urlList);
+        YarnClusterDescriptor descriptor = perJobClusterClientBuilder.createPerJobClusterDescriptor(options);
 
         //部署 jobGraph是空的
         ClusterClientProvider<ApplicationId> provider = descriptor.deployJobCluster(clusterSpecification, jobGraph, true);

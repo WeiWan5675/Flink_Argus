@@ -111,14 +111,6 @@ public class FlinkContext<T> {
             ExecutionEnvironment waitEnv = (ExecutionEnvironment) env;
             return waitEnv.execute(taskName);
         }
-        if (FlinkContains.SCALA_STREAM_ENV == this.envClass) {
-            org.apache.flink.streaming.api.scala.StreamExecutionEnvironment waitEnv = (org.apache.flink.streaming.api.scala.StreamExecutionEnvironment) env;
-            return waitEnv.execute(taskName);
-        }
-        if (FlinkContains.SCALA_BATCH_ENV == this.envClass) {
-            org.apache.flink.api.scala.ExecutionEnvironment waitEnv = (org.apache.flink.api.scala.ExecutionEnvironment) env;
-            return waitEnv.execute(taskName);
-        }
         throw new ArgusCommonException(ArgusExceptionEnum.FAILURE);
     }
 

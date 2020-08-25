@@ -1,15 +1,10 @@
 package org.weiwan.argus.core.pub.output.hdfs;
 
-import org.apache.commons.net.ntp.TimeStamp;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.hive.metastore.api.Decimal;
 import org.apache.hadoop.mapred.FileOutputFormat;
 import org.weiwan.argus.core.pub.enums.CompressType;
 import org.weiwan.argus.core.pub.enums.FileType;
-import org.weiwan.argus.core.pub.enums.WriteMode;
 import org.weiwan.argus.core.pub.pojo.DataField;
 import org.weiwan.argus.core.pub.pojo.DataRecord;
 import org.weiwan.argus.core.pub.pojo.DataRow;
@@ -17,7 +12,6 @@ import org.weiwan.argus.core.pub.pojo.DataRow;
 import java.io.IOException;
 import java.sql.Time;
 import java.sql.Timestamp;
-import java.time.LocalDateTime;
 import java.util.*;
 
 /**

@@ -203,13 +203,11 @@ public abstract class BaseEnvIniter {
     }
 
     protected boolean isStream(FlinkContext<?> context) {
-        return context.getEnv() instanceof StreamExecutionEnvironment
-                || context.getEnv() instanceof org.apache.flink.streaming.api.scala.StreamExecutionEnvironment;
+        return context.getEnv() instanceof StreamExecutionEnvironment;
     }
 
     protected boolean isBatch(FlinkContext<?> context) {
-        return context.getEnv() instanceof ExecutionEnvironment ||
-                context.getEnv() instanceof org.apache.flink.api.scala.ExecutionEnvironment;
+        return context.getEnv() instanceof ExecutionEnvironment;
     }
 
 }

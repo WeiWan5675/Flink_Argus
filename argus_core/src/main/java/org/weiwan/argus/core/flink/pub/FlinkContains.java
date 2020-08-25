@@ -13,10 +13,6 @@ import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 public class FlinkContains {
     public static final Class<StreamExecutionEnvironment> JAVA_STREAM_ENV = StreamExecutionEnvironment.class;
     public static final Class<ExecutionEnvironment> JAVA_BATCH_ENV = ExecutionEnvironment.class;
-    public static final Class<org.apache.flink.streaming.api.scala.StreamExecutionEnvironment> SCALA_STREAM_ENV =
-            org.apache.flink.streaming.api.scala.StreamExecutionEnvironment.class;
-    public static final Class<org.apache.flink.api.scala.ExecutionEnvironment> SCALA_BATCH_ENV =
-            org.apache.flink.api.scala.ExecutionEnvironment.class;
 
 
     public static final String FLINK_CONF_FILE_NAME = "flink.conf";

@@ -5,12 +5,11 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.common.type.HiveDecimal;
-import org.iq80.snappy.SnappyOutputStream;
 import org.weiwan.argus.common.utils.DateUtils;
 import org.weiwan.argus.core.pub.pojo.DataField;
 import org.weiwan.argus.core.pub.pojo.DataRecord;
 import org.weiwan.argus.core.pub.pojo.DataRow;
-import org.weiwan.argus.core.utils.HdfsUtil;
+import org.xerial.snappy.SnappyOutputStream;
 
 import java.io.IOException;
 import java.io.OutputStream;
