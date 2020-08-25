@@ -103,6 +103,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URL;
 import java.net.URLDecoder;
 import java.nio.charset.Charset;
 import java.util.*;
@@ -541,7 +542,13 @@ public class YarnClusterDescriptor implements ClusterDescriptor<ApplicationId> {
 				});
 				jobGraph.getClasspaths().clear();
 				addShipFiles(tmpShipFIls);
+			}else{
+				List<URL> classpaths = jobGraph.getClasspaths();
+				for (URL urlt : classpaths) {
+					jobGraph.addJar(new org.apache.flink.core.fs.Path(urlt.toURI()));
+				}
 			}
+
 			validClusterSpecification.setJobGraph(jobGraph);
 		}
 
