@@ -49,6 +49,9 @@ public class OptionParser {
         List<String> argsList = new ArrayList<>();
         for (String key : optionToMap.keySet()) {
             String var = String.valueOf(optionToMap.get(key));
+            if(StringUtils.isEmpty(var) || "null".equalsIgnoreCase(var)){
+                continue;
+            }
             if (StringUtils.isNotEmpty(var)) {
                 argsList.add(key);
                 if ("false".equalsIgnoreCase(var) || "true".equalsIgnoreCase(var)) {

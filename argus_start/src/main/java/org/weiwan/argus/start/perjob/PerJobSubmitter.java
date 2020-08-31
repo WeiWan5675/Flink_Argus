@@ -71,7 +71,6 @@ public class PerJobSubmitter {
         perJobClusterClientBuilder.init(options);
         //添加flink-dist jar
         YarnClusterDescriptor descriptor = perJobClusterClientBuilder.createPerJobClusterDescriptor(options);
-
         //部署 jobGraph是空的
         ClusterClientProvider<ApplicationId> provider = descriptor.deployJobCluster(clusterSpecification, jobGraph, true);
         String applicationId = provider.getClusterClient().getClusterId().toString();

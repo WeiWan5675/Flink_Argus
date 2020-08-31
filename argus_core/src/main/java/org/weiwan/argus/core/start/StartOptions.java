@@ -110,6 +110,27 @@ public class StartOptions implements Serializable {
     @Parameter(names = "-hadoopUserName", description = "hadoop user name")
     private String hadoopUserName;
 
+    @Parameter(names = "-yarnHome", description = "yarn home path")
+    private String yarnHome;
+
+    @Parameter(names = "-hiveHome", description = "hive home path")
+    private String hiveHome;
+
+    public String getHiveHome() {
+        return hiveHome;
+    }
+
+    public void setHiveHome(String hiveHome) {
+        this.hiveHome = hiveHome;
+    }
+
+    public String getYarnHome() {
+        return yarnHome;
+    }
+
+    public void setYarnHome(String yarnHome) {
+        this.yarnHome = yarnHome;
+    }
 
     public String getHadoopUserName() {
         return hadoopUserName;

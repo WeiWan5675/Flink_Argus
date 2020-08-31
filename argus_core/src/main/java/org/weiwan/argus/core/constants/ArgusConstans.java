@@ -3,6 +3,10 @@ package org.weiwan.argus.core.constants;
 import org.apache.flink.configuration.ConfigOption;
 import org.apache.flink.configuration.ConfigOptions;
 
+import java.util.List;
+
+import static org.apache.flink.configuration.ConfigOptions.key;
+
 /**
  * @Author: xiaozhennan
  * @Date: 2020/7/15 19:18
@@ -60,7 +64,27 @@ public class ArgusConstans {
                     "shipfile: When submitting a task, upload the plugin package under the pluginRoot directory to deploy the plug-in package. " +
                     "The yarn-node node does not need to deploy the plugin package. " +
                     "The task startup speed depends on the size of the plugin package and the network environment.");
-
+    /**
+     * A list of jar files that contain the user-defined function (UDF) classes and all classes used from within the UDFs.
+     */
+    public static final ConfigOption<List<String>> JARS =
+            key("pipeline.jars")
+                    .stringType()
+                    .asList()
+                    .noDefaultValue()
+                    .withDescription("A semicolon-separated list of the jars to package with the job jars to be sent to the" +
+                            " cluster. These have to be valid paths.");
+    /**
+     * A list of URLs that are added to the classpath of each user code classloader of the program.
+     * Paths must specify a protocol (e.g. file://) and be accessible on all nodes
+     */
+    public static final ConfigOption<List<String>> CLASSPATHS =
+            key("pipeline.classpaths")
+                    .stringType()
+                    .asList()
+                    .noDefaultValue()
+                    .withDescription("A semicolon-separated list of the classpaths to package with the job jars to be sent to" +
+                            " the cluster. These have to be valid URLs.");
 
 
 }

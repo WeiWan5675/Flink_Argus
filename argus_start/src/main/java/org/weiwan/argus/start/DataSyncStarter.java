@@ -5,7 +5,9 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.flink.client.ClientUtils;
 import org.apache.flink.client.program.*;
 import org.apache.flink.configuration.*;
+import org.apache.flink.core.execution.DefaultExecutorServiceLoader;
 import org.apache.flink.runtime.jobgraph.JobGraph;
+import org.apache.flink.runtime.util.bash.FlinkConfigLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.weiwan.argus.common.options.OptionParser;
@@ -110,6 +112,7 @@ public class DataSyncStarter {
                 logger.info("RunMode:" + RunMode.yarnper.toString());
                 startFlag = startFromYarnPerMode(options, coreJarFile, urlList, argsAll);
                 break;
+
             case application:
                 logger.info("RunMode:" + RunMode.application.toString());
                 startFlag = startFromApplicationMode(options, coreJarFile, urlList, argsAll);
@@ -122,8 +125,11 @@ public class DataSyncStarter {
 
     }
 
-    private static boolean startFromApplicationMode(StartOptions options, File coreJarFile, List<URL> urlList, String[] argsAll) {
+    private static boolean startFromApplicationMode(StartOptions options, File coreJarFile, List<URL> urlList, String[] argsAll) throws ProgramInvocationException {
+        PackagedProgram packagedProgram = buildProgram(options, coreJarFile, urlList, argsAll);
+        Configuration configuration = ClusterConfigLoader.loadFlinkConfig(options);
 
+        executeProgram(configuration, packagedProgram);
         return false;
     }
 
@@ -348,6 +354,61 @@ public class DataSyncStarter {
         options.setFlinkHome(flinkHome);
         options.setFlinkLibDir(flinkHome + File.separator + "lib");
         logger.info("FLINK_HOME path is: {}", flinkHome);
+        setDefaultHadoopEnv(options, defaultMap);
+        setDefaultHiveEnv(options, defaultMap);
+        setDefaultYarnEnv(options, defaultMap);
+
+        String hadoopUserName = SystemUtil.getSystemVar("HADOOP_USER_NAME");
+        String defaultHadoopUserName = defaultMap.get("HADOOP_USER_NAME");
+        if (!defaultHadoopUserName.equalsIgnoreCase(hadoopUserName)) {
+            SystemUtil.setSystemVar("HADOOP_USER_NAME", defaultHadoopUserName);
+            hadoopUserName = defaultHadoopUserName;
+        }
+        options.setHadoopUserName(hadoopUserName);
+    }
+
+    private static void setDefaultYarnEnv(StartOptions options, Map<String, String> defaultMap) {
+        String yarnHome = SystemUtil.getSystemVar(ArgusKey.KEY_HIVE_HOME);
+        String defaultYarnHome = defaultMap.get(ArgusKey.KEY_HIVE_HOME);
+        if (StringUtils.isEmpty(defaultYarnHome)) {
+            //配置文件为空
+            options.setYarnConf(yarnHome + File.separator + "conf");
+            logger.debug("get YARN_HOME From EnvironmentVariable: {}", yarnHome);
+        } else {
+            //配置文件不为空
+            yarnHome = defaultYarnHome;
+            if (StringUtils.isEmpty(yarnHome))
+                options.setYarnConf(yarnHome + File.separator + "conf");
+        }
+        if (StringUtils.isNotEmpty(yarnHome)) {
+            options.setYarnHome(yarnHome);
+            logger.info("YARN_HOME path is: {}", yarnHome);
+        } else {
+            logger.debug("YARN_HOME path is null");
+        }
+    }
+
+    private static void setDefaultHiveEnv(StartOptions options, Map<String, String> defaultMap) {
+        String hiveHome = SystemUtil.getSystemVar(ArgusKey.KEY_HIVE_HOME);
+        String defaultHiveHome = defaultMap.get(ArgusKey.KEY_HIVE_HOME);
+        if (StringUtils.isEmpty(defaultHiveHome)) {
+            //配置文件为空
+            options.setHiveConf(hiveHome + File.separator + "conf");
+            logger.debug("get HIVE_HOME From EnvironmentVariable: {}", hiveHome);
+        } else {
+            //配置文件不为空
+            hiveHome = defaultHiveHome;
+            options.setHiveConf(defaultHiveHome + File.separator + "conf");
+        }
+        if (StringUtils.isNotEmpty(hiveHome)) {
+            options.setHiveHome(hiveHome);
+            logger.info("HIVE_HOME path is: {}", hiveHome);
+        } else {
+            logger.debug("HIVE_HOME path is null");
+        }
+    }
+
+    private static void setDefaultHadoopEnv(StartOptions options, Map<String, String> defaultMap) {
         //获得flink环境变量
         String hadoopHome = SystemUtil.getSystemVar(ArgusKey.KEY_HADOOP_HOME);
         String defaultHadoopHome = defaultMap.get(ArgusKey.KEY_HADOOP_HOME);
@@ -360,30 +421,12 @@ public class DataSyncStarter {
             hadoopHome = defaultHadoopHome;
             options.setHadoopConf(defaultHadoopHome + File.separator + "etc/hadoop");
         }
-        options.setHadoopHome(hadoopHome);
-        logger.info("HADOOP_HOME path is: {}", hadoopHome);
-        //获得flink环境变量
-        String hiveHome = SystemUtil.getSystemVar(ArgusKey.KEY_HIVE_HOME);
-        String defaultHiveHome = defaultMap.get(ArgusKey.KEY_HIVE_HOME);
-        if (StringUtils.isEmpty(defaultHiveHome)) {
-            //配置文件为空
-            options.setHiveConf(hiveHome + File.separator + "conf");
-            logger.debug("get HIVE_HOME From EnvironmentVariable: {}", hiveHome);
+        if (StringUtils.isNotEmpty(hadoopHome)) {
+            options.setHadoopHome(hadoopHome);
+            logger.info("HADOOP_HOME path is: {}", hadoopHome);
         } else {
-            //配置文件不为空
-            hiveHome = defaultHiveHome;
-            options.setHiveConf(defaultHiveHome + File.separator + "conf");
+            logger.debug("HADOOP_HOME path is null");
         }
-        logger.info("HIVE_HOME path is: {}", hiveHome);
-
-
-        String hadoopUserName = SystemUtil.getSystemVar("HADOOP_USER_NAME");
-        String defaultHadoopUserName = defaultMap.get("HADOOP_USER_NAME");
-        if (!defaultHadoopUserName.equalsIgnoreCase(hadoopUserName)) {
-            SystemUtil.setSystemVar("HADOOP_USER_NAME", defaultHadoopUserName);
-            hadoopUserName = defaultHadoopUserName;
-        }
-        options.setHadoopUserName(hadoopUserName);
     }
 
     private static String setArgusHomePath(StartOptions options) {
@@ -437,8 +480,25 @@ public class DataSyncStarter {
                 .setArguments(argsAll)
                 .build();
         return PackagedProgramUtils.createJobGraph(program, configuration, options.getParallelism(), false);
-
     }
+
+
+    private static PackagedProgram buildProgram(StartOptions options, File coreJarFile, List<URL> urls, String[] argsAll) throws ProgramInvocationException {
+        Configuration configuration = ClusterConfigLoader.loadFlinkConfig(options);
+        return PackagedProgram.newBuilder()
+                .setJarFile(coreJarFile)
+                .setUserClassPaths(urls)
+                .setEntryPointClassName(ArgusConstans.ARGUS_CORE_RUN_CLASS)
+                .setConfiguration(configuration)
+                .setArguments(argsAll)
+                .build();
+    }
+
+    private static void executeProgram(final Configuration configuration, final PackagedProgram program) throws ProgramInvocationException {
+        ClientUtils.executeProgram(new DefaultExecutorServiceLoader(), configuration, program, false, false);
+    }
+
+
 }
 
 
