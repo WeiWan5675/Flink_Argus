@@ -121,60 +121,54 @@ public class DataSyncStarter {
             case application:
                 logger.info("RunMode:" + RunMode.application.toString());
                 startFlag = startFromApplicationMode(options, coreJarFile, urlList, argsAll);
+                break;
             default:
                 logger.info(String.format("No Match RunMode of %s !", mode));
+                return;
         }
 
         logger.info(startFlag ? "APP RUN SUCCESS!" : "APP RUN FAILED");
-
-
     }
+
+
 
     private static boolean startFromApplicationMode(StartOptions options, File coreJarFile, List<URL> urlList, String[] argsAll) throws ProgramInvocationException {
-        PackagedProgram packagedProgram = buildProgram(options, coreJarFile, urlList, argsAll);
-        Configuration configuration = ClusterConfigLoader.loadFlinkConfig(options);
-        List<String> classpaths = new ArrayList<>();
-        for (URL classpath : urlList) {
-            classpaths.add(classpath.toString());
-        }
-
-        String flinkConfDir = options.getFlinkConf();
-        String yarnConfDir = options.getYarnConf();
-
-        Configuration flinkConfiguration = ClusterConfigLoader.loadFlinkConfig(options);
-        if (org.apache.commons.lang.StringUtils.isNotBlank(flinkConfDir)) {
-            try {
-                FileSystem.initialize(flinkConfiguration);
-
-                YarnConfiguration yarnConf = ClusterConfigLoader.loadYarnConfig(options);
-                YarnClient yarnClient = YarnClient.createYarnClient();
-                yarnClient.init(yarnConf);
-                yarnClient.start();
-                ApplicationId applicationId;
-
-                if (org.apache.commons.lang.StringUtils.isEmpty(options.getAppId())) {
-                    applicationId = ClusterClientFactory.getAppIdFromYarn(yarnClient, options);
-                    if (applicationId == null || org.apache.commons.lang.StringUtils.isEmpty(applicationId.toString())) {
-                        throw new RuntimeException("No flink session found on yarn cluster.");
-                    }
-                } else {
-                    applicationId = ConverterUtils.toApplicationId(options.getAppId());
-                }
-                configuration.set(ArgusConstans.CLASSPATHS, classpaths);
-                configuration.setString(DeploymentOptions.TARGET, RemoteExecutor.NAME);
-                HighAvailabilityMode highAvailabilityMode = HighAvailabilityMode.fromConfig(configuration);
-                if (highAvailabilityMode.equals(HighAvailabilityMode.ZOOKEEPER) && applicationId != null) {
-                    configuration.setString(HighAvailabilityOptions.HA_CLUSTER_ID, applicationId.toString());
-                }
-                executeProgram(configuration, packagedProgram);
-                return false;
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-
-        }
         return false;
     }
+
+    private static boolean startFromYarnPerMode(StartOptions options, File coreJarFile, List<URL> urlList, String[] argsAll) throws Exception {
+
+
+        return true;
+    }
+
+    private static boolean startFromYarnMode(StartOptions options, File coreJarFile, List<URL> urlList, String[]
+            argsAll) throws Exception {
+        ClusterClient clusterClient = ClusterClientFactory.createClusterClient(options);
+        String webInterfaceURL = clusterClient.getWebInterfaceURL();
+        addMonitorToArgs(argsAll, webInterfaceURL);
+        JobGraph jobGraph = buildJobGraph(options, coreJarFile, urlList, argsAll);
+        ClientUtils.submitJob(clusterClient, jobGraph);
+        return true;
+    }
+
+    private static boolean startFromLocalMode(String[] argsAll, StartOptions options) throws Exception {
+        ArgusRun.main(argsAll);
+        return true;
+    }
+
+    private static boolean startFromStandaloneMode(StartOptions options, File
+            coreJarFile, List<URL> urlList, String... argsAll) throws Exception {
+        ClusterClient clusterClient = ClusterClientFactory.createStandaloneClient(options);
+        String webInterfaceURL = clusterClient.getWebInterfaceURL();
+        String[] args = addMonitorToArgs(argsAll, webInterfaceURL);
+        JobGraph jobGraph = buildJobGraph(options, coreJarFile, urlList, args);
+        ClientUtils.submitJob(clusterClient, jobGraph);
+        return true;
+    }
+
+
+
 
     private static List<URL> findLibJar(String... libDirs) throws MalformedURLException {
         List<URL> urls = new ArrayList<>();
@@ -261,58 +255,6 @@ public class DataSyncStarter {
     }
 
 
-    /**
-     * 独占模式,单独一个YarnSession
-     *
-     * @param options
-     * @param coreJarFile
-     * @param urlList
-     * @param argsAll
-     * @return
-     */
-    private static boolean startFromYarnPerMode(StartOptions options, File
-            coreJarFile, List<URL> urlList, String[] argsAll) throws Exception {
-//        String libJar = options.getLibDir();
-//        if (StringUtils.isBlank(libJar)) {
-//            throw new IllegalArgumentException("per-job mode must have flink lib path!");
-//        }
-//        addMonitorToArgs(argsAll, "");
-//        PerJobSubmitter.submit(options, new JobGraph(), coreJarFile, urlList, argsAll);
-        return true;
-    }
-
-/**
- * 1. 判断是否是yarn模式
- * 2. 如果是yarn模式,检查classpath配置
- * 3. 如果是hdfs的classpath,检查hdfsclasspath是否正常
- * 4. 使用hdfsclasspath
- * 5. hdfs classpath hdfs://flink/flink_argus/lib
- */
-
-    /**
-     * 提交到YarnSession中,默认的YarnSession名称为Flink Session Cluster
-     *
-     * @param options
-     * @param coreJarFile
-     * @param urlList
-     * @param argsAll
-     * @return
-     * @throws Exception
-     */
-    private static boolean startFromYarnMode(StartOptions options, File coreJarFile, List<URL> urlList, String[]
-            argsAll) throws Exception {
-        ClusterClient clusterClient = ClusterClientFactory.createClusterClient(options);
-        String webInterfaceURL = clusterClient.getWebInterfaceURL();
-        addMonitorToArgs(argsAll, webInterfaceURL);
-        JobGraph jobGraph = buildJobGraph(options, coreJarFile, urlList, argsAll);
-        ClientUtils.submitJob(clusterClient, jobGraph);
-        return true;
-    }
-
-    private static boolean startFromLocalMode(String[] argsAll, StartOptions options) throws Exception {
-        ArgusRun.main(argsAll);
-        return true;
-    }
 
     private static void setDefaultEnvPath(StartOptions options) {
         String argusHome = options.getArgusHome();
@@ -346,19 +288,37 @@ public class DataSyncStarter {
         String readerPluginDir = defaultMap.getOrDefault(ArgusKey.KEY_ARGUS_PLUGINS_READER_DIR, KEY_READER_PLUGIN_DIR);
         String channelPluginDir = defaultMap.getOrDefault(ArgusKey.KEY_ARGUS_PLUGINS_CHANNEL_DIR, KEY_CHANNEL_PLUGIN_DIR);
         String writerPluginDir = defaultMap.getOrDefault(ArgusKey.KEY_ARGUS_PLUGINS_WRITER_DIR, KEY_WRITER_PLUGIN_DIR);
-        if (StringUtils.isEmpty(options.getReaderPluginDir())) {
-            if (!FileUtil.isAbsolutePath(readerPluginDir)) {
-                readerPluginDir = argusHome + File.separator +
-                        DataSyncStarter.KEY_PLUGINS_DIR + File.separator +
-                        DataSyncStarter.KEY_READER_PLUGIN_DIR;
-            }
-            options.setReaderPluginDir(readerPluginDir);
-        } else {
-            readerPluginDir = options.getReaderPluginDir();
+        setReaderPluginDir(options, argusHome, readerPluginDir);
+        setChannelPluginDir(options, argusHome, channelPluginDir);
+        setWriterPluginDir(options, argusHome, writerPluginDir);
+        setDefaultFlinkEnv(options, defaultMap);
+        setDefaultHadoopEnv(options, defaultMap);
+        setDefaultHiveEnv(options, defaultMap);
+        setDefaultYarnEnv(options, defaultMap);
+        String hadoopUserName = SystemUtil.getSystemVar("HADOOP_USER_NAME");
+        String defaultHadoopUserName = defaultMap.get("HADOOP_USER_NAME");
+        if (!defaultHadoopUserName.equalsIgnoreCase(hadoopUserName)) {
+            SystemUtil.setSystemVar("HADOOP_USER_NAME", defaultHadoopUserName);
+            hadoopUserName = defaultHadoopUserName;
         }
+        options.setHadoopUserName(hadoopUserName);
+    }
 
-        logger.info("argus reader plugins dir is: {}", readerPluginDir);
+    private static void setWriterPluginDir(StartOptions options, String argusHome, String writerPluginDir) {
+        if (StringUtils.isEmpty(options.getWriterPluginDir())) {
+            if (!FileUtil.isAbsolutePath(writerPluginDir)) {
+                writerPluginDir = argusHome + File.separator +
+                        DataSyncStarter.KEY_PLUGINS_DIR + File.separator +
+                        DataSyncStarter.KEY_WRITER_PLUGIN_DIR;
+            }
+            options.setWriterPluginDir(writerPluginDir);
+        } else {
+            writerPluginDir = options.getWriterPluginDir();
+        }
+        logger.info("argus writer plugins dir is: {}", writerPluginDir);
+    }
 
+    private static void setChannelPluginDir(StartOptions options, String argusHome, String channelPluginDir) {
         if (StringUtils.isEmpty(options.getChannelPluginDir())) {
             if (!FileUtil.isAbsolutePath(channelPluginDir)) {
                 channelPluginDir = argusHome + File.separator +
@@ -370,19 +330,23 @@ public class DataSyncStarter {
             channelPluginDir = options.getChannelPluginDir();
         }
         logger.info("argus channel plugins dir is: {}", channelPluginDir);
+    }
 
-        if (StringUtils.isEmpty(options.getWriterPluginDir())) {
-            if (!FileUtil.isAbsolutePath(writerPluginDir)) {
-                writerPluginDir = argusHome + File.separator +
+    private static void setReaderPluginDir(StartOptions options, String argusHome, String readerPluginDir) {
+        if (StringUtils.isEmpty(options.getReaderPluginDir())) {
+            if (!FileUtil.isAbsolutePath(readerPluginDir)) {
+                readerPluginDir = argusHome + File.separator +
                         DataSyncStarter.KEY_PLUGINS_DIR + File.separator +
-                        DataSyncStarter.KEY_WRITER_PLUGIN_DIR;
+                        DataSyncStarter.KEY_READER_PLUGIN_DIR;
             }
-            options.setWriterPluginDir(writerPluginDir);
+            options.setReaderPluginDir(readerPluginDir);
         } else {
-            channelPluginDir = options.getChannelPluginDir();
+            readerPluginDir = options.getReaderPluginDir();
         }
-        logger.info("argus writer plugins dir is: {}", writerPluginDir);
+        logger.info("argus reader plugins dir is: {}", readerPluginDir);
+    }
 
+    private static void setDefaultFlinkEnv(StartOptions options, Map<String, String> defaultMap) {
         //获得flink环境变量
         String flinkHome = SystemUtil.getSystemVar(ArgusKey.KEY_FLINK_HOME);
         String defaultFilnkHome = defaultMap.get(ArgusKey.KEY_FLINK_HOME);
@@ -398,17 +362,6 @@ public class DataSyncStarter {
         options.setFlinkHome(flinkHome);
         options.setFlinkLibDir(flinkHome + File.separator + "lib");
         logger.info("FLINK_HOME path is: {}", flinkHome);
-        setDefaultHadoopEnv(options, defaultMap);
-        setDefaultHiveEnv(options, defaultMap);
-        setDefaultYarnEnv(options, defaultMap);
-
-        String hadoopUserName = SystemUtil.getSystemVar("HADOOP_USER_NAME");
-        String defaultHadoopUserName = defaultMap.get("HADOOP_USER_NAME");
-        if (!defaultHadoopUserName.equalsIgnoreCase(hadoopUserName)) {
-            SystemUtil.setSystemVar("HADOOP_USER_NAME", defaultHadoopUserName);
-            hadoopUserName = defaultHadoopUserName;
-        }
-        options.setHadoopUserName(hadoopUserName);
     }
 
     private static void setDefaultYarnEnv(StartOptions options, Map<String, String> defaultMap) {
@@ -492,15 +445,7 @@ public class DataSyncStarter {
         return argusHome;
     }
 
-    private static boolean startFromStandaloneMode(StartOptions options, File
-            coreJarFile, List<URL> urlList, String... argsAll) throws Exception {
-        ClusterClient clusterClient = ClusterClientFactory.createStandaloneClient(options);
-        String webInterfaceURL = clusterClient.getWebInterfaceURL();
-        String[] args = addMonitorToArgs(argsAll, webInterfaceURL);
-        JobGraph jobGraph = buildJobGraph(options, coreJarFile, urlList, args);
-        ClientUtils.submitJob(clusterClient, jobGraph);
-        return true;
-    }
+
 
     public static String[] addMonitorToArgs(String[] argsAll, String rul) {
         String[] args = new String[argsAll.length + 1];
@@ -549,15 +494,3 @@ public class DataSyncStarter {
 
 }
 
-
-/**
- * -1. 解析参数
- * 0. 初始化 hadoop yarn flink 配置文件夹
- * 1. 判断启动模式 cliMode  CMD CONF 分为cmd模式  和conf配置文件模式
- * 2. 根据启动模式的不同,获取对应的插件/运行类信息
- * 4. 根据job类型 获取不同的任务提交信息
- * 5. 本地提交模式 不需要额外的信息
- * 6. yarn | yarnPer | 需要获得 jar信息远程连接信息 并且打包
- * 6. 提交任务
- * 8. 关闭资源
- */

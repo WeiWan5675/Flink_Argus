@@ -51,7 +51,7 @@
     <!-- 控制日志是否在控制台打印，默认打印 -->
     <property name="IS_OPEN_CONSOLE" value="true"/>
     <!--日志级别-->
-    <property name="LEVEL" value="INFO"/>
+    <property name="LEVEL" value="DEBUG"/>
 
     <!--日志输出格式-->
     <!--控制台-彩色-->
