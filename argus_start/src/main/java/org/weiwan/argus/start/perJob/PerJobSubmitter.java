@@ -74,6 +74,7 @@ public class PerJobSubmitter {
         clusterSpecification.setProgramArgs(remoteArgs);
         clusterSpecification.setCreateProgramDelay(true);
         clusterSpecification.setYarnConfiguration(yarnConfig);
+        clusterSpecification.setJobName(launcherOptions.getJobDescJson());
         PerJobClusterClientBuilder perJobClusterClientBuilder = new PerJobClusterClientBuilder();
         perJobClusterClientBuilder.init(launcherOptions);
 
