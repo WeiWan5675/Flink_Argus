@@ -7,8 +7,14 @@ import org.apache.flink.client.deployment.executors.RemoteExecutor;
 import org.apache.flink.client.program.*;
 import org.apache.flink.configuration.*;
 import org.apache.flink.core.execution.DefaultExecutorServiceLoader;
+import org.apache.flink.core.fs.FileSystem;
 import org.apache.flink.runtime.jobgraph.JobGraph;
+import org.apache.flink.runtime.jobmanager.HighAvailabilityMode;
 import org.apache.flink.runtime.util.bash.FlinkConfigLoader;
+import org.apache.hadoop.yarn.api.records.ApplicationId;
+import org.apache.hadoop.yarn.client.api.YarnClient;
+import org.apache.hadoop.yarn.conf.YarnConfiguration;
+import org.apache.hadoop.yarn.util.ConverterUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.weiwan.argus.common.options.OptionParser;
@@ -133,13 +139,44 @@ public class DataSyncStarter {
         for (URL classpath : urlList) {
             classpaths.add(classpath.toString());
         }
-        configuration.set(ArgusConstans.CLASSPATHS, classpaths);
-        configuration.setString(DeploymentOptions.TARGET, RemoteExecutor.NAME);
 
-        executeProgram(configuration, packagedProgram);
+        String flinkConfDir = options.getFlinkConf();
+        String yarnConfDir = options.getYarnConf();
+
+        Configuration flinkConfiguration = ClusterConfigLoader.loadFlinkConfig(options);
+        if (org.apache.commons.lang.StringUtils.isNotBlank(flinkConfDir)) {
+            try {
+                FileSystem.initialize(flinkConfiguration);
+
+                YarnConfiguration yarnConf = ClusterConfigLoader.loadYarnConfig(options);
+                YarnClient yarnClient = YarnClient.createYarnClient();
+                yarnClient.init(yarnConf);
+                yarnClient.start();
+                ApplicationId applicationId;
+
+                if (org.apache.commons.lang.StringUtils.isEmpty(options.getAppId())) {
+                    applicationId = ClusterClientFactory.getAppIdFromYarn(yarnClient, options);
+                    if (applicationId == null || org.apache.commons.lang.StringUtils.isEmpty(applicationId.toString())) {
+                        throw new RuntimeException("No flink session found on yarn cluster.");
+                    }
+                } else {
+                    applicationId = ConverterUtils.toApplicationId(options.getAppId());
+                }
+                configuration.set(ArgusConstans.CLASSPATHS, classpaths);
+                configuration.setString(DeploymentOptions.TARGET, RemoteExecutor.NAME);
+                HighAvailabilityMode highAvailabilityMode = HighAvailabilityMode.fromConfig(configuration);
+                if (highAvailabilityMode.equals(HighAvailabilityMode.ZOOKEEPER) && applicationId != null) {
+                    configuration.setString(HighAvailabilityOptions.HA_CLUSTER_ID, applicationId.toString());
+                }
+                executeProgram(configuration, packagedProgram);
+                return false;
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+        }
         return false;
     }
-
 
     private static List<URL> findLibJar(String... libDirs) throws MalformedURLException {
         List<URL> urls = new ArrayList<>();
@@ -235,7 +272,8 @@ public class DataSyncStarter {
      * @param argsAll
      * @return
      */
-    private static boolean startFromYarnPerMode(StartOptions options, File coreJarFile, List<URL> urlList, String[] argsAll) throws Exception {
+    private static boolean startFromYarnPerMode(StartOptions options, File
+            coreJarFile, List<URL> urlList, String[] argsAll) throws Exception {
         String libJar = options.getLibDir();
         if (StringUtils.isBlank(libJar)) {
             throw new IllegalArgumentException("per-job mode must have flink lib path!");
@@ -263,7 +301,8 @@ public class DataSyncStarter {
      * @return
      * @throws Exception
      */
-    private static boolean startFromYarnMode(StartOptions options, File coreJarFile, List<URL> urlList, String[] argsAll) throws Exception {
+    private static boolean startFromYarnMode(StartOptions options, File coreJarFile, List<URL> urlList, String[]
+            argsAll) throws Exception {
         ClusterClient clusterClient = ClusterClientFactory.createClusterClient(options);
         String webInterfaceURL = clusterClient.getWebInterfaceURL();
         addMonitorToArgs(argsAll, webInterfaceURL);
@@ -455,7 +494,8 @@ public class DataSyncStarter {
         return argusHome;
     }
 
-    private static boolean startFromStandaloneMode(StartOptions options, File coreJarFile, List<URL> urlList, String... argsAll) throws Exception {
+    private static boolean startFromStandaloneMode(StartOptions options, File
+            coreJarFile, List<URL> urlList, String... argsAll) throws Exception {
         ClusterClient clusterClient = ClusterClientFactory.createStandaloneClient(options);
         String webInterfaceURL = clusterClient.getWebInterfaceURL();
         String[] args = addMonitorToArgs(argsAll, webInterfaceURL);
@@ -476,7 +516,8 @@ public class DataSyncStarter {
     }
 
 
-    private static JobGraph buildJobGraph(StartOptions options, File coreJarFile, List<URL> urls, String[] argsAll) throws Exception {
+    private static JobGraph buildJobGraph(StartOptions options, File coreJarFile, List<URL> urls, String[]
+            argsAll) throws Exception {
         String flinkConf = options.getFlinkConf();
         Configuration configuration = ClusterConfigLoader.loadFlinkConfig(options);
         PackagedProgram program = PackagedProgram.newBuilder()
@@ -490,7 +531,8 @@ public class DataSyncStarter {
     }
 
 
-    private static PackagedProgram buildProgram(StartOptions options, File coreJarFile, List<URL> urls, String[] argsAll) throws ProgramInvocationException {
+    private static PackagedProgram buildProgram(StartOptions options, File coreJarFile, List<URL> urls, String[]
+            argsAll) throws ProgramInvocationException {
         Configuration configuration = ClusterConfigLoader.loadFlinkConfig(options);
         return PackagedProgram.newBuilder()
                 .setJarFile(coreJarFile)
@@ -501,7 +543,8 @@ public class DataSyncStarter {
                 .build();
     }
 
-    private static void executeProgram(final Configuration configuration, final PackagedProgram program) throws ProgramInvocationException {
+    private static void executeProgram(final Configuration configuration, final PackagedProgram program) throws
+            ProgramInvocationException {
         ClientUtils.executeProgram(new DefaultExecutorServiceLoader(), configuration, program, false, false);
     }
 

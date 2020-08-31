@@ -109,7 +109,7 @@ public class ClusterClientFactory {
         return null;
     }
 
-    private static ApplicationId getAppIdFromYarn(YarnClient yarnClient, StartOptions options) throws Exception {
+    public static ApplicationId getAppIdFromYarn(YarnClient yarnClient, StartOptions options) throws Exception {
         Set<String> set = new HashSet<>();
         set.add("Apache Flink");
         EnumSet<YarnApplicationState> enumSet = EnumSet.noneOf(YarnApplicationState.class);
