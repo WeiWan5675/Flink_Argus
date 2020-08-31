@@ -140,20 +140,11 @@ public class FlinkPerJobUtil {
                 break;
             }
         }
-        Configuration configuration = clusterSpecification.getConfiguration();
-
-        List<URL> classpaths = clusterSpecification.getClasspaths();
-        List<String> paths = new ArrayList<>();
-        for (URL classpath : classpaths) {
-            paths.add(new Path(classpath.toURI()).toString());
-        }
-
-        Configuration set = configuration.set(ArgusConstans.CLASSPATHS,paths);
         return PackagedProgram.newBuilder()
                 .setJarFile(clusterSpecification.getJarFile())
                 .setUserClassPaths(clusterSpecification.getClasspaths())
                 .setEntryPointClassName(clusterSpecification.getEntryPointClass())
-                .setConfiguration(set)
+                .setConfiguration(clusterSpecification.getConfiguration())
                 .setSavepointRestoreSettings(clusterSpecification.getSpSetting())
                 .setArguments(args)
                 .build();
