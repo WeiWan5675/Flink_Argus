@@ -10,7 +10,6 @@ import org.apache.flink.core.execution.DefaultExecutorServiceLoader;
 import org.apache.flink.core.fs.FileSystem;
 import org.apache.flink.runtime.jobgraph.JobGraph;
 import org.apache.flink.runtime.jobmanager.HighAvailabilityMode;
-import org.apache.flink.runtime.util.bash.FlinkConfigLoader;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
 import org.apache.hadoop.yarn.client.api.YarnClient;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
@@ -29,7 +28,6 @@ import org.weiwan.argus.core.utils.ClusterConfigLoader;
 import org.weiwan.argus.core.utils.CommonUtil;
 import org.weiwan.argus.start.cluster.ClusterClientFactory;
 import org.weiwan.argus.core.enums.RunMode;
-import org.weiwan.argus.start.perjob.PerJobSubmitter;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -274,12 +272,12 @@ public class DataSyncStarter {
      */
     private static boolean startFromYarnPerMode(StartOptions options, File
             coreJarFile, List<URL> urlList, String[] argsAll) throws Exception {
-        String libJar = options.getLibDir();
-        if (StringUtils.isBlank(libJar)) {
-            throw new IllegalArgumentException("per-job mode must have flink lib path!");
-        }
-        addMonitorToArgs(argsAll, "");
-        PerJobSubmitter.submit(options, new JobGraph(), coreJarFile, urlList, argsAll);
+//        String libJar = options.getLibDir();
+//        if (StringUtils.isBlank(libJar)) {
+//            throw new IllegalArgumentException("per-job mode must have flink lib path!");
+//        }
+//        addMonitorToArgs(argsAll, "");
+//        PerJobSubmitter.submit(options, new JobGraph(), coreJarFile, urlList, argsAll);
         return true;
     }
 
