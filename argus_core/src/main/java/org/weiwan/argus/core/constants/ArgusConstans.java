@@ -53,6 +53,12 @@ public class ArgusConstans {
     public static final String ARGUS_CORE_RUN_CLASS = "org.weiwan.argus.core.ArgusRun";
 
 
+    public static final String FLINK_CHECKPOINT_INTERVAL_KEY = "flink.checkpoint.interval";
+
+    public static final String FLINK_CHECKPOINT_TIMEOUT_KEY = "flink.checkpoint.timeout";
+
+    public static final String YARN_RESOURCE_MANAGER_WEBAPP_ADDRESS_KEY = "yarn.resourcemanager.webapp.address";
+
 
     public static final ConfigOption<String> FLINK_PLUGIN_LOAD_MODE_KEY = ConfigOptions
             .key("pluginLoadMode")

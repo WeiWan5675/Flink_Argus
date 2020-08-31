@@ -3,17 +3,10 @@ package org.weiwan.argus.start;
 import com.alibaba.fastjson.JSONObject;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.flink.client.ClientUtils;
-import org.apache.flink.client.deployment.executors.RemoteExecutor;
 import org.apache.flink.client.program.*;
 import org.apache.flink.configuration.*;
 import org.apache.flink.core.execution.DefaultExecutorServiceLoader;
-import org.apache.flink.core.fs.FileSystem;
 import org.apache.flink.runtime.jobgraph.JobGraph;
-import org.apache.flink.runtime.jobmanager.HighAvailabilityMode;
-import org.apache.hadoop.yarn.api.records.ApplicationId;
-import org.apache.hadoop.yarn.client.api.YarnClient;
-import org.apache.hadoop.yarn.conf.YarnConfiguration;
-import org.apache.hadoop.yarn.util.ConverterUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.weiwan.argus.common.options.OptionParser;
@@ -26,8 +19,8 @@ import org.weiwan.argus.core.constants.ArgusConstans;
 import org.weiwan.argus.core.start.StartOptions;
 import org.weiwan.argus.core.utils.ClusterConfigLoader;
 import org.weiwan.argus.core.utils.CommonUtil;
-import org.weiwan.argus.start.cluster.ClusterClientFactory;
 import org.weiwan.argus.core.enums.RunMode;
+import org.weiwan.argus.start.perJob.PerJobSubmitter;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -131,14 +124,12 @@ public class DataSyncStarter {
     }
 
 
-
     private static boolean startFromApplicationMode(StartOptions options, File coreJarFile, List<URL> urlList, String[] argsAll) throws ProgramInvocationException {
         return false;
     }
 
     private static boolean startFromYarnPerMode(StartOptions options, File coreJarFile, List<URL> urlList, String[] argsAll) throws Exception {
-
-
+        PerJobSubmitter.submit(options, new JobGraph(), urlList, coreJarFile, argsAll);
         return true;
     }
 
@@ -166,8 +157,6 @@ public class DataSyncStarter {
         ClientUtils.submitJob(clusterClient, jobGraph);
         return true;
     }
-
-
 
 
     private static List<URL> findLibJar(String... libDirs) throws MalformedURLException {
@@ -253,7 +242,6 @@ public class DataSyncStarter {
             options.setArgusConf(arugsJobContext);
         }
     }
-
 
 
     private static void setDefaultEnvPath(StartOptions options) {
@@ -444,7 +432,6 @@ public class DataSyncStarter {
         logger.info(String.format("ARGUS_HOME is [%s]", argusHome));
         return argusHome;
     }
-
 
 
     public static String[] addMonitorToArgs(String[] argsAll, String rul) {
