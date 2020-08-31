@@ -353,8 +353,8 @@ public class DataSyncStarter {
     }
 
     private static void setDefaultYarnEnv(StartOptions options, Map<String, String> defaultMap) {
-        String yarnHome = SystemUtil.getSystemVar(ArgusKey.KEY_HIVE_HOME);
-        String defaultYarnHome = defaultMap.get(ArgusKey.KEY_HIVE_HOME);
+        String yarnHome = SystemUtil.getSystemVar(ArgusKey.KEY_YARN_HOME);
+        String defaultYarnHome = defaultMap.get(ArgusKey.KEY_YARN_HOME);
         if (StringUtils.isEmpty(defaultYarnHome)) {
             //配置文件为空
             options.setYarnConf(yarnHome + File.separator + "conf");
@@ -371,6 +371,8 @@ public class DataSyncStarter {
         } else {
             logger.debug("YARN_HOME path is null");
         }
+        //TODO 此处使用Hadoop的配置目录
+        options.setYarnConf(options.getHadoopConf());
     }
 
     private static void setDefaultHiveEnv(StartOptions options, Map<String, String> defaultMap) {

@@ -32,6 +32,7 @@ public class ArgusKey {
     public static final String KEY_ARGUS_LOG_DIR = "ARUGS_LOG_DIR";
     public static final String KEY_HADOOP_HOME = "HADOOP_HOME";
     public static final String KEY_HIVE_HOME = "HIVE_HOME";
+    public static final String KEY_YARN_HOME = "YARN_HOME";
     public static final String KEY_FLINK_HOME = "FLINK_HOME";
     public static final String KEY_ARGUS_HOME = "ARGUS_HOME";
 
