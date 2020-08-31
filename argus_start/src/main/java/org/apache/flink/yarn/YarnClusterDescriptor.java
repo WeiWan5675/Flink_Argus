@@ -108,15 +108,7 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLDecoder;
 import java.nio.charset.Charset;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static org.apache.flink.configuration.ConfigConstants.DEFAULT_FLINK_USR_LIB_DIR;
@@ -526,9 +518,15 @@ public class YarnClusterDescriptor implements ClusterDescriptor<ApplicationId> {
                 });
                 jobGraph.getClasspaths().clear();
                 addShipFiles(shipFiles);
+            }else{
+                //classpath模式加载
+                List<URL> classpaths = jobGraph.getClasspaths();
+
             }
             clusterSpecification.setJobGraph(jobGraph);
         }
+
+
 
 
         //------------------------------------------------------------------------------------------
@@ -718,21 +716,6 @@ public class YarnClusterDescriptor implements ClusterDescriptor<ApplicationId> {
 
         final List<Path> providedLibDirs = getRemoteSharedPaths(configuration);
 
-
-        //-------------------------------------------------------------------------------
-        //-------------------------------------------------------------------------------
-        //-------------------------------------------------------------------------------
-        //-------------------------------------------------------------------------------
-        List<URL> classpaths =
-                clusterSpecification.getClasspaths();
-
-        for (URL classpath : classpaths) {
-            Path path = new Path(classpath.toURI());
-            providedLibDirs.add(path);
-        }
-        //-------------------------------------------------------------------------------
-        //-------------------------------------------------------------------------------
-        //-------------------------------------------------------------------------------
         final YarnApplicationFileUploader fileUploader = YarnApplicationFileUploader.from(
                 fs,
                 fs.getHomeDirectory(),

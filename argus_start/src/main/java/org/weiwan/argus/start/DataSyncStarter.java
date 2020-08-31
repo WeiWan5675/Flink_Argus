@@ -129,6 +129,7 @@ public class DataSyncStarter {
     }
 
     private static boolean startFromYarnPerMode(StartOptions options, File coreJarFile, List<URL> urlList, String[] argsAll) throws Exception {
+
         PerJobSubmitter.submit(options, new JobGraph(), urlList, coreJarFile, argsAll);
         return true;
     }

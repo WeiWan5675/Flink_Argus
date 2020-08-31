@@ -19,6 +19,8 @@ package org.weiwan.argus.start.perJob;
 
 import org.apache.flink.client.deployment.ClusterSpecification;
 import org.apache.flink.client.program.PackagedProgram;
+import org.apache.flink.configuration.Configuration;
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.yarn.client.api.YarnClient;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.slf4j.Logger;
@@ -28,6 +30,9 @@ import org.weiwan.argus.common.utils.ValueUtil;
 import org.weiwan.argus.core.constants.ArgusConstans;
 
 import java.lang.reflect.Field;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Properties;
 
 
@@ -135,12 +140,20 @@ public class FlinkPerJobUtil {
                 break;
             }
         }
+        Configuration configuration = clusterSpecification.getConfiguration();
 
+        List<URL> classpaths = clusterSpecification.getClasspaths();
+        List<String> paths = new ArrayList<>();
+        for (URL classpath : classpaths) {
+            paths.add(new Path(classpath.toURI()).toString());
+        }
+
+        Configuration set = configuration.set(ArgusConstans.CLASSPATHS,paths);
         return PackagedProgram.newBuilder()
                 .setJarFile(clusterSpecification.getJarFile())
                 .setUserClassPaths(clusterSpecification.getClasspaths())
                 .setEntryPointClassName(clusterSpecification.getEntryPointClass())
-                .setConfiguration(clusterSpecification.getConfiguration())
+                .setConfiguration(set)
                 .setSavepointRestoreSettings(clusterSpecification.getSpSetting())
                 .setArguments(args)
                 .build();
