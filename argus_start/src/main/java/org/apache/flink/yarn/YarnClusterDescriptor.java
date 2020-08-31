@@ -27,6 +27,7 @@ import org.apache.flink.client.deployment.ClusterDescriptor;
 import org.apache.flink.client.deployment.ClusterRetrieveException;
 import org.apache.flink.client.deployment.ClusterSpecification;
 import org.apache.flink.client.deployment.application.ApplicationConfiguration;
+import org.apache.flink.client.deployment.executors.RemoteExecutor;
 import org.apache.flink.client.program.ClusterClientProvider;
 import org.apache.flink.client.program.PackagedProgram;
 import org.apache.flink.client.program.PackagedProgramUtils;
@@ -522,12 +523,6 @@ public class YarnClusterDescriptor implements ClusterDescriptor<ApplicationId> {
             PackagedProgram program = buildProgram(url, clusterSpecification);
             clusterSpecification.setProgram(program);
             Configuration configuration = clusterSpecification.getConfiguration();
-            List<URL> urls = clusterSpecification.getClasspaths();
-            List<String> classpaths = new ArrayList<>();
-            for (URL classpath : urls) {
-                classpaths.add(classpath.toString());
-            }
-            WritableConfig set = ((WritableConfig) configuration).set(ArgusConstans.CLASSPATHS, classpaths);
             jobGraph = PackagedProgramUtils.createJobGraph(program, configuration, clusterSpecification.getParallelism(), false);
             //使用的是hadoop config自带的插件加载配置
             String pluginLoadMode = clusterSpecification.getConfiguration().getString(FLINK_PLUGIN_LOAD_MODE_KEY);

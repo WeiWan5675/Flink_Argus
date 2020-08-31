@@ -3,6 +3,7 @@ package org.weiwan.argus.start;
 import com.alibaba.fastjson.JSONObject;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.flink.client.ClientUtils;
+import org.apache.flink.client.deployment.executors.RemoteExecutor;
 import org.apache.flink.client.program.*;
 import org.apache.flink.configuration.*;
 import org.apache.flink.core.execution.DefaultExecutorServiceLoader;
@@ -128,6 +129,12 @@ public class DataSyncStarter {
     private static boolean startFromApplicationMode(StartOptions options, File coreJarFile, List<URL> urlList, String[] argsAll) throws ProgramInvocationException {
         PackagedProgram packagedProgram = buildProgram(options, coreJarFile, urlList, argsAll);
         Configuration configuration = ClusterConfigLoader.loadFlinkConfig(options);
+        List<String> classpaths = new ArrayList<>();
+        for (URL classpath : urlList) {
+            classpaths.add(classpath.toString());
+        }
+        configuration.set(ArgusConstans.CLASSPATHS, classpaths);
+        configuration.setString(DeploymentOptions.TARGET, RemoteExecutor.NAME);
 
         executeProgram(configuration, packagedProgram);
         return false;
