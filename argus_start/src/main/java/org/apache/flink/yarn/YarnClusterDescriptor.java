@@ -542,11 +542,6 @@ public class YarnClusterDescriptor implements ClusterDescriptor<ApplicationId> {
 				});
 				jobGraph.getClasspaths().clear();
 				addShipFiles(tmpShipFIls);
-			}else{
-				List<URL> classpaths = jobGraph.getClasspaths();
-				for (URL urlt : classpaths) {
-					jobGraph.addJar(new org.apache.flink.core.fs.Path(urlt.toURI()));
-				}
 			}
 
 			validClusterSpecification.setJobGraph(jobGraph);
