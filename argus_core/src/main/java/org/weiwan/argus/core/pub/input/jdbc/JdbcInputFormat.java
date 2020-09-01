@@ -5,6 +5,7 @@ import org.apache.flink.configuration.Configuration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.weiwan.argus.common.utils.DateUtils;
+import org.weiwan.argus.common.utils.StringUtil;
 import org.weiwan.argus.core.pub.input.BaseRichInputFormat;
 import org.weiwan.argus.core.pub.output.hdfs.ColumnType;
 import org.weiwan.argus.core.pub.pojo.*;
@@ -247,6 +248,12 @@ public abstract class JdbcInputFormat extends BaseRichInputFormat<DataRecord<Dat
                         dataField.setValue(null);
                         dataField.setFieldType(ColumnType.NULL);
                     } else {
+                        if(object instanceof String){
+                            String s = String.valueOf(object);
+                            if(StringUtil.isNotEmpty(s)){
+                                object = s.replace("\\r", "").replace("\\u0001", "");
+                            }
+                        }
                         dataField.setValue(object);
                         ColumnType columnType = ColumnType.getType(object.getClass().getTypeName());
                         dataField.setFieldType(columnType);
