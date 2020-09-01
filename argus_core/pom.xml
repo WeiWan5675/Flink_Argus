@@ -29,7 +29,10 @@
             <artifactId>flink-streaming-java_${scala.binary.version}</artifactId>
             <scope>provided</scope>
         </dependency>
-
+        <dependency>
+            <groupId>org.apache.flink</groupId>
+            <artifactId>flink-clients_${scala.binary.version}</artifactId>
+        </dependency>
         <dependency>
             <groupId>org.apache.flink</groupId>
             <artifactId>flink-statebackend-rocksdb_${scala.binary.version}</artifactId>
@@ -78,11 +81,10 @@
             <scope>provided</scope>
         </dependency>
 
-
         <dependency>
             <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-yarn-client</artifactId>
-            <scope>compile</scope>
+            <scope>provided</scope>
         </dependency>
 
         <!-- test -->
