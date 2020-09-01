@@ -36,7 +36,6 @@ for jar in $JAR_HOME/*.jar
 do
 CLASS_PATH=$CLASS_PATH:$jar
 done
-echo $CLASS_PATH
 
 for jar in $READER_PLUGINS_DIR/*.jar
 do
