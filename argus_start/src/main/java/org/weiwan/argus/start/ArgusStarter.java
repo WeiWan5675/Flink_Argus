@@ -422,6 +422,7 @@ public class ArgusStarter {
         }
         if (StringUtils.isNotEmpty(hadoopHome)) {
             options.setHadoopHome(hadoopHome);
+            SystemUtil.setSystemVar("hadoop.home.dir", hadoopHome);
             logger.info("HADOOP_HOME path is: {}", hadoopHome);
         } else {
             logger.debug("HADOOP_HOME path is null");
