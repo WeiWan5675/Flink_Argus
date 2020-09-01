@@ -9,6 +9,8 @@ package org.weiwan.argus.core;
  **/
 public class ArgusKey {
 
+    public static final String KEY_TASK_NAME = "flink.task.name";
+
     public static final String KEY_READER_NAME = "reader.name";
     public static final String KEY_READER_TYPE = "reader.type";
     public static final String KEY_READER_CLASS_NAME = "reader.class";

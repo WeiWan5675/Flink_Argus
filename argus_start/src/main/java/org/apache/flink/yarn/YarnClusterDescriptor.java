@@ -18,6 +18,7 @@
 
 package org.apache.flink.yarn;
 
+import com.alibaba.fastjson.JSONObject;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.flink.annotation.VisibleForTesting;
 import org.apache.flink.api.common.cache.DistributedCache;
@@ -89,6 +90,7 @@ import org.apache.hadoop.yarn.util.ConverterUtils;
 import org.apache.hadoop.yarn.util.Records;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.weiwan.argus.core.ArgusKey;
 import org.weiwan.argus.core.constants.ArgusConstans;
 import org.weiwan.argus.start.perJob.FlinkPerJobUtil;
 
@@ -426,8 +428,17 @@ public class YarnClusterDescriptor implements ClusterDescriptor<ApplicationId> {
             JobGraph jobGraph,
             boolean detached) throws ClusterDeploymentException {
         try {
+            String jobName = "flink argus job";
+            String jobDesc = clusterSpecification.getJobDesc();
+            if (jobDesc != null) {
+                JSONObject jsonObject = JSONObject.parseObject(jobDesc);
+                jobName = (String) jsonObject.get(ArgusKey.KEY_TASK_NAME);
+                jobName += ArgusConstans.HENG_GANG + (String) jsonObject.get(ArgusKey.KEY_READER_NAME);
+                jobName += ArgusConstans.HENG_GANG + (String) jsonObject.get(ArgusKey.KEY_CHANNEL_NAME);
+                jobName += ArgusConstans.HENG_GANG + (String) jsonObject.get(ArgusKey.KEY_WRITER_NAME);
+            }
             return deployInternal(
-                    clusterSpecification, clusterSpecification.getJobName(),
+                    clusterSpecification, jobName,
                     getYarnJobClusterEntrypoint(),
                     jobGraph,
                     detached);
@@ -518,15 +529,11 @@ public class YarnClusterDescriptor implements ClusterDescriptor<ApplicationId> {
                 });
                 jobGraph.getClasspaths().clear();
                 addShipFiles(shipFiles);
-            }else{
-                //classpath模式加载
-                List<URL> classpaths = jobGraph.getClasspaths();
+            } else {
 
             }
             clusterSpecification.setJobGraph(jobGraph);
         }
-
-
 
 
         //------------------------------------------------------------------------------------------

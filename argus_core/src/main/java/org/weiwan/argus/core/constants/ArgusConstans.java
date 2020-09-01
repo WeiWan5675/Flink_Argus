@@ -24,7 +24,7 @@ public class ArgusConstans {
     public static final String SINGLE_QUOTE_MARK_SYMBOL = "'";
     public static final String DOUBLE_QUOTE_MARK_SYMBOL = "\"";
     public static final String COMMA_SYMBOL = ",";
-
+    public static final String HENG_GANG = "-";
     public static final String SINGLE_SLASH_SYMBOL = "/";
     public static final String DOUBLE_SLASH_SYMBOL = "//";
 

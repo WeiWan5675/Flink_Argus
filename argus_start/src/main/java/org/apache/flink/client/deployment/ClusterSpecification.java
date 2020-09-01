@@ -49,7 +49,7 @@ public final class ClusterSpecification {
     private File jarFile;
     private boolean createProgramDelay = false;
     private PackagedProgram program;
-    private String jobName;
+    private String jobDesc;
 
     private ClusterSpecification(int masterMemoryMB, int taskManagerMemoryMB, int numberTaskManagers, int slotsPerTaskManager, int parallelism, int priority) {
         this.masterMemoryMB = masterMemoryMB;
@@ -61,12 +61,12 @@ public final class ClusterSpecification {
     }
 
 
-    public String getJobName() {
-        return jobName;
+    public String getJobDesc() {
+        return jobDesc;
     }
 
-    public void setJobName(String jobName) {
-        this.jobName = jobName;
+    public void setJobDesc(String jobDesc) {
+        this.jobDesc = jobDesc;
     }
 
     public PackagedProgram getProgram() {

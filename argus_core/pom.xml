@@ -69,11 +69,6 @@
 
         <dependency>
             <groupId>org.apache.hadoop</groupId>
-            <artifactId>hadoop-yarn-client</artifactId>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-mapreduce-client-core</artifactId>
             <scope>provided</scope>
         </dependency>
@@ -83,6 +78,12 @@
             <scope>provided</scope>
         </dependency>
 
+
+        <dependency>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-yarn-client</artifactId>
+            <scope>compile</scope>
+        </dependency>
 
         <!-- test -->
         <dependency>
