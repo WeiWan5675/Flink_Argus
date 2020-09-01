@@ -20,7 +20,8 @@ import org.weiwan.argus.core.start.StartOptions;
 import org.weiwan.argus.core.utils.ClusterConfigLoader;
 import org.weiwan.argus.core.utils.CommonUtil;
 import org.weiwan.argus.core.enums.RunMode;
-import org.weiwan.argus.start.perJob.PerJobSubmitter;
+import org.weiwan.argus.core.perJob.ClusterClientFactory;
+import org.weiwan.argus.core.perJob.PerJobSubmitter;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -37,12 +38,12 @@ import java.util.Map;
  * @Author: xiaozhennan
  * @Date: 2020/7/14 19:24
  * @Package: PACKAGE_NAME
- * @ClassName: org.weiwan.argus.start.DataSyncStarter
+ * @ClassName: org.weiwan.argus.start.ArgusStarter
  * @Description:
  **/
-public class DataSyncStarter {
+public class ArgusStarter {
 
-    private static final Logger logger = LoggerFactory.getLogger(DataSyncStarter.class);
+    private static final Logger logger = LoggerFactory.getLogger(ArgusStarter.class);
 
     public static final String KEY_PLUGINS_DIR = "plugins";
     public static final String KEY_READER_PLUGIN_DIR = "reader";
@@ -297,8 +298,8 @@ public class DataSyncStarter {
         if (StringUtils.isEmpty(options.getWriterPluginDir())) {
             if (!FileUtil.isAbsolutePath(writerPluginDir)) {
                 writerPluginDir = argusHome + File.separator +
-                        DataSyncStarter.KEY_PLUGINS_DIR + File.separator +
-                        DataSyncStarter.KEY_WRITER_PLUGIN_DIR;
+                        ArgusStarter.KEY_PLUGINS_DIR + File.separator +
+                        ArgusStarter.KEY_WRITER_PLUGIN_DIR;
             }
             options.setWriterPluginDir(writerPluginDir);
         } else {
@@ -311,8 +312,8 @@ public class DataSyncStarter {
         if (StringUtils.isEmpty(options.getChannelPluginDir())) {
             if (!FileUtil.isAbsolutePath(channelPluginDir)) {
                 channelPluginDir = argusHome + File.separator +
-                        DataSyncStarter.KEY_PLUGINS_DIR + File.separator +
-                        DataSyncStarter.KEY_CHANNEL_PLUGIN_DIR;
+                        ArgusStarter.KEY_PLUGINS_DIR + File.separator +
+                        ArgusStarter.KEY_CHANNEL_PLUGIN_DIR;
             }
             options.setChannelPluginDir(channelPluginDir);
         } else {
@@ -325,8 +326,8 @@ public class DataSyncStarter {
         if (StringUtils.isEmpty(options.getReaderPluginDir())) {
             if (!FileUtil.isAbsolutePath(readerPluginDir)) {
                 readerPluginDir = argusHome + File.separator +
-                        DataSyncStarter.KEY_PLUGINS_DIR + File.separator +
-                        DataSyncStarter.KEY_READER_PLUGIN_DIR;
+                        ArgusStarter.KEY_PLUGINS_DIR + File.separator +
+                        ArgusStarter.KEY_READER_PLUGIN_DIR;
             }
             options.setReaderPluginDir(readerPluginDir);
         } else {
@@ -427,7 +428,7 @@ public class DataSyncStarter {
             logger.warn("the ARUGS_HOME environment variable was not found, use the launcher root directory!");
             logger.warn("use the path of the startup class path as ARGUS_HOME");
             //获得当前启动类jar包得实际地址 $ARGUS_`HOME/lib
-            String appPath = CommonUtil.getAppPath(DataSyncStarter.class);
+            String appPath = CommonUtil.getAppPath(ArgusStarter.class);
             File file = new File(appPath);
             argusHome = file.getParent();
         }

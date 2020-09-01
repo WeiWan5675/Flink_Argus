@@ -53,7 +53,7 @@ do
 done
 
 
-CLASS_NAME=org.weiwan.argus.start.DataSyncStarter
+CLASS_NAME=org.weiwan.argus.start.ArgusStarter
 
 echo "Flink Argus starting ..."
 $JAVA_RUN -cp $CLASS_PATH $CLASS_NAME $@

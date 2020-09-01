@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package org.weiwan.argus.start;
+package org.weiwan.argus.core.perJob;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.flink.client.deployment.StandaloneClusterDescriptor;

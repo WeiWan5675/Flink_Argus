@@ -92,7 +92,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.weiwan.argus.core.ArgusKey;
 import org.weiwan.argus.core.constants.ArgusConstans;
-import org.weiwan.argus.start.perJob.FlinkPerJobUtil;
+import org.weiwan.argus.core.utils.FlinkPerJobUtil;
 
 import javax.annotation.Nullable;
 
@@ -107,7 +107,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.URL;
 import java.net.URLDecoder;
 import java.nio.charset.Charset;
 import java.util.*;
@@ -119,8 +118,6 @@ import static org.apache.flink.runtime.entrypoint.component.FileJobGraphRetrieve
 import static org.apache.flink.util.Preconditions.checkArgument;
 import static org.apache.flink.util.Preconditions.checkNotNull;
 import static org.apache.flink.yarn.YarnConfigKeys.LOCAL_RESOURCE_DESCRIPTOR_SEPARATOR;
-import static org.weiwan.argus.start.perJob.FlinkPerJobUtil.buildProgram;
-import static org.weiwan.argus.start.perJob.FlinkPerJobUtil.getUrlFormat;
 
 /**
  * The descriptor with deployment information for deploying a Flink cluster on Yarn.

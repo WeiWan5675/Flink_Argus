@@ -189,7 +189,7 @@ public final class ClusterSpecification {
     }
 
     /**
-     * Builder for the {@link org.apache.flink.client.deployment.ClusterSpecification} instance.
+     * Builder for the {@link ClusterSpecification} instance.
      */
     public static class ClusterSpecificationBuilder {
         private int masterMemoryMB = 768;
@@ -229,8 +229,8 @@ public final class ClusterSpecification {
             return this;
         }
 
-        public org.apache.flink.client.deployment.ClusterSpecification createClusterSpecification() {
-            return new org.apache.flink.client.deployment.ClusterSpecification(
+        public ClusterSpecification createClusterSpecification() {
+            return new ClusterSpecification(
                     masterMemoryMB,
                     taskManagerMemoryMB,
                     numberTaskManagers,

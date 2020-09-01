@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package org.weiwan.argus.start.perJob;
+package org.weiwan.argus.core.perJob;
 
 import org.apache.flink.client.deployment.ClusterSpecification;
 import org.apache.flink.client.program.ClusterClientProvider;
@@ -30,6 +30,7 @@ import org.slf4j.LoggerFactory;
 import org.weiwan.argus.core.constants.ArgusConstans;
 import org.weiwan.argus.core.start.StartOptions;
 import org.weiwan.argus.core.utils.ClusterConfigLoader;
+import org.weiwan.argus.core.utils.FlinkPerJobUtil;
 
 import java.io.File;
 import java.net.URL;
