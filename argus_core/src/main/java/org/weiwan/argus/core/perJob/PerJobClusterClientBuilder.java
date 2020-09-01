@@ -101,7 +101,7 @@ public class PerJobClusterClientBuilder {
                 if (jar.toURI().toURL().toString().contains("flink-dist")) {
                     descriptor.setLocalJarPath(new Path(jar.toURI().toURL().toString()));
                 } else {
-                    shipFiles.add(jar);
+//                    shipFiles.add(jar);
                 }
             }
         }
