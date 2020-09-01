@@ -251,7 +251,7 @@ public abstract class JdbcInputFormat extends BaseRichInputFormat<DataRecord<Dat
                         if(object instanceof String){
                             String s = String.valueOf(object);
                             if(StringUtil.isNotEmpty(s)){
-                                object = s.replace("\\r", "").replace("\\u0001", "");
+                                object = s.replaceAll("[\\t\\n\\r]", "").replace("\\u0001", "");
                             }
                         }
                         dataField.setValue(object);
