@@ -299,10 +299,10 @@ public class ArgusStarter {
             if (!FileUtil.isAbsolutePath(writerPluginDir)) {
                 writerPluginDir = argusHome + File.separator + writerPluginDir;
             }
-            options.setWriterPluginDir(writerPluginDir);
         } else {
             writerPluginDir = options.getWriterPluginDir();
         }
+        options.setWriterPluginDir(writerPluginDir);
         logger.info("argus writer plugins dir is: {}", writerPluginDir);
     }
 
@@ -311,10 +311,11 @@ public class ArgusStarter {
             if (!FileUtil.isAbsolutePath(channelPluginDir)) {
                 channelPluginDir = argusHome + File.separator + channelPluginDir;
             }
-            options.setChannelPluginDir(channelPluginDir);
+
         } else {
             channelPluginDir = options.getChannelPluginDir();
         }
+        options.setChannelPluginDir(channelPluginDir);
         logger.info("argus channel plugins dir is: {}", channelPluginDir);
     }
 
@@ -324,10 +325,10 @@ public class ArgusStarter {
                 readerPluginDir = argusHome + File.separator +
                         readerPluginDir;
             }
-            options.setReaderPluginDir(readerPluginDir);
         } else {
             readerPluginDir = options.getReaderPluginDir();
         }
+        options.setReaderPluginDir(readerPluginDir);
         logger.info("argus reader plugins dir is: {}", readerPluginDir);
     }
 
