@@ -15,7 +15,78 @@
         <module>common_channel</module>
         <module>example_channel</module>
     </modules>
+<dependencies>
+    <dependency>
+        <groupId>org.weiwan.argus</groupId>
+        <artifactId>argus_core</artifactId>
+        <scope>provided</scope>
+    </dependency>
+    <!-- flink-start-->
+    <dependency>
+        <groupId>org.apache.flink</groupId>
+        <artifactId>flink-java</artifactId>
+        <scope>provided</scope>
+    </dependency>
 
+    <dependency>
+        <groupId>org.apache.flink</groupId>
+        <artifactId>flink-streaming-java_${scala.binary.version}</artifactId>
+        <scope>provided</scope>
+    </dependency>
+
+    <dependency>
+        <groupId>org.apache.flink</groupId>
+        <artifactId>flink-statebackend-rocksdb_${scala.binary.version}</artifactId>
+        <scope>provided</scope>
+    </dependency>
+
+    <dependency>
+        <groupId>org.apache.flink</groupId>
+        <artifactId>flink-yarn_2.11</artifactId>
+        <version>${flink.version}</version>
+        <exclusions>
+            <exclusion>
+                <artifactId>flink-shaded-hadoop2</artifactId>
+                <groupId>org.apache.flink</groupId>
+            </exclusion>
+        </exclusions>
+        <scope>provided</scope>
+    </dependency>
+
+    <dependency>
+        <groupId>org.apache.hadoop</groupId>
+        <artifactId>hadoop-hdfs</artifactId>
+        <scope>provided</scope>
+    </dependency>
+
+    <dependency>
+        <groupId>org.apache.hadoop</groupId>
+        <artifactId>hadoop-common</artifactId>
+        <scope>provided</scope>
+    </dependency>
+
+    <dependency>
+        <groupId>org.apache.hadoop</groupId>
+        <artifactId>hadoop-yarn-common</artifactId>
+        <scope>provided</scope>
+    </dependency>
+
+    <dependency>
+        <groupId>org.apache.hadoop</groupId>
+        <artifactId>hadoop-yarn-client</artifactId>
+        <scope>provided</scope>
+    </dependency>
+    <dependency>
+        <groupId>org.apache.hadoop</groupId>
+        <artifactId>hadoop-mapreduce-client-core</artifactId>
+        <scope>provided</scope>
+    </dependency>
+    <dependency>
+        <groupId>org.apache.hadoop</groupId>
+        <artifactId>hadoop-yarn-api</artifactId>
+        <scope>provided</scope>
+    </dependency>
+</dependencies>
     <build>
         <finalName>${project.name}</finalName>
     </build>

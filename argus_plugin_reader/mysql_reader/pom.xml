@@ -17,7 +17,6 @@
             <artifactId>argus_core</artifactId>
         </dependency>
     </dependencies>
-
     <build>
         <finalName>${project.name}</finalName>
     </build>
