@@ -18,10 +18,12 @@
 
 package org.weiwan.argus.core.perJob;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.flink.client.deployment.ClusterSpecification;
 import org.apache.flink.client.program.ClusterClientProvider;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.runtime.jobgraph.JobGraph;
+import org.apache.flink.runtime.jobgraph.SavepointRestoreSettings;
 import org.apache.flink.yarn.YarnClusterDescriptor;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
@@ -62,16 +64,16 @@ public class PerJobSubmitter {
         clusterSpecification.setCreateProgramDelay(true);
         Configuration configuration = ClusterConfigLoader.loadFlinkConfig(launcherOptions);
         YarnConfiguration yarnConfig = ClusterConfigLoader.loadYarnConfig(launcherOptions);
+        configuration.setString("hadoop.home.dir", launcherOptions.getHadoopHome());
 
-        String libDir = launcherOptions.getLibDir();
         clusterSpecification.setConfiguration(configuration);
         clusterSpecification.setClasspaths(urls);
         clusterSpecification.setEntryPointClass(ArgusConstans.ARGUS_CORE_RUN_CLASS);
         clusterSpecification.setJarFile(coreJar);
 
-//        if (StringUtils.isNotEmpty(launcherOptions.getS())) {
-//            clusterSpecification.setSpSetting(SavepointRestoreSettings.forPath(launcherOptions.getS()));
-//        }
+        if (StringUtils.isNotEmpty(launcherOptions.getSavePointPath())) {
+            clusterSpecification.setSpSetting(SavepointRestoreSettings.forPath(launcherOptions.getSavePointPath()));
+        }
         clusterSpecification.setProgramArgs(remoteArgs);
         clusterSpecification.setCreateProgramDelay(true);
         clusterSpecification.setYarnConfiguration(yarnConfig);
