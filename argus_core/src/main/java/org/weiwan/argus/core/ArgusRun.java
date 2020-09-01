@@ -46,6 +46,7 @@ public class ArgusRun {
 //        Map<String, String> jobMap = YamlUtils.loadYamlStr(jobConfContent);
         Map<String, String> jobMap = JSONObject.parseObject(jobConfContent, Map.class);
 
+        setDefaultEnv(options);
         printEnvInfo(optionToMap, jobMap);
         Map<String, Object> tmpObj = new HashMap<>();
         tmpObj.putAll(jobMap);
@@ -93,6 +94,11 @@ public class ArgusRun {
         DataStreamSink writerSink = writer.writer(channelStream);
         JobExecutionResult execute = env.execute(jobConfig.getStringVal(ArgusKey.KEY_TASK_NAME, "ArgusJob"));
 
+    }
+
+    private static void setDefaultEnv(StartOptions options) {
+        System.setProperty("hadoop.home.dir", options.getHadoopHome());
+        System.setProperty("FLINK_HOME", options.getFlinkHome());
     }
 
 
