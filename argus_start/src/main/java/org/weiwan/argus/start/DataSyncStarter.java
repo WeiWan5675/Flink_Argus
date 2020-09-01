@@ -88,7 +88,7 @@ public class DataSyncStarter {
         String readerPluginDir = options.getReaderPluginDir();
         String channelPluginDir = options.getChannelPluginDir();
         String writerPluginDir = options.getWriterPluginDir();
-        List<URL> urlList = findLibJar(libDir, extLibDir, pluginRoot, readerPluginDir, channelPluginDir, writerPluginDir);
+        List<URL> urlList = findLibJar(extLibDir, pluginRoot, readerPluginDir, channelPluginDir, writerPluginDir);
         String coreJarFileName = findCoreJarFile(libDir);
         File coreJarFile = new File(libDir + File.separator + coreJarFileName);
 

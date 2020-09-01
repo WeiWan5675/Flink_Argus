@@ -9,7 +9,6 @@ import org.weiwan.argus.core.pub.input.BaseRichInputFormat;
 import org.weiwan.argus.core.pub.pojo.DataField;
 import org.weiwan.argus.core.pub.pojo.DataRecord;
 import org.weiwan.argus.core.pub.pojo.DataRow;
-import org.weiwan.argus.reader.ExampleInputFormat;
 
 /**
  * @Author: xiaozhennan

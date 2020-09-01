@@ -18,3 +18,4 @@ target
 out
 tmp
 logs
+**/dependency-reduced-pom.xml
