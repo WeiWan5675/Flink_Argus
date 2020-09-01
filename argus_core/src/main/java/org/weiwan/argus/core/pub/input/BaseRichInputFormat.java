@@ -6,6 +6,8 @@ import org.apache.flink.api.common.io.statistics.BaseStatistics;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.core.io.InputSplit;
 import org.apache.flink.core.io.InputSplitAssigner;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.weiwan.argus.core.pub.pojo.JobFormatState;
 import org.weiwan.argus.core.pub.config.ArgusContext;
 import org.weiwan.argus.core.pub.config.JobConfig;
@@ -24,6 +26,8 @@ import java.util.List;
  * @Description:
  **/
 public abstract class BaseRichInputFormat<OT, T extends InputSplit> extends RichInputFormat<OT, T> {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(BaseRichInputFormat.class);
 
 
     protected ArgusContext argusContext;
@@ -107,7 +111,7 @@ public abstract class BaseRichInputFormat<OT, T extends InputSplit> extends Rich
             indexOfSubTask = formatState.getNumOfSubTask();
             //用state的offset恢复
         }
-
+        LOGGER.info("initializeInputFormatSuccessfully");
         //初始化完成,后续调用子类的openInput,打开数据源
         inited = true;
         openInput(split);

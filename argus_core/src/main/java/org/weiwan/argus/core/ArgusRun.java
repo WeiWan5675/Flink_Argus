@@ -1,6 +1,7 @@
 package org.weiwan.argus.core;
 
 import com.alibaba.fastjson.JSONObject;
+import org.apache.commons.lang.StringUtils;
 import org.apache.flink.api.common.JobExecutionResult;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.datastream.DataStreamSink;
@@ -81,9 +82,16 @@ public class ArgusRun {
         ArgusWriter writer = argusPluginManager.loadWriterPlugin(wUrls, writerClassName);
 
         DataStream readerStream = reader.reader();
-        DataStream channelStream = channel.channel(readerStream);
+
+        //如果没有使用channel,不需要设置
+        DataStream channelStream = null;
+        if (StringUtils.isNotBlank(channelClassName)) {
+            channelStream = channel.channel(readerStream);
+        } else {
+            channelStream = readerStream;
+        }
         DataStreamSink writerSink = writer.writer(channelStream);
-        JobExecutionResult execute = env.execute(jobConfig.getStringVal("flink.task.name", "ArgusJob"));
+        JobExecutionResult execute = env.execute(jobConfig.getStringVal(ArgusKey.KEY_TASK_NAME, "ArgusJob"));
 
     }
 

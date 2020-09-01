@@ -297,9 +297,7 @@ public class ArgusStarter {
     private static void setWriterPluginDir(StartOptions options, String argusHome, String writerPluginDir) {
         if (StringUtils.isEmpty(options.getWriterPluginDir())) {
             if (!FileUtil.isAbsolutePath(writerPluginDir)) {
-                writerPluginDir = argusHome + File.separator +
-                        ArgusStarter.KEY_PLUGINS_DIR + File.separator +
-                        ArgusStarter.KEY_WRITER_PLUGIN_DIR;
+                writerPluginDir = argusHome + File.separator + writerPluginDir;
             }
             options.setWriterPluginDir(writerPluginDir);
         } else {
@@ -311,9 +309,7 @@ public class ArgusStarter {
     private static void setChannelPluginDir(StartOptions options, String argusHome, String channelPluginDir) {
         if (StringUtils.isEmpty(options.getChannelPluginDir())) {
             if (!FileUtil.isAbsolutePath(channelPluginDir)) {
-                channelPluginDir = argusHome + File.separator +
-                        ArgusStarter.KEY_PLUGINS_DIR + File.separator +
-                        ArgusStarter.KEY_CHANNEL_PLUGIN_DIR;
+                channelPluginDir = argusHome + File.separator + channelPluginDir;
             }
             options.setChannelPluginDir(channelPluginDir);
         } else {
@@ -326,8 +322,7 @@ public class ArgusStarter {
         if (StringUtils.isEmpty(options.getReaderPluginDir())) {
             if (!FileUtil.isAbsolutePath(readerPluginDir)) {
                 readerPluginDir = argusHome + File.separator +
-                        ArgusStarter.KEY_PLUGINS_DIR + File.separator +
-                        ArgusStarter.KEY_READER_PLUGIN_DIR;
+                        readerPluginDir;
             }
             options.setReaderPluginDir(readerPluginDir);
         } else {

@@ -2,6 +2,8 @@ package org.weiwan.argus.core.pub.input.jdbc;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.flink.configuration.Configuration;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.weiwan.argus.common.utils.DateUtils;
 import org.weiwan.argus.core.pub.input.BaseRichInputFormat;
 import org.weiwan.argus.core.pub.output.hdfs.ColumnType;
@@ -23,6 +25,7 @@ import java.util.Map;
  **/
 public abstract class JdbcInputFormat extends BaseRichInputFormat<DataRecord<DataRow>, JdbcInputSpliter> {
 
+    Logger logger = LoggerFactory.getLogger(JdbcInputFormat.class);
 
     private static final String KEY_READER_TYPE = "reader.type";
     private static final String KEY_READER_NAME = "reader.name";
@@ -91,6 +94,7 @@ public abstract class JdbcInputFormat extends BaseRichInputFormat<DataRecord<Dat
         this.incrField = readerConfig.getStringVal(KEY_READER_INCR_INCRFIELD);
         this.splitField = readerConfig.getStringVal(KEY_READER_SPLIT_FIELD);
         this.lastOffset = readerConfig.getStringVal(KEY_READER_INCR_LASTOFFSET);
+        logger.info("set JDBCReader Related Parameters");
     }
 
 
@@ -122,11 +126,13 @@ public abstract class JdbcInputFormat extends BaseRichInputFormat<DataRecord<Dat
                     .thisSplitNum(split.getSplitNumber()).build();
             sqlGenerator.generatorSql(sqlInfo);
             String sql = sqlGenerator.getSql();
+            logger.info("generated SQL Content: {}", sql);
             String maxSql = sqlGenerator.generatorIncrMaxSql();
+            logger.info("generated MaxSQL Content: {}", maxSql);
             String minSql = sqlGenerator.generatorIncrMinSql();
+            logger.info("generated MinSQL Content: {}", minSql);
             statement = dbConn.prepareStatement(sql, ResultSet.TYPE_FORWARD_ONLY,
                     ResultSet.CONCUR_READ_ONLY);
-            System.out.println("sql: " + sql);
             //获得最大最小 max min
             /**
              * 获取最大最小得offset 如果没有传lastOffset 就使用数据库最大 和最小
@@ -140,29 +146,24 @@ public abstract class JdbcInputFormat extends BaseRichInputFormat<DataRecord<Dat
             ResultSet rsMin = statement.executeQuery(minSql);
             Object minVar = getMaxOrMinValue(rsMin, SqlGenerator.MIN_VALUE);
 
-            if (lastOffset != null) {
-                minVar = lastOffset;
-            }
-
+            this.statement.setFetchSize(batchSize);
+            this.statement.setQueryTimeout(queryTimeout);
             //var object 支持三种类型  1. Long 2. Date 3.Timestamp
-
+            logger.info("maxValue:{}",maxVar);
+            logger.info("minValue:{}",minVar);
             if (isPolling) {
-                this.statement.setFetchSize(batchSize);
-                this.statement.setQueryTimeout(queryTimeout);
                 this.statement.setObject(1, minVar);
                 this.statement.setObject(2, maxVar);
             } else {
                 //获取offset Sql 直接访问数据库获得 根据IncrField 字段
-                this.statement.setFetchSize(batchSize);
-                this.statement.setQueryTimeout(queryTimeout);
                 this.statement.setObject(1, minVar);
                 this.statement.setObject(2, maxVar);
 
             }
 
             if (StringUtils.isNotEmpty(lastOffset)) {
-                //设置进去
-                this.statement.setString(1, lastOffset);
+                this.statement.setObject(1, lastOffset);
+                logger.info("use the lastOffset [{}] provided by user",lastOffset);
             }
             this.resultSet = this.statement.executeQuery();
             tableMetaData = this.resultSet.getMetaData();
