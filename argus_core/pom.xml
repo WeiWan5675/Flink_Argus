@@ -115,6 +115,7 @@
                     <artifactId>snappy-java</artifactId>
                 </exclusion>
             </exclusions>
+            <scope>provided</scope>
         </dependency>
 
         <dependency>
@@ -126,6 +127,7 @@
                     <artifactId>snappy-java</artifactId>
                 </exclusion>
             </exclusions>
+            <scope>provided</scope>
         </dependency>
 
         <dependency>
