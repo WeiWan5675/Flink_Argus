@@ -99,8 +99,8 @@ public class StartOptions implements Serializable {
     @Parameter(names = "-extLibJar" , description = "ext lib jar file")
     private String extLibFile;
 
-    @Parameter(names = "-pluginLoadMode", description = "plugin load mode")
-    private String pluginLoadMode = "classpath";
+    @Parameter(names = "-pluginLoadMode", description = "plugin load mode: classpath or shipfile")
+    private String pluginLoadMode = "shipfile";
 
     @Parameter(names = "-flinkHome", description = "flink home path")
     private String flinkHome;

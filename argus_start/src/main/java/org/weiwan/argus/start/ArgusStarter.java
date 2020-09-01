@@ -83,15 +83,8 @@ public class ArgusStarter {
 
 
         String[] argsAll = OptionParser.optionToArgs(options);
-        String pluginRoot = options.getPluginsDir();
-        String libDir = options.getLibDir();
-        String extLibDir = options.getExtLibDir();
-        String readerPluginDir = options.getReaderPluginDir();
-        String channelPluginDir = options.getChannelPluginDir();
-        String writerPluginDir = options.getWriterPluginDir();
-        List<URL> urlList = findLibJar(extLibDir, pluginRoot, readerPluginDir, channelPluginDir, writerPluginDir);
-        String coreJarFileName = findCoreJarFile(libDir);
-        File coreJarFile = new File(libDir + File.separator + coreJarFileName);
+        List<URL> urlList = findLibJars(options);
+        File coreJarFile = getCoreJarFile(options);
 
         boolean startFlag = false;
         switch (RunMode.valueOf(mode.toLowerCase())) {
@@ -122,6 +115,27 @@ public class ArgusStarter {
         }
 
         logger.info(startFlag ? "APP RUN SUCCESS!" : "APP RUN FAILED");
+    }
+
+    private static File getCoreJarFile(StartOptions options) throws FileNotFoundException {
+        String libDir = options.getLibDir();
+        String coreJarFileName = findCoreJarName(libDir);
+        return new File(libDir + File.separator + coreJarFileName);
+    }
+
+    private static List<URL> findLibJars(StartOptions options) throws MalformedURLException {
+        String pluginRoot = options.getPluginsDir();
+        String extLibDir = options.getExtLibDir();
+        String readerPluginDir = options.getReaderPluginDir();
+        String channelPluginDir = options.getChannelPluginDir();
+        String writerPluginDir = options.getWriterPluginDir();
+        List<URL> urlList;
+        if (ArgusConstans.SHIP_FILE_PLUGIN_LOAD_MODE.equalsIgnoreCase(options.getPluginLoadMode())) {
+            urlList = findLibJar(extLibDir, pluginRoot, readerPluginDir, channelPluginDir, writerPluginDir);
+        } else {
+            urlList = new ArrayList<>();
+        }
+        return urlList;
     }
 
 
@@ -178,7 +192,7 @@ public class ArgusStarter {
         return urls;
     }
 
-    private static String findCoreJarFile(String libDir) throws FileNotFoundException {
+    private static String findCoreJarName(String libDir) throws FileNotFoundException {
         String coreJarFileName = null;
         File libPath = new File(libDir);
         if (libPath.exists() && libPath.isDirectory()) {
