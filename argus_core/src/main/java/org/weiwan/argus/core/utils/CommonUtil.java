@@ -88,7 +88,7 @@ public class CommonUtil {
 
 
     public static String useCommandLogLevel(String logLevel) {
-        LoggerContext loggerContext = (LoggerContext) LoggerFactory.getILoggerFactory();
+        ch.qos.logback.classic.LoggerContext loggerContext = (ch.qos.logback.classic.LoggerContext) LoggerFactory.getILoggerFactory();
         //设置全局日志级别
         ch.qos.logback.classic.Logger _Log = loggerContext.getLogger("root");
         Level level = _Log.getLevel();

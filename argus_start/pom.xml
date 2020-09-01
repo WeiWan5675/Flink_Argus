@@ -152,11 +152,6 @@
             <artifactId>hadoop-yarn-api</artifactId>
             <version>${hadoop.version}</version>
         </dependency>
-<!--        <dependency>-->
-<!--            <groupId>org.apache.avro</groupId>-->
-<!--            <artifactId>avro</artifactId>-->
-<!--            <version>1.8.2</version>-->
-<!--        </dependency>-->
     </dependencies>
 
 
