@@ -52,6 +52,7 @@
                     <groupId>org.apache.flink</groupId>
                 </exclusion>
             </exclusions>
+            <scope>provided</scope>
         </dependency>
 
         <dependency>
