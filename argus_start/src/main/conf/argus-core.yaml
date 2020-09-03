@@ -16,9 +16,9 @@ ARGUS_PLUGINS_WRITER_DIR: plugins/writer
 ARGUS_LIB_DIR: lib
 ARGUS_EXT_LIB_DIR: extlib
 ARGUS_LOG_DIR: logs
-HADOOP_HOME: /opt/cloudera/parcels/CDH/lib/hadoop
-YARN_HOME: /opt/cloudera/parcels/CDH/lib/hadoop-yarn
-HIVE_HOME: /opt/cloudera/parcels/CDH/lib/hive
+HADOOP_HOME:
+YARN_HOME:
+HIVE_HOME:
 FLINK_HOME:
 HBASE_HOME:
 HADOOP_USER_NAME: hdfs

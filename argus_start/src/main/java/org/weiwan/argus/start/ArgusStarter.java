@@ -412,12 +412,16 @@ public class ArgusStarter {
         String defaultHadoopHome = defaultMap.get(ArgusKey.KEY_HADOOP_HOME);
         if (StringUtils.isEmpty(defaultHadoopHome)) {
             //配置文件为空
-            options.setHadoopConf(hadoopHome + File.separator + "conf");
+            if(StringUtils.isEmpty(hadoopHome)){
+                logger.error("hadoop home is empty, please check your env!");
+                throw new RuntimeException("HADOOP HOME was not found, please check environment variables or configuration files");
+            }
+            options.setHadoopConf(hadoopHome + File.separator + "etc" + File.separator + "hadoop");
             logger.debug("get HADOOP_HOME From EnvironmentVariable: {}", hadoopHome);
         } else {
             //配置文件不为空
             hadoopHome = defaultHadoopHome;
-            options.setHadoopConf(defaultHadoopHome + File.separator + "etc/hadoop");
+            options.setHadoopConf(hadoopHome + File.separator + "etc/hadoop");
         }
         if (StringUtils.isNotEmpty(hadoopHome)) {
             options.setHadoopHome(hadoopHome);
