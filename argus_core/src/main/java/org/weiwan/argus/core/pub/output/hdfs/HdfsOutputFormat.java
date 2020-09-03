@@ -251,19 +251,18 @@ public class HdfsOutputFormat<T extends DataRecord> extends BaseRichOutputFormat
                 //不管任务是否正常完成,删除临时目录
                 HdfsUtil.deleteFile(new Path(tmpPath), fileSystem, true);
                 Path _action = new Path(actionPath);
-                if(fileSystem.exists(_action) && fileSystem.listStatus(_action).length == 0){
+                if (fileSystem.exists(_action) && fileSystem.listStatus(_action).length == 0) {
                     //可以删除了
                     HdfsUtil.deleteFile(new Path(actionPath), fileSystem, true);
                 }
             } catch (IllegalArgumentException e) {
                 e.printStackTrace();
-            } finally {
             }
         }
     }
 
     private void moveDataToActionDir() throws IOException {
-        if(!fileSystem.exists(new Path(actionPath))){
+        if (!fileSystem.exists(new Path(actionPath))) {
             try {
                 fileSystem.mkdirs(new Path(actionPath));
             } catch (IOException e) {
@@ -282,31 +281,37 @@ public class HdfsOutputFormat<T extends DataRecord> extends BaseRichOutputFormat
         }
     }
 
-    private void moveDataToTargetDir() throws IOException {
-        //临时文件修改为实际complete文件
-        if (actionFileBlocks.size() != 0 && completeFileBlocks.size() == actionFileBlocks.size()) {
-            for (int i = 0; i < actionFileBlocks.size(); i++) {
-                Path src = new Path(actionFileBlocks.get(i));
-                Path dsc = new Path(completeFileBlocks.get(i));
-                HdfsUtil.moveBlockToTarget(src, dsc, fileSystem, true);
-            }
-        }
+    private void moveDataToTargetDir() {
+        try {
+            //临时文件修改为实际complete文件
+            if (actionFileBlocks.size() != 0 && completeFileBlocks.size() == actionFileBlocks.size()) {
+                for (int i = 0; i < actionFileBlocks.size(); i++) {
+                    Path src = new Path(actionFileBlocks.get(i));
+                    Path dsc = new Path(completeFileBlocks.get(i));
 
+                    HdfsUtil.moveBlockToTarget(src, dsc, fileSystem, true);
 
-        Path actionDir = new Path(actionPath);
-        final int maxRetryTime = 100;
-        int i = 0;
-        //等待所有子任务完成
-        for (; i < maxRetryTime; ++i) {
-            try {
-                FileStatus[] finisheds = fileSystem.listStatus(actionDir);
-                if (fileSystem.exists(actionDir) && finisheds.length == 0) {
-                    break;
                 }
-            } catch (IOException e) {
-                e.printStackTrace();
             }
-            SystemUtil.sleep(3000);
+
+
+            Path actionDir = new Path(actionPath);
+            final int maxRetryTime = 100;
+            int i = 0;
+            //等待所有子任务完成
+            for (; i < maxRetryTime; ++i) {
+                try {
+                    FileStatus[] finisheds = fileSystem.listStatus(actionDir);
+                    if (fileSystem.exists(actionDir) && finisheds.length == 0) {
+                        break;
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                SystemUtil.sleep(3000);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
