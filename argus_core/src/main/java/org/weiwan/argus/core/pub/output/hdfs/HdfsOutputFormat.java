@@ -3,6 +3,7 @@ package org.weiwan.argus.core.pub.output.hdfs;
 import org.apache.commons.lang3.CharEncoding;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.flink.configuration.Configuration;
+import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.weiwan.argus.common.utils.SystemUtil;
@@ -232,8 +233,8 @@ public class HdfsOutputFormat<T extends DataRecord> extends BaseRichOutputFormat
         outPuter.close();
         //删除临时文件
         try {
-            waitAllTaskComplete();
             moveDataToTargetDir();
+            waitAllTaskComplete();
         } catch (IOException e) {
             e.printStackTrace();
             throw e;
@@ -255,13 +256,14 @@ public class HdfsOutputFormat<T extends DataRecord> extends BaseRichOutputFormat
     }
 
     private void waitAllTaskComplete() throws IOException {
-        Path finishedDir = new Path(tmpPath);
+        Path finishedDir = new Path(targetPath);
         final int maxRetryTime = 100;
         int i = 0;
         //等待所有子任务完成
         for (; i < maxRetryTime; ++i) {
             try {
-                if (fileSystem.exists(finishedDir) && fileSystem.listStatus(finishedDir).length == numTasks) {
+                FileStatus[] finisheds = fileSystem.listStatus(finishedDir);
+                if (fileSystem.exists(finishedDir) && finisheds.length == numTasks) {
                     break;
                 }
             } catch (IOException e) {

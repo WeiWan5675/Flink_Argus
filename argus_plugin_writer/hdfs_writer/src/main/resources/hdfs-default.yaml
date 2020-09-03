@@ -1,3 +1,18 @@
+
+ARGUS_PLUGINS_DIR: plugins
+ARGUS_PLUGINS_READER_DIR: plugins/reader
+ARGUS_PLUGINS_CHANNEL_DIR: plugins/channel
+ARGUS_PLUGINS_WRITER_DIR: plugins/writer
+ARGUS_LIB_DIR: lib
+ARGUS_EXT_LIB_DIR: extlib
+ARGUS_LOG_DIR: logs
+HADOOP_HOME:
+YARN_HOME:
+HIVE_HOME:
+FLINK_HOME:
+HBASE_HOME:
+HADOOP_USER_NAME: easylife
+
 flink:
   task:
     name: flinkApp
@@ -36,9 +51,9 @@ reader:
   class: org.weiwan.argus.reader.mysql.MysqlReader
   parallelism: 1
   jdbc:
-    url: jdbc:mysql://10.2.39.129:3306/easylife?useUnicode=true&characterEncoding=utf8&autoReconnect=true
-    username: root
-    password: root123HOPSON
+    url: jdbc:mysql://rm-2zeh739lme9f9hr08eo.mysql.rds.aliyuncs.com:3306/easylife?useUnicode=true&characterEncoding=utf8&autoReconnect=true
+    username: easylife_test
+    password: EasyLife123
     schema: easylife
     drive: com.mysql.jdbc.Driver
   tableName: easylife_order
@@ -46,12 +61,12 @@ reader:
   queryTimeout: 60
   splitField: id #只支持数字类型 通过 sql mod N = 0 N = 1 N = 2 N = 3
   sql:
-    filter: id > 100 #a=3,b=5这样
+    filter: #a=3,b=5这样
     columns:
     customSql: #如果指定了自定义SQL 那么filter columns 都不会生效 包括increment配置 适用拉取特殊数据时使用
   increment:
     incrField: update_time_dw #如果不指定,默认 select ${columns} from ${table} where 1 = 1 and ${filter} and [splitField mod N = I]
-    lastOffset: "2020-08-06 00:00:00" #如果指定了该字段,会直接使用,如果不指定,默认是全量拉取 时间类型得  默认值为 1970-01-01 08:00:00  数值型 默认 -1
+    lastOffset: "2020-09-01 00:00:00" #如果指定了该字段,会直接使用,如果不指定,默认是全量拉取 时间类型得  默认值为 1970-01-01 08:00:00  数值型 默认 -1
     enablePolling: false #是否轮询 如果开启轮询 必须要指定increment的属性
     pollingInterval: #轮询间隔
 
@@ -62,7 +77,7 @@ writer:
   type: batch # stream
   name: hdfswriter
   class: org.weiwan.argus.writer.hdfs.HdfsWriter
-  parallelism: 3
+  parallelism: 2
   batchWriteMode: false #写出模式,是批量写出 还是逐条写出
   batchWriteSize: 10000 #批量写出的大小
   output:
@@ -74,7 +89,7 @@ writer:
     charSetName: UTF-8
     matchMode: Alignment # Alignment 字段位置映射 | Mapping 字段名称匹配
     writeMode: overwrite #overwrite append
-    compressType: GZIP
+    compressType: none
     fileType: Text
 
 
