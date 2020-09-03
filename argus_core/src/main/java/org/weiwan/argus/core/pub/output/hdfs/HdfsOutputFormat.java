@@ -6,6 +6,8 @@ import org.apache.flink.configuration.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.weiwan.argus.common.utils.SystemUtil;
 import org.weiwan.argus.core.pub.config.ArgusContext;
 import org.weiwan.argus.core.pub.enums.CompressType;
@@ -33,6 +35,8 @@ import java.util.List;
  * @Description: 提供HDFS数据写出的相关能力, 数据写出到HDFS
  **/
 public class HdfsOutputFormat<T extends DataRecord> extends BaseRichOutputFormat<T> {
+
+    private static final Logger logger = LoggerFactory.getLogger(HdfsOutputFormat.class);
 
     protected String fileName;
     protected String targetPath;
@@ -240,9 +244,16 @@ public class HdfsOutputFormat<T extends DataRecord> extends BaseRichOutputFormat
         outPuter.close();
         //删除临时文件
         try {
+            //移动文件到actionDir
             moveDataToActionDir();
+            //等待所有任务完成
             waitAllTaskComplete();
+            //移动文件到目标文件夹
             moveDataToTargetDir();
+            //等待所有节点移动完成
+            waitMoveDataComplete();
+            //清理工作空间
+            cleanUpTheWorkspace();
         } catch (IOException e) {
             e.printStackTrace();
             throw e;
@@ -261,10 +272,62 @@ public class HdfsOutputFormat<T extends DataRecord> extends BaseRichOutputFormat
         }
     }
 
+    private void cleanUpTheWorkspace() {
+        logger.info("start clean up the work space");
+        Path actionDir = new Path(actionPath);
+        Path tmpDir = new Path(tmpPath);
+
+        try {
+            if (fileSystem.exists(actionDir)) {
+                logger.info("delete action dir:{}", actionDir.toString());
+                HdfsUtil.deleteFile(actionDir, fileSystem, true);
+            }
+
+            if (fileSystem.exists(tmpDir)) {
+                logger.info("delete tmp dir:{}", tmpDir.toString());
+                HdfsUtil.deleteFile(tmpDir, fileSystem, true);
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void waitMoveDataComplete() throws IOException {
+        logger.info("wait move data to target dir");
+        Path actionDir = new Path(actionPath);
+        while (true) {
+            try {
+                if (fileSystem.exists(actionDir)) {
+                    FileStatus[] fileStatuses = fileSystem.listStatus(actionDir);
+                    if (fileStatuses.length == 0) {
+                        //都已经移动完成,跳出等待
+                        logger.info("move operating finished");
+                        break;
+                    } else {
+                        //还未完成,等待一会
+                        logger.info("move operating not finished yet wait {} second", 3);
+                        SystemUtil.sleep(3000);
+                        continue;
+                    }
+                } else {
+                    //action文件夹已经不存在,跳出等待
+                    logger.info("action folder has been deleted by other nodes");
+                    break;
+                }
+            } catch (IOException e) {
+                logger.warn("Wait for the move to complete and delete the folder to be completed by other nodes for subsequent processing");
+                break;
+            }
+        }
+    }
+
     private void moveDataToActionDir() throws IOException {
+        logger.info("start moving data to .action path");
         if (!fileSystem.exists(new Path(actionPath))) {
             try {
                 fileSystem.mkdirs(new Path(actionPath));
+                logger.info(".action does not exist ,create .action");
             } catch (IOException e) {
                 e.printStackTrace();
             } catch (IllegalArgumentException e) {
@@ -276,73 +339,53 @@ public class HdfsOutputFormat<T extends DataRecord> extends BaseRichOutputFormat
             for (int i = 0; i < waitFinishdFileBlocks.size(); i++) {
                 Path src = new Path(waitFinishdFileBlocks.get(i));
                 Path actionDsc = new Path(actionFileBlocks.get(i));
+                logger.info("移动文件 scr:{} to dsc: {}", src.toString(), actionDsc.toString());
                 HdfsUtil.moveBlockToTarget(src, actionDsc, fileSystem, true);
             }
         }
     }
 
-    private void moveDataToTargetDir() {
-        try {
-            //临时文件修改为实际complete文件
-            if (actionFileBlocks.size() != 0 && completeFileBlocks.size() == actionFileBlocks.size()) {
-                for (int i = 0; i < actionFileBlocks.size(); i++) {
-                    Path src = new Path(actionFileBlocks.get(i));
-                    Path dsc = new Path(completeFileBlocks.get(i));
-
-                    HdfsUtil.moveBlockToTarget(src, dsc, fileSystem, true);
-
-                }
+    private void moveDataToTargetDir() throws IOException {
+        logger.info("move data to target dir, target dir is {}", targetPath);
+        for (int i = 0; i < actionFileBlocks.size(); i++) {
+            Path src = new Path(actionFileBlocks.get(i));
+            Path dsc = new Path(completeFileBlocks.get(i));
+            if (fileSystem.exists(src)) {
+                //存在,需要移动
+                logger.info("move block src:{} To dsc:{}", src.toString(), dsc.toString());
+                HdfsUtil.moveBlockToTarget(src, dsc, fileSystem, true);
             }
-
-
-            Path actionDir = new Path(actionPath);
-            final int maxRetryTime = 100;
-            int i = 0;
-            //等待所有子任务完成
-            for (; i < maxRetryTime; ++i) {
-                try {
-                    FileStatus[] finisheds = fileSystem.listStatus(actionDir);
-                    if (fileSystem.exists(actionDir) && finisheds.length == 0) {
-                        break;
-                    }
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-                SystemUtil.sleep(3000);
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
         }
     }
 
     private void waitAllTaskComplete() throws IOException {
         Path actionDir = new Path(actionPath);
-        final int maxRetryTime = 100;
-        int i = 0;
-        //等待所有子任务完成
-        for (; i < maxRetryTime; ++i) {
-            try {
-                if (fileSystem.exists(actionDir)) {
-                    FileStatus[] finisheds = new FileStatus[0];
-                    try {
-                        finisheds = fileSystem.listStatus(actionDir);
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                    if (finisheds.length == numTasks) {
-                        break;
-                    }
+        logger.info("wait all task complete");
+        //写文件等待次数
+        int maxWaitRoundNum = 100;
+        //写文件等待时间间隔
+        long roundWaitTime = 3000L;
+
+        long maxWaitTime = maxWaitRoundNum * roundWaitTime;
+        while (maxWaitRoundNum != 0) {
+            if (fileSystem.exists(actionDir)) {
+                FileStatus[] fileStatuses = fileSystem.listStatus(actionDir);
+                if (fileStatuses.length == numTasks) {
+                    //所有的都到位了
+                    logger.info("ALL task complete! actionFileSize:{}", fileStatuses.length);
+                    break;
+                } else {
+                    logger.info("wait task completed, waiting {} second!", maxWaitTime - (maxWaitRoundNum * roundWaitTime));
+                    SystemUtil.sleep(roundWaitTime);
                 }
-            } catch (IOException e) {
-                e.printStackTrace();
             }
-            SystemUtil.sleep(3000);
+            maxWaitRoundNum--;
         }
 
-        //如果等待所有文件写出完成失败,直接任务失败,抛出异常
-        if (i == maxRetryTime) {
-            throw new RuntimeException("timeout when gathering finish tags for each subtasks");
+        if (maxWaitRoundNum == 0) {
+            throw new RuntimeException("timeout for write block");
         }
+
     }
 
 
