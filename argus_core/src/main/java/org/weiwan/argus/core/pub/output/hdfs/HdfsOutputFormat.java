@@ -47,6 +47,7 @@ public class HdfsOutputFormat<T extends DataRecord> extends BaseRichOutputFormat
 
     protected String tmpPath;
     protected String tmpFileName;
+    protected String actionPath;
     protected String tmpFileSuffix = "tmp";
 
     protected String dfsDefault;
@@ -78,6 +79,7 @@ public class HdfsOutputFormat<T extends DataRecord> extends BaseRichOutputFormat
     private MatchMode matchMode;
     private List<String> completeFileBlocks = new ArrayList<>();
     private List<String> waitFinishdFileBlocks = new ArrayList<>();
+    private List<String> actionFileBlocks = new ArrayList<>();
 
 
     @Override
@@ -144,14 +146,19 @@ public class HdfsOutputFormat<T extends DataRecord> extends BaseRichOutputFormat
         }
         //临时目录
         this.tmpPath = targetPath + File.separator + ".temporary";
+        this.actionPath = targetPath + File.separator + ".action";
         this.tmpFileName = "." + fileName + "." + tmpFileSuffix;
         if (isRestore()) {
             this.tmpFileName = "." + fileName + "." + tmpFileSuffix;
         }
         this.currentFileBlock = tmpPath + File.separator + tmpFileName;
-        this.nextFileBlockIndex = currentFileBlockIndex++;
+        this.nextFileBlockIndex = currentFileBlockIndex + 1;
+        //添加一个当前完成的completeFile path
         completeFileBlocks.add(targetPath + File.separator + fileName);
+        //添加等待完成的,正在写入的文件路径
         waitFinishdFileBlocks.add(currentFileBlock);
+        //添加一个完成后移动到指定目录的文件路径
+        actionFileBlocks.add(actionPath + File.separator + fileName);
         return currentFileBlock;
     }
 
@@ -233,38 +240,93 @@ public class HdfsOutputFormat<T extends DataRecord> extends BaseRichOutputFormat
         outPuter.close();
         //删除临时文件
         try {
-            moveDataToTargetDir();
+            moveDataToActionDir();
             waitAllTaskComplete();
+            moveDataToTargetDir();
         } catch (IOException e) {
             e.printStackTrace();
             throw e;
         } finally {
-            //不管任务是否正常完成,删除临时目录
-            HdfsUtil.deleteFile(new Path(tmpPath), fileSystem, true);
+            try {
+                //不管任务是否正常完成,删除临时目录
+                HdfsUtil.deleteFile(new Path(tmpPath), fileSystem, true);
+                Path _action = new Path(actionPath);
+                if(fileSystem.exists(_action) && fileSystem.listStatus(_action).length == 0){
+                    //可以删除了
+                    HdfsUtil.deleteFile(new Path(actionPath), fileSystem, true);
+                }
+            } catch (IllegalArgumentException e) {
+                e.printStackTrace();
+            } finally {
+            }
+        }
+    }
+
+    private void moveDataToActionDir() throws IOException {
+        if(!fileSystem.exists(new Path(actionPath))){
+            try {
+                fileSystem.mkdirs(new Path(actionPath));
+            } catch (IOException e) {
+                e.printStackTrace();
+            } catch (IllegalArgumentException e) {
+                e.printStackTrace();
+            }
+        }
+        //临时文件修改为实际complete文件
+        if (waitFinishdFileBlocks.size() != 0 && completeFileBlocks.size() == waitFinishdFileBlocks.size()) {
+            for (int i = 0; i < waitFinishdFileBlocks.size(); i++) {
+                Path src = new Path(waitFinishdFileBlocks.get(i));
+                Path actionDsc = new Path(actionFileBlocks.get(i));
+                HdfsUtil.moveBlockToTarget(src, actionDsc, fileSystem, true);
+            }
         }
     }
 
     private void moveDataToTargetDir() throws IOException {
         //临时文件修改为实际complete文件
-        if (waitFinishdFileBlocks.size() != 0 && completeFileBlocks.size() == waitFinishdFileBlocks.size()) {
-            for (int i = 0; i < waitFinishdFileBlocks.size(); i++) {
-                Path src = new Path(waitFinishdFileBlocks.get(i));
+        if (actionFileBlocks.size() != 0 && completeFileBlocks.size() == actionFileBlocks.size()) {
+            for (int i = 0; i < actionFileBlocks.size(); i++) {
+                Path src = new Path(actionFileBlocks.get(i));
                 Path dsc = new Path(completeFileBlocks.get(i));
                 HdfsUtil.moveBlockToTarget(src, dsc, fileSystem, true);
             }
         }
-    }
 
-    private void waitAllTaskComplete() throws IOException {
-        Path finishedDir = new Path(targetPath);
+
+        Path actionDir = new Path(actionPath);
         final int maxRetryTime = 100;
         int i = 0;
         //等待所有子任务完成
         for (; i < maxRetryTime; ++i) {
             try {
-                FileStatus[] finisheds = fileSystem.listStatus(finishedDir);
-                if (fileSystem.exists(finishedDir) && finisheds.length == numTasks) {
+                FileStatus[] finisheds = fileSystem.listStatus(actionDir);
+                if (fileSystem.exists(actionDir) && finisheds.length == 0) {
                     break;
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            SystemUtil.sleep(3000);
+        }
+    }
+
+    private void waitAllTaskComplete() throws IOException {
+        Path actionDir = new Path(actionPath);
+        final int maxRetryTime = 100;
+        int i = 0;
+        //等待所有子任务完成
+        for (; i < maxRetryTime; ++i) {
+            try {
+                if (fileSystem.exists(actionDir)) {
+                    FileStatus[] finisheds = new FileStatus[0];
+                    try {
+                        finisheds = fileSystem.listStatus(actionDir);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    if (finisheds.length == numTasks) {
+                        break;
+                    }
                 }
             } catch (IOException e) {
                 e.printStackTrace();
