@@ -19,13 +19,13 @@ import java.util.Map;
  **/
 public interface FileOutputer<T extends DataRow> {
 
-    public void init(List<DataField> fields) throws IOException;
+    void init(List<DataField> fields) throws IOException;
 
-    public boolean output(DataRecord<T> data) throws Exception;
+    void output(DataRecord<T> data) throws Exception;
 
-    public boolean batchOutput(List<DataRecord<T>> dataRecords) throws Exception;
+    void batchOutput(List<DataRecord<T>> dataRecords) throws Exception;
 
-    public void close();
+    void close() throws IOException;
 
 
 }

@@ -72,7 +72,7 @@ public class TextFileOutputer extends BaseFileOutputer<DataRow> {
     }
 
     @Override
-    public boolean out(Map<String, DataField> data) throws Exception {
+    public void out(Map<String, DataField> data) throws Exception {
         StringBuffer sb = new StringBuffer();
         for (String key : columnTypes.keySet()) {
             DataField dataField = data.get(key);
@@ -159,16 +159,14 @@ public class TextFileOutputer extends BaseFileOutputer<DataRow> {
             stream.flush();
         }
         waitBatchSize++;
-        return true;
     }
 
 
     @Override
-    public boolean batchOutput(List<DataRecord<DataRow>> dataRecords) {
+    public void batchOutput(List<DataRecord<DataRow>> dataRecords) {
         for (DataRecord<DataRow> dataRecord : dataRecords) {
 
         }
-        return false;
     }
 
 

@@ -31,12 +31,7 @@ import java.lang.reflect.Field;
 import java.util.Properties;
 
 
-/**
- * Date: 2019/09/11
- * Company: www.dtstack.com
- *
- * @author tudou
- */
+
 public class FlinkPerJobUtil {
     private static final Logger LOG = LoggerFactory.getLogger(FlinkPerJobUtil.class);
     /**

@@ -2,8 +2,6 @@ package org.weiwan.argus.core.utils;
 
 import org.apache.commons.lang3.StringUtils;
 
-import java.sql.DriverManager;
-
 /**
  * @Author: xiaozhennan
  * @Date: 2020/8/3 14:18
@@ -34,7 +32,7 @@ public class JdbcFactory {
 
         switch (drive) {
             case JDBC_HIVE_DRIVE:
-                jdbcHolder = new HiveJbdcHolder(jdbcInfo);
+                jdbcHolder = new HiveJDBCHolder(jdbcInfo);
                 break;
             case JDBC_MYSQL_DRIVE:
                 jdbcHolder = new MysqlJdbcHolder(jdbcInfo);

@@ -22,6 +22,7 @@ import org.weiwan.argus.core.utils.CommonUtil;
 import org.weiwan.argus.core.enums.RunMode;
 import org.weiwan.argus.core.perJob.ClusterClientFactory;
 import org.weiwan.argus.core.perJob.PerJobSubmitter;
+import org.weiwan.argus.core.utils.HadoopUtil;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -32,6 +33,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 
 /**
@@ -65,13 +67,16 @@ public class ArgusStarter {
         readDefaultJobConf(options);
         //设置默认路径
         setDefaultEnvPath(options);
+
         //读取job配置文件
         readArgusJobConf(options);
         //使用用户配置文件覆盖默认配置文件 形成最终配置文件
         String userJobConf = options.getArgusConf();
         String defaultJobConf = options.getDefaultJobConf();
-        mergeUserAndDefault(options, userJobConf, defaultJobConf);
-
+        Map<String, String> defaultJobMap = mergeUserAndDefault(userJobConf, defaultJobConf);
+        setDefaultEnvVar(options, defaultJobMap);
+        String jobJson = JSONObject.toJSONString(defaultJobMap);
+        options.setJobDescJson(jobJson);
         //根据模式不同,组装不同的参数
         if (options.isCmdMode()) {
             //命令行模式
@@ -116,6 +121,18 @@ public class ArgusStarter {
 
         logger.info(startFlag ? "APP RUN SUCCESS!" : "APP RUN FAILED");
     }
+
+    private static void setDefaultEnvVar(StartOptions options, Map<String, String> defaultJobMap) {
+        org.apache.hadoop.conf.Configuration configuration = ClusterConfigLoader.loadHadoopConfig(options);
+        defaultJobMap.put(HadoopUtil.KEY_DEFAULT_FS, configuration.get(HadoopUtil.KEY_DEFAULT_FS));
+        defaultJobMap.put(HadoopUtil.KEY_HADOOP_USER_NAME, configuration.get(HadoopUtil.KEY_HADOOP_USER_NAME));
+        defaultJobMap.put(HadoopUtil.KEY_DFS_NAMESERVICES, configuration.get(HadoopUtil.KEY_DFS_NAMESERVICES));
+        defaultJobMap.put(HadoopUtil.KEY_FS_HDFS_IMPL_DISABLE_CACHE, configuration.get(HadoopUtil.KEY_FS_HDFS_IMPL_DISABLE_CACHE));
+        defaultJobMap.put(HadoopUtil.KEY_HA_DEFAULT_FS, configuration.get(HadoopUtil.KEY_HA_DEFAULT_FS));
+        defaultJobMap.put(HadoopUtil.KEY_HADOOP_SECURITY_AUTHENTICATION, configuration.get(HadoopUtil.KEY_HADOOP_SECURITY_AUTHENTICATION));
+        defaultJobMap.put(HadoopUtil.KEY_HADOOP_SECURITY_AUTHORIZATION, configuration.get(HadoopUtil.KEY_HADOOP_SECURITY_AUTHORIZATION));
+    }
+
 
     private static File getCoreJarFile(StartOptions options) throws FileNotFoundException {
         String libDir = options.getLibDir();
@@ -214,7 +231,7 @@ public class ArgusStarter {
     }
 
 
-    private static void mergeUserAndDefault(StartOptions options, String userJobConf, String defaultJobConf) {
+    private static Map<String, String> mergeUserAndDefault(String userJobConf, String defaultJobConf) {
         logger.info("merge default and job profiles to one profile");
 
         Map<String, String> defaultJobMap = YamlUtils.loadYamlStr(defaultJobConf);
@@ -226,8 +243,7 @@ public class ArgusStarter {
             defaultJobMap.put(key, userJobMap.get(key));
         }
         logger.info("merged profile size: {}", defaultJobMap.size());
-        String jobJson = JSONObject.toJSONString(defaultJobMap);
-        options.setJobDescJson(jobJson);
+        return defaultJobMap;
     }
 
     private static void readDefaultJobConf(StartOptions options) throws IOException {
@@ -412,7 +428,7 @@ public class ArgusStarter {
         String defaultHadoopHome = defaultMap.get(ArgusKey.KEY_HADOOP_HOME);
         if (StringUtils.isEmpty(defaultHadoopHome)) {
             //配置文件为空
-            if(StringUtils.isEmpty(hadoopHome)){
+            if (StringUtils.isEmpty(hadoopHome)) {
                 logger.error("hadoop home is empty, please check your env!");
                 throw new RuntimeException("HADOOP HOME was not found, please check environment variables or configuration files");
             }

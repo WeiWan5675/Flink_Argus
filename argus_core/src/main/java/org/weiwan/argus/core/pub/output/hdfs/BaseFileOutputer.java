@@ -74,7 +74,7 @@ public abstract class BaseFileOutputer<T extends DataRow> implements FileOutpute
 
 
     @Override
-    public boolean output(DataRecord<T> data) throws Exception {
+    public void output(DataRecord<T> data) throws Exception {
         //没有初始化,并且是index匹配模式
         if (!inited && MatchMode.ALIGNMENT == matchMode) {
             //使用数据的类型进行初始化
@@ -93,15 +93,13 @@ public abstract class BaseFileOutputer<T extends DataRow> implements FileOutpute
         DataRow row = data.getData();
         Map<String, DataField> dataFieldMap = transformRow2Map(row);
         this.out(dataFieldMap);
-        return true;
     }
 
     @Override
-    public boolean batchOutput(List<DataRecord<T>> dataRecords) throws Exception {
+    public void batchOutput(List<DataRecord<T>> dataRecords) throws Exception {
         for (DataRecord<T> dataRecord : dataRecords) {
             output(dataRecord);
         }
-        return true;
     }
 
     private Map<String, DataField> transformRow2Map(DataRow row) {
@@ -130,7 +128,7 @@ public abstract class BaseFileOutputer<T extends DataRow> implements FileOutpute
 
     public abstract void initOutputer() throws IOException;
 
-    public abstract boolean out(Map<String, DataField> data) throws Exception;
+    public abstract void out(Map<String, DataField> data) throws Exception;
 
 
     //提供一套默认转换

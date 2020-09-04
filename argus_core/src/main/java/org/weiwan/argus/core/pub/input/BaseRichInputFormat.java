@@ -187,4 +187,8 @@ public abstract class BaseRichInputFormat<OT, T extends InputSplit> extends Rich
         }
         return this.isRestore;
     }
+
+    public void notifyCheckpointComplete(long checkpointId) {
+        //do noting
+    }
 }
