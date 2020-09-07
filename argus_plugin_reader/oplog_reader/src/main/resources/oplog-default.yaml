@@ -1,0 +1,31 @@
+reader:
+  type: batch # batch 批处理 stream
+  name: oplogreader
+  class: org.weiwan.argus.reader.oplog.OplogReader
+  parallelism: 1
+  mongodb:
+    host: 10.2.39.129
+    port: 27017
+    url:
+    userName:
+    passWord:
+  dataBase: local
+  tableName: oplog.rs
+  analysisTableName: easylife.CustomerFollow,easylife.estate,easylife.estateHouse,easylife.Brokerage    #大小写跟mongo保持一致
+  pullTime: 2020-09-02 #拉取数据起始时间,默认值执行任务当前时间
+
+
+
+  batchSize: 1000 #setFeachSize()的大小 每次从服务器取多少数据
+  queryTimeout: 60
+
+writer:
+  type:
+  name: hivewriter
+  class: org.weiwan.argus.writer.hive.HiveWriter
+
+
+channel:
+  type:
+  name: commonchannel
+  class: org.weiwan.argus.channel.CommonChannel

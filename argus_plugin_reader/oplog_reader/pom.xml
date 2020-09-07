@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+        <artifactId>argus_plugin_reader</artifactId>
+        <groupId>org.weiwan.argus</groupId>
+        <version>1.0.0</version>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
+
+    <artifactId>oplog_reader</artifactId>
+    <properties>
+        <mongo.version>3.2.1</mongo.version>
+    </properties>
+    <dependencies>
+        <dependency>
+            <groupId>org.weiwan.argus</groupId>
+            <artifactId>argus_core</artifactId>
+        </dependency>
+
+
+        <!-- https://mvnrepository.com/artifact/org.mongodb/mongo-java-driver -->
+        <dependency>
+            <groupId>org.mongodb</groupId>
+            <artifactId>mongo-java-driver</artifactId>
+            <version>${mongo.version}</version>
+        </dependency>
+
+    </dependencies>
+
+
+
+    <build>
+        <finalName>${project.name}</finalName>
+    </build>
+</project>
