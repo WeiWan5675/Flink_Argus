@@ -21,11 +21,11 @@ reader:
 
 writer:
   type:
-  name: hivewriter
-  class: org.weiwan.argus.writer.hive.HiveWriter
+  name: ExampleWriter
+  class: org.weiwan.argus.writer.ExampleWriter
 
 
 channel:
   type:
-  name: commonchannel
-  class: org.weiwan.argus.channel.CommonChannel
+  name: ExampleChannel
+  class: org.weiwan.argus.channel.ExampleChannel
