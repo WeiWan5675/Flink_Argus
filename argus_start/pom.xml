@@ -49,6 +49,13 @@
             <artifactId>example_reader</artifactId>
             <version>${example_reader.version}</version>
         </dependency>
+
+     <dependency>
+            <groupId>org.weiwan.argus</groupId>
+            <artifactId>oplog_reader</artifactId>
+            <version>${oplog_reader.version}</version>
+        </dependency>
+
         <dependency>
             <groupId>org.weiwan.argus</groupId>
             <artifactId>example_channel</artifactId>

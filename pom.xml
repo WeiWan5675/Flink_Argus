@@ -59,6 +59,7 @@
         <example_reader.version>1.0.0</example_reader.version>
         <example_channel.version>1.0.0</example_channel.version>
         <example_writer.version>1.0.0</example_writer.version>
+        <oplog_reader.version>1.0.0</oplog_reader.version>
     </properties>
 
 
