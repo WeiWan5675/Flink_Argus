@@ -32,14 +32,12 @@ public class JobConfig extends AbstractConfig {
             Object value = map.get(key);
             if (key.startsWith("reader")) {
                 readerConfig.setVal(key, value);
-            }
-
-            if (key.startsWith("writer")) {
+            } else if (key.startsWith("writer")) {
                 writerConfig.setVal(key, value);
-            }
-
-            if (key.startsWith("channel")) {
+            } else if (key.startsWith("channel")) {
                 channelConfig.setVal(key, value);
+            } else {
+                this.setVal(key, value);
             }
         }
     }

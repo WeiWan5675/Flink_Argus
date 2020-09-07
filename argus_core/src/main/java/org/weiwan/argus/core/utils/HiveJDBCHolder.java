@@ -8,10 +8,10 @@ import java.sql.SQLException;
  * @Author: xiaozhennan
  * @Date: 2020/8/3 14:42
  * @Package: org.weiwan.argus.core.utils
- * @ClassName: HiveJbdcHolder
+ * @ClassName: HiveJDBCHolder
  * @Description:
  **/
-public class HiveJbdcHolder implements JdbcHolder {
+public class HiveJDBCHolder implements JdbcHolder {
     private JdbcInfo jdbcInfo;
     private String jdbcUrl;
     private String username;
@@ -19,7 +19,7 @@ public class HiveJbdcHolder implements JdbcHolder {
     private String database;
     private Connection connection;
 
-    public HiveJbdcHolder(JdbcInfo jdbcInfo) throws SQLException {
+    public HiveJDBCHolder(JdbcInfo jdbcInfo) throws SQLException {
         this.jdbcInfo = jdbcInfo;
         this.jdbcUrl = jdbcInfo.getJdbcUrl();
         this.username = jdbcInfo.getUsername();

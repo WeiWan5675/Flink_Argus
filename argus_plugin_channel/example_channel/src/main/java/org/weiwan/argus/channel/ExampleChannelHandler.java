@@ -1,9 +1,7 @@
 package org.weiwan.argus.channel;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.weiwan.argus.core.pub.config.ArgusContext;
-import org.weiwan.argus.core.pub.handler.ArgusChannelHandler;
+import org.weiwan.argus.core.pub.streaming.ArgusChannelHandler;
 import org.weiwan.argus.core.pub.pojo.DataField;
 import org.weiwan.argus.core.pub.pojo.DataRecord;
 import org.weiwan.argus.core.pub.pojo.DataRow;

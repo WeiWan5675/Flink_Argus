@@ -26,12 +26,7 @@ import org.weiwan.argus.core.pub.pojo.DataRow;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-/**
- * Row Utilities
- *
- * Company: www.dtstack.com
- * @author huyifan.zju@163.com
- */
+
 public class RowUtil {
     static Gson gson = new GsonBuilder().disableHtmlEscaping().create();
 

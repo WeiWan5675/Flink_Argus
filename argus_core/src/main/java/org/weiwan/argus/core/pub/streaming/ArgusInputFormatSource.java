@@ -1,5 +1,6 @@
 package org.weiwan.argus.core.pub.streaming;
 
+import org.apache.flink.api.common.ExecutionConfig;
 import org.apache.flink.api.common.io.InputFormat;
 import org.apache.flink.api.common.io.RichInputFormat;
 import org.apache.flink.api.common.state.ListState;
@@ -13,12 +14,15 @@ import org.apache.flink.core.io.InputSplit;
 import org.apache.flink.metrics.Counter;
 import org.apache.flink.runtime.jobgraph.tasks.InputSplitProvider;
 import org.apache.flink.runtime.jobgraph.tasks.InputSplitProviderException;
+import org.apache.flink.runtime.state.CheckpointListener;
 import org.apache.flink.runtime.state.FunctionInitializationContext;
 import org.apache.flink.runtime.state.FunctionSnapshotContext;
 import org.apache.flink.streaming.api.checkpoint.CheckpointedFunction;
 import org.apache.flink.streaming.api.functions.source.InputFormatSourceFunction;
+import org.apache.flink.streaming.api.operators.OutputTypeConfigurable;
 import org.apache.flink.streaming.api.operators.StreamingRuntimeContext;
 import org.weiwan.argus.core.pub.input.BaseRichInputFormat;
+import org.weiwan.argus.core.pub.output.BaseRichOutputFormat;
 import org.weiwan.argus.core.pub.pojo.JobFormatState;
 import org.weiwan.argus.core.pub.config.ArgusContext;
 
@@ -34,7 +38,7 @@ import java.util.NoSuchElementException;
  * @ClassName: ArgusInputFormatSource
  * @Description:
  **/
-public class ArgusInputFormatSource<OUT> extends InputFormatSourceFunction<OUT> implements CheckpointedFunction {
+public class ArgusInputFormatSource<OUT> extends InputFormatSourceFunction<OUT> implements CheckpointedFunction, CheckpointListener {
 
     private static final long serialVersionUID = 1L;
 
@@ -248,4 +252,19 @@ public class ArgusInputFormatSource<OUT> extends InputFormatSourceFunction<OUT> 
     public void setArgusContext(ArgusContext argusContext) {
         this.argusContext = argusContext;
     }
+
+
+    @Override
+    public void notifyCheckpointComplete(long checkpointId) throws Exception {
+        if (format != null && format instanceof BaseRichInputFormat) {
+            ((BaseRichInputFormat) format).notifyCheckpointComplete(checkpointId);
+        }
+    }
+
+
+    @Override
+    public void notifyCheckpointAborted(long checkpointId) throws Exception {
+        //not yet Supported
+    }
+
 }

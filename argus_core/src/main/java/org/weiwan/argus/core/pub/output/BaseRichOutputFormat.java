@@ -2,6 +2,8 @@ package org.weiwan.argus.core.pub.output;
 
 import org.apache.flink.api.common.io.RichOutputFormat;
 import org.apache.flink.configuration.Configuration;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.weiwan.argus.core.pub.pojo.JobFormatState;
 import org.weiwan.argus.core.pub.config.ArgusContext;
 import org.weiwan.argus.core.pub.config.JobConfig;
@@ -21,6 +23,8 @@ import java.util.List;
  **/
 public abstract class BaseRichOutputFormat<T extends DataRecord> extends RichOutputFormat<T> {
 
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(BaseRichOutputFormat.class);
     protected ArgusContext argusContext;
     protected JobConfig jobConfig;
     protected WriterConfig writerConfig;
@@ -29,9 +33,12 @@ public abstract class BaseRichOutputFormat<T extends DataRecord> extends RichOut
     protected int taskNumber;
     protected int numTasks;
 
+
+    //批处理模式支持
     protected List<T> batchRecords;
     protected boolean isBatchWriteMode;
     protected int batchWriteSize;
+
 
     private boolean isRestore;
 
@@ -104,7 +111,7 @@ public abstract class BaseRichOutputFormat<T extends DataRecord> extends RichOut
             formatState = new JobFormatState();
         }
         //子类打开资源
-        openOutput(taskNumber, numTasks, argusContext);
+        openOutput(this.taskNumber, this.numTasks, argusContext);
         //子类初始化完成
     }
 
@@ -145,7 +152,7 @@ public abstract class BaseRichOutputFormat<T extends DataRecord> extends RichOut
     }
 
     public JobFormatState getSnapshotState() {
-        snapshot(formatState);
+        this.snapshot(formatState);
         return this.formatState;
     }
 
@@ -160,4 +167,11 @@ public abstract class BaseRichOutputFormat<T extends DataRecord> extends RichOut
     public void setJobFormatState(JobFormatState jobFormatState) {
         this.formatState = jobFormatState;
     }
+
+
+    public void checkpointComplete(long currentCheckpointIndex, long nextCheckpointIndex) {
+        //do nothing
+    }
+
+
 }

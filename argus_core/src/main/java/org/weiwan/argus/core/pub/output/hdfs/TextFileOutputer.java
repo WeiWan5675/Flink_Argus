@@ -6,6 +6,7 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.common.type.HiveDecimal;
 import org.weiwan.argus.common.utils.DateUtils;
+import org.weiwan.argus.core.pub.enums.ColumnType;
 import org.weiwan.argus.core.pub.pojo.DataField;
 import org.weiwan.argus.core.pub.pojo.DataRecord;
 import org.weiwan.argus.core.pub.pojo.DataRow;
@@ -72,7 +73,7 @@ public class TextFileOutputer extends BaseFileOutputer<DataRow> {
     }
 
     @Override
-    public boolean out(Map<String, DataField> data) throws Exception {
+    public void out(Map<String, DataField> data) throws Exception {
         StringBuffer sb = new StringBuffer();
         for (String key : columnTypes.keySet()) {
             DataField dataField = data.get(key);
@@ -159,16 +160,14 @@ public class TextFileOutputer extends BaseFileOutputer<DataRow> {
             stream.flush();
         }
         waitBatchSize++;
-        return true;
     }
 
 
     @Override
-    public boolean batchOutput(List<DataRecord<DataRow>> dataRecords) {
+    public void batchOutput(List<DataRecord<DataRow>> dataRecords) {
         for (DataRecord<DataRow> dataRecord : dataRecords) {
 
         }
-        return false;
     }
 
 

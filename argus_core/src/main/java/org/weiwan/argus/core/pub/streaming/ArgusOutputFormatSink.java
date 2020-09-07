@@ -12,6 +12,7 @@ import org.apache.flink.api.common.typeinfo.TypeHint;
 import org.apache.flink.api.common.typeinfo.TypeInformation;
 import org.apache.flink.api.java.typeutils.InputTypeConfigurable;
 import org.apache.flink.configuration.Configuration;
+import org.apache.flink.runtime.state.CheckpointListener;
 import org.apache.flink.runtime.state.FunctionInitializationContext;
 import org.apache.flink.runtime.state.FunctionSnapshotContext;
 import org.apache.flink.streaming.api.checkpoint.CheckpointedFunction;
@@ -34,7 +35,7 @@ import java.util.Map;
  * @ClassName: ArgusOutputFormatSink
  * @Description:
  **/
-public class ArgusOutputFormatSink<T> extends RichSinkFunction<T> implements InputTypeConfigurable, CheckpointedFunction {
+public class ArgusOutputFormatSink<T> extends RichSinkFunction<T> implements InputTypeConfigurable, CheckpointedFunction, CheckpointListener {
 
     private static final long serialVersionUID = 1L;
     private static final Logger LOG = LoggerFactory.getLogger(OutputFormatSinkFunction.class);
@@ -46,7 +47,8 @@ public class ArgusOutputFormatSink<T> extends RichSinkFunction<T> implements Inp
     private Map<Integer, JobFormatState> cacheMapStates;
     private boolean isRestore;
     private ArgusContext argusContext;
-
+    private long currentCheckpointIndex;
+    private long nextCheckpointIndex;
 
     public ArgusOutputFormatSink(OutputFormat<T> format) {
         this.format = format;
@@ -89,7 +91,6 @@ public class ArgusOutputFormatSink<T> extends RichSinkFunction<T> implements Inp
     }
 
 
-
     @Override
     public void invoke(T value, Context context) throws Exception {
         try {
@@ -101,7 +102,7 @@ public class ArgusOutputFormatSink<T> extends RichSinkFunction<T> implements Inp
     }
 
     @Override
-    public void close() throws IOException {
+    public void close() throws Exception {
         try {
             format.close();
         } catch (Exception ex) {
@@ -124,8 +125,6 @@ public class ArgusOutputFormatSink<T> extends RichSinkFunction<T> implements Inp
     public OutputFormat<T> getFormat() {
         return format;
     }
-
-
 
 
     @Override
@@ -153,5 +152,22 @@ public class ArgusOutputFormatSink<T> extends RichSinkFunction<T> implements Inp
                 cacheMapStates.put(formatState.getNumOfSubTask(), formatState);
             }
         }
+    }
+
+
+    @Override
+    public void notifyCheckpointComplete(long checkpointId) throws Exception {
+        //只有这个类型的outputformat才进行notifyCheckpoint通知
+        if (format != null && format instanceof BaseRichOutputFormat) {
+            this.currentCheckpointIndex = checkpointId;
+            this.nextCheckpointIndex = checkpointId++;
+            ((BaseRichOutputFormat) format).checkpointComplete(currentCheckpointIndex, nextCheckpointIndex);
+        }
+    }
+
+
+    @Override
+    public void notifyCheckpointAborted(long checkpointId) throws Exception {
+        //not yet Supported
     }
 }

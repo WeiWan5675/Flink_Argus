@@ -5,7 +5,7 @@ import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.weiwan.argus.core.pub.config.ArgusContext;
 import org.weiwan.argus.core.pub.config.ChannelConfig;
 import org.weiwan.argus.core.pub.config.JobConfig;
-import org.weiwan.argus.core.pub.handler.ArgusChannelHandler;
+import org.weiwan.argus.core.pub.streaming.ArgusChannelHandler;
 import org.weiwan.argus.core.pub.pojo.DataRecord;
 
 /**

@@ -1,7 +1,7 @@
 package org.weiwan.argus.channel;
 
 import org.weiwan.argus.core.pub.config.ArgusContext;
-import org.weiwan.argus.core.pub.handler.ArgusChannelHandler;
+import org.weiwan.argus.core.pub.streaming.ArgusChannelHandler;
 import org.weiwan.argus.core.pub.pojo.DataRecord;
 
 /**

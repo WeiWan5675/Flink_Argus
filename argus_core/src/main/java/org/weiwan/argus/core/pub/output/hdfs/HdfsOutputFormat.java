@@ -19,6 +19,7 @@ import org.weiwan.argus.core.pub.pojo.DataRecord;
 import org.weiwan.argus.core.pub.pojo.JobFormatState;
 import org.weiwan.argus.core.start.StartOptions;
 import org.weiwan.argus.core.utils.ClusterConfigLoader;
+import org.weiwan.argus.core.utils.HadoopUtil;
 import org.weiwan.argus.core.utils.HdfsUtil;
 
 import java.io.File;

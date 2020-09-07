@@ -34,14 +34,8 @@ public class OrcFileOutputer extends BaseFileOutputer<DataRow> {
     }
 
     @Override
-    public boolean out(Map<String, DataField> data) throws Exception {
-        return false;
-    }
+    public void out(Map<String, DataField> data) throws Exception {
 
-    @Override
-    public boolean batchOutput(List<DataRecord<DataRow>> dataRecords) {
-        return false;
     }
-
 
 }

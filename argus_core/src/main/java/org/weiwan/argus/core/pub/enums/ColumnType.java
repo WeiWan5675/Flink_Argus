@@ -1,4 +1,4 @@
-package org.weiwan.argus.core.pub.output.hdfs;
+package org.weiwan.argus.core.pub.enums;
 
 import org.weiwan.argus.core.constants.ArgusConstans;
 
@@ -38,6 +38,10 @@ public enum ColumnType implements Serializable {
     YEAR, DATETIME,
 
 
+    /**
+     * 组合类型
+     */
+    LIST,MAP,
     NULL;
 
     public static List<ColumnType> TIME_TYPE = Arrays.asList(

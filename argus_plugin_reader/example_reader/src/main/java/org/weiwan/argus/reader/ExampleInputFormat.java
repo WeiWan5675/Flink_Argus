@@ -5,7 +5,7 @@ import org.slf4j.LoggerFactory;
 import org.weiwan.argus.common.utils.DateUtils;
 import org.weiwan.argus.core.pub.config.ArgusContext;
 import org.weiwan.argus.core.pub.input.BaseRichInputFormat;
-import org.weiwan.argus.core.pub.output.hdfs.ColumnType;
+import org.weiwan.argus.core.pub.enums.ColumnType;
 import org.weiwan.argus.core.pub.pojo.DataField;
 import org.weiwan.argus.core.pub.pojo.DataRecord;
 import org.weiwan.argus.core.pub.pojo.DataRow;
