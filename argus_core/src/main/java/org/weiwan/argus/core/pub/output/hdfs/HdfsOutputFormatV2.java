@@ -99,9 +99,16 @@ public class HdfsOutputFormatV2 extends BaseRichOutputFormat<DataRecord<DataRow<
             this.fileSystem = HadoopUtil.getFileSystem(hadoopConfig);
 
 
-            //初始化文件写出器
             //生成文件目录,临时目录
+            //临时文件目录 就是每个子任务 一个单独的临时文件目录
+            //如果是流处理,就在每次checkpoint 快照的时候,关闭文件句柄,在checkpoint完成通知时,移动文件到数据目录
+            //如果是批处理,只需要在任务完成时,将临时文件移动到target目录
+            //每次任务启动,判断是否是restore,如果不是,清理临时目录,如果是,将checkpointId 小于恢复后的id的所有文件移动到目标目录,继续消费
+            //初始化文件写出器
             //打开文件系统
+            /**
+             *
+             */
             if (isRestore()) {
                 //需要进行恢复工作
                 /**
@@ -130,19 +137,19 @@ public class HdfsOutputFormatV2 extends BaseRichOutputFormat<DataRecord<DataRow<
 
     @Override
     public void closeOutput() throws IOException {
-
+        //如果是批处理,需要在关闭时,把子任务的数据移动过去
     }
 
 
     @Override
     public void snapshot(JobFormatState formatState) {
-        //把当前正在写入的文件刷新,关闭文件
-        //把
+        //把当前正在写入的文件刷新,关闭文件句柄
+        //把最后一行更新进state里
     }
 
     @Override
-    public void notifyCheckpointComplete(long currentCheckpointIndex, long nextCheckpointIndex) {
+    public void checkpointComplete(long currentCheckpointIndex, long nextCheckpointIndex) {
         //把当前checkpointCompleteID下的所有文件移动到完成目录
-        //日过开启了合并小文件,需要移动时合并小文件
+        //如果开启了合并小文件,需要移动时合并小文件
     }
 }

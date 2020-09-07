@@ -3,6 +3,7 @@ package org.weiwan.argus.core.pub.output.hdfs;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.mapred.FileOutputFormat;
+import org.weiwan.argus.core.pub.enums.ColumnType;
 import org.weiwan.argus.core.pub.enums.CompressType;
 import org.weiwan.argus.core.pub.enums.FileType;
 import org.weiwan.argus.core.pub.pojo.DataField;

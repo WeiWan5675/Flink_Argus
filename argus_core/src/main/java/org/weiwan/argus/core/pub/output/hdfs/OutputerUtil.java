@@ -7,6 +7,7 @@ import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector;
 import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspectorFactory;
 import org.apache.hadoop.io.*;
 import org.weiwan.argus.common.utils.DateUtils;
+import org.weiwan.argus.core.pub.enums.ColumnType;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;

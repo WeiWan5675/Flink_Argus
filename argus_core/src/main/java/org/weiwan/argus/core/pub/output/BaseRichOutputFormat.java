@@ -169,7 +169,7 @@ public abstract class BaseRichOutputFormat<T extends DataRecord> extends RichOut
     }
 
 
-    public void notifyCheckpointComplete(long currentCheckpointIndex, long nextCheckpointIndex) {
+    public void checkpointComplete(long currentCheckpointIndex, long nextCheckpointIndex) {
         //do nothing
     }
 

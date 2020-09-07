@@ -161,7 +161,7 @@ public class ArgusOutputFormatSink<T> extends RichSinkFunction<T> implements Inp
         if (format != null && format instanceof BaseRichOutputFormat) {
             this.currentCheckpointIndex = checkpointId;
             this.nextCheckpointIndex = checkpointId++;
-            ((BaseRichOutputFormat) format).notifyCheckpointComplete(currentCheckpointIndex, nextCheckpointIndex);
+            ((BaseRichOutputFormat) format).checkpointComplete(currentCheckpointIndex, nextCheckpointIndex);
         }
     }
 

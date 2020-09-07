@@ -1,7 +1,7 @@
 package org.weiwan.argus.core.pub.pojo;
 
 import org.apache.flink.annotation.PublicEvolving;
-import org.weiwan.argus.core.pub.output.hdfs.ColumnType;
+import org.weiwan.argus.core.pub.enums.ColumnType;
 
 import java.io.Serializable;
 

@@ -3,6 +3,7 @@ package org.weiwan.argus.core.pub.pojo;
 import org.apache.flink.annotation.PublicEvolving;
 
 import java.io.Serializable;
+import java.util.Map;
 
 /**
  * @Author: xiaozhennan
@@ -19,6 +20,7 @@ public class DataRecord<T> implements Serializable {
     private String schemaName;
     private String dataPath;
     private String dataType;
+    private Map<String,String> dataMeta;
     private T data;
 
     public DataRecord(T data) {
@@ -29,6 +31,13 @@ public class DataRecord<T> implements Serializable {
 
     }
 
+    public Map<String, String> getDataMeta() {
+        return dataMeta;
+    }
+
+    public void setDataMeta(Map<String, String> dataMeta) {
+        this.dataMeta = dataMeta;
+    }
 
     public String getSchemaName() {
         return schemaName;
