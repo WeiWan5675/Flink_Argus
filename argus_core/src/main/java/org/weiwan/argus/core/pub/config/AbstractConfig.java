@@ -5,8 +5,7 @@ import com.google.gson.internal.LinkedTreeMap;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 
 public abstract class AbstractConfig implements Serializable {
@@ -185,6 +184,18 @@ public abstract class AbstractConfig implements Serializable {
             return Boolean.valueOf(((String) ret).toLowerCase());
         }
         throw new RuntimeException("can't cast " + key + " from " + ret.getClass().getName() + " to Boolean");
+    }
+
+    public List<String> getListForSplit(String key, String split) {
+        List<String> vars = new ArrayList<>();
+        if (key != null && !"".equalsIgnoreCase(key)) {
+            Object obj = internalMap.get(key);
+            if (obj instanceof String) {
+                String[] splits = ((String) obj).split(split);
+                vars.addAll(Arrays.asList(splits));
+            }
+        }
+        return vars;
     }
 
 }

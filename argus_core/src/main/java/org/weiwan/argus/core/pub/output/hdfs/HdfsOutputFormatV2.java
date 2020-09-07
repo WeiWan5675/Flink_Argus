@@ -33,6 +33,7 @@ public class HdfsOutputFormatV2 extends BaseRichOutputFormat<DataRecord<DataRow<
         super(argusContext);
     }
 
+
     private static final Logger logger = LoggerFactory.getLogger(HdfsOutputFormat.class);
 
     public static final String WRITER_HDFS_OUTPUT_FILE_NAME = "writer.output.fileName";
@@ -71,6 +72,16 @@ public class HdfsOutputFormatV2 extends BaseRichOutputFormat<DataRecord<DataRow<
     protected FileSystem fileSystem;
     protected org.apache.hadoop.conf.Configuration hadoopConfig;
 
+
+    protected int currentBlockIndex = -1;
+    protected int nextBlockIndex;
+
+    protected String currentBlockFileName;
+    protected String nextBlockFileName;
+
+    protected List<String> fileBlocks;
+    protected String processPath;
+
     @Override
     public void configure(Configuration parameters) {
         super.configure(parameters);
@@ -98,7 +109,17 @@ public class HdfsOutputFormatV2 extends BaseRichOutputFormat<DataRecord<DataRow<
             this.hadoopConfig = HadoopUtil.getConfiguration(jobConfig);
             this.fileSystem = HadoopUtil.getFileSystem(hadoopConfig);
 
+            processPath = targetPath + ".process_" + taskNumber;
 
+            nextFileBlock();
+
+            if(isRestore() && isStream()){
+                //把上一次成功的index之后的都移动过去
+                //block_0_0 block_0_1 block_0_2
+                //上一次成功的时 block_0_1
+                //mv .process_0/block_0* targetdir
+                //delete ./process_0/=
+            }
             //生成文件目录,临时目录
             //临时文件目录 就是每个子任务 一个单独的临时文件目录
             //如果是流处理,就在每次checkpoint 快照的时候,关闭文件句柄,在checkpoint完成通知时,移动文件到数据目录
@@ -120,6 +141,19 @@ public class HdfsOutputFormatV2 extends BaseRichOutputFormat<DataRecord<DataRow<
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    private void nextFileBlock() {
+        //把完成的文件存放到这个目录
+        fileBlocks.add(currentBlockFileName);
+        //索引+1
+        nextBlockIndex = currentBlockIndex + 1;
+        //当前写入的文件名称变更
+        currentBlockFileName = processPath + fileName + taskNumber + nextBlockIndex;
+        //当前blockIndex变更
+        currentBlockIndex = nextBlockIndex;
+        //根据新current 生成下一个index
+        nextBlockIndex = currentBlockIndex + 1;
     }
 
 

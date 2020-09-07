@@ -41,7 +41,7 @@ public abstract class BaseRichOutputFormat<T extends DataRecord> extends RichOut
 
 
     private boolean isRestore;
-
+    private boolean isStream;
 
     /**
      * 打开数据源
@@ -100,7 +100,7 @@ public abstract class BaseRichOutputFormat<T extends DataRecord> extends RichOut
     public void open(int taskNumber, int numTasks) throws IOException {
         this.isBatchWriteMode = writerConfig.getBooleanVal("writer.batchWriteMode", false);
         this.batchWriteSize = writerConfig.getIntVal("writer.batchWriteSize", 1000);
-
+        this.isStream = writerConfig.getBooleanVal("writer.type", false);
         if (isBatchWriteMode) {
             this.batchRecords = new ArrayList(batchWriteSize);
         }
@@ -162,6 +162,14 @@ public abstract class BaseRichOutputFormat<T extends DataRecord> extends RichOut
             this.isRestore = flags[0];
         }
         return this.isRestore;
+    }
+
+
+    public boolean isStream(boolean... flags) {
+        if (flags.length == 1) {
+            this.isStream = flags[0];
+        }
+        return this.isStream;
     }
 
     public void setJobFormatState(JobFormatState jobFormatState) {
