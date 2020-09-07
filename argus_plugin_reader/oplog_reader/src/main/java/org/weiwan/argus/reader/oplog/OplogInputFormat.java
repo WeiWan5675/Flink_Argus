@@ -136,13 +136,19 @@ public class OplogInputFormat extends BaseRichInputFormat<DataRecord<DataRow<Obj
                     .maxAwaitTime(querytimeout, TimeUnit.SECONDS) //设置此操作在服务器上的最大等待执行时间
                     .iterator();
         } catch (Exception e) {
-            System.err.println( e.getClass().getName() + ": " + e.getMessage() );
+            e.printStackTrace();
+
         }
     }
 
     @Override
     public OplogInputSpliter[] getInputSpliter(int minNumSplits) {
-        return new OplogInputSpliter[0];
+        OplogInputSpliter[] splits = new OplogInputSpliter[minNumSplits];
+        for (int i = 0; i < minNumSplits; i++){
+            OplogInputSpliter exampleInputSplit = new OplogInputSpliter(i, minNumSplits);
+            splits[i] = exampleInputSplit;
+        }
+        return splits;
     }
 
     @Override
