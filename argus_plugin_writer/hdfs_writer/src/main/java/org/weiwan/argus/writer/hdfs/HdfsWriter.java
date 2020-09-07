@@ -5,6 +5,8 @@ import org.weiwan.argus.core.pub.api.BaseWriter;
 import org.weiwan.argus.core.pub.config.ArgusContext;
 import org.weiwan.argus.core.pub.output.BaseRichOutputFormat;
 import org.weiwan.argus.core.pub.output.hdfs.HdfsOutputFormat;
+import org.weiwan.argus.core.pub.output.hdfs.HdfsOutputFormatV2;
+import org.weiwan.argus.core.pub.pojo.DataField;
 import org.weiwan.argus.core.pub.pojo.DataRecord;
 import org.weiwan.argus.core.pub.pojo.DataRow;
 
@@ -15,15 +17,15 @@ import org.weiwan.argus.core.pub.pojo.DataRow;
  * @ClassName: HdfsWriter
  * @Description:
  **/
-public class HdfsWriter extends BaseWriter<DataRecord<DataRow>> {
+public class HdfsWriter extends BaseWriter<DataRecord<DataRow<DataField>>> {
 
     public HdfsWriter(StreamExecutionEnvironment env, ArgusContext argusContext) {
         super(env, argusContext);
     }
 
     @Override
-    public BaseRichOutputFormat<DataRecord<DataRow>> getOutputFormat(ArgusContext argusContext) {
-        HdfsOutputFormat hdfsOutputFormat = new HdfsOutputFormat(argusContext);
+    public BaseRichOutputFormat<DataRecord<DataRow<DataField>>> getOutputFormat(ArgusContext argusContext) {
+        HdfsOutputFormatV2 hdfsOutputFormat = new HdfsOutputFormatV2(argusContext);
         return hdfsOutputFormat;
     }
 

@@ -41,7 +41,7 @@ public enum ColumnType implements Serializable {
     /**
      * 组合类型
      */
-    LIST,MAP,
+    ARRAYLIST,HASHMAP,LIST,
     NULL;
 
     public static List<ColumnType> TIME_TYPE = Arrays.asList(

@@ -34,6 +34,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import static org.weiwan.argus.core.utils.HadoopUtil.KEY_HA_DEFAULT_FS;
+
 
 /**
  * @Author: xiaozhennan
@@ -126,8 +128,28 @@ public class ArgusStarter {
         defaultJobMap.put(HadoopUtil.KEY_DEFAULT_FS, configuration.get(HadoopUtil.KEY_DEFAULT_FS));
         defaultJobMap.put(HadoopUtil.KEY_HADOOP_USER_NAME, configuration.get(HadoopUtil.KEY_HADOOP_USER_NAME));
         defaultJobMap.put(HadoopUtil.KEY_DFS_NAMESERVICES, configuration.get(HadoopUtil.KEY_DFS_NAMESERVICES));
+        String nameservice = configuration.get(HadoopUtil.KEY_DFS_NAMESERVICES);
+        String name_service_key = "dfs.ha.namenodes.";
+
+        String nameservice_key = name_service_key + nameservice;
+        String nameservice_value = configuration.get(nameservice_key);
+        defaultJobMap.put(nameservice_key, nameservice_value);
+        String rpc_key = "dfs.namenode.rpc-address.";
+        rpc_key += nameservice + ".";
+        String[] split = nameservice_value.split(",");
+        String rpc_key1 = rpc_key + split[0];
+        String rpc_key2 = rpc_key + split[1];
+        String rpcValue1 = configuration.get(rpc_key1);
+        String rpcValue2 = configuration.get(rpc_key2);
+        defaultJobMap.put(rpc_key1, rpcValue1);
+        defaultJobMap.put(rpc_key2, rpcValue2);
+        String failoverKey = "dfs.client.failover.proxy.provider.nameservices";
+        String failoverValue = configuration.get(failoverKey);
+        defaultJobMap.put(failoverKey, failoverValue);
+        defaultJobMap.put(KEY_HA_DEFAULT_FS, "hdfs://" + nameservice_value);
+
         defaultJobMap.put(HadoopUtil.KEY_FS_HDFS_IMPL_DISABLE_CACHE, configuration.get(HadoopUtil.KEY_FS_HDFS_IMPL_DISABLE_CACHE));
-        defaultJobMap.put(HadoopUtil.KEY_HA_DEFAULT_FS, configuration.get(HadoopUtil.KEY_HA_DEFAULT_FS));
+        defaultJobMap.put(KEY_HA_DEFAULT_FS, configuration.get(KEY_HA_DEFAULT_FS));
         defaultJobMap.put(HadoopUtil.KEY_HADOOP_SECURITY_AUTHENTICATION, configuration.get(HadoopUtil.KEY_HADOOP_SECURITY_AUTHENTICATION));
         defaultJobMap.put(HadoopUtil.KEY_HADOOP_SECURITY_AUTHORIZATION, configuration.get(HadoopUtil.KEY_HADOOP_SECURITY_AUTHORIZATION));
     }

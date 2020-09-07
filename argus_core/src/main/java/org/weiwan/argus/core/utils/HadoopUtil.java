@@ -9,6 +9,7 @@ import org.weiwan.argus.core.pub.config.JobConfig;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Map;
 
 public class HadoopUtil {
 
@@ -56,6 +57,14 @@ public class HadoopUtil {
         if (StringUtils.isEmpty(hadoopUserName)) {
             hadoopUserName = System.getProperty("user.name");
         }
+
+        Map<String, Object> all = jobConfig.getAll();
+        for (String key : all.keySet()) {
+            if(key.startsWith("dfs.")){
+                configuration.set(key,jobConfig.getStringVal(key));
+            }
+        }
+
         configuration.set(KEY_HADOOP_USER_NAME, hadoopUserName);
         return configuration;
     }

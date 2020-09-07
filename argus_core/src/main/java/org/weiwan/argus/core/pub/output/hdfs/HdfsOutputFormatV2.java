@@ -3,6 +3,7 @@ package org.weiwan.argus.core.pub.output.hdfs;
 import org.apache.commons.lang3.CharEncoding;
 import org.apache.flink.configuration.Configuration;
 import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.weiwan.argus.core.pub.config.ArgusContext;
@@ -15,7 +16,9 @@ import org.weiwan.argus.core.pub.pojo.DataRecord;
 import org.weiwan.argus.core.pub.pojo.DataRow;
 import org.weiwan.argus.core.pub.pojo.JobFormatState;
 import org.weiwan.argus.core.utils.HadoopUtil;
+import org.weiwan.argus.core.utils.HdfsUtil;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.Date;
 import java.util.List;
@@ -113,7 +116,7 @@ public class HdfsOutputFormatV2 extends BaseRichOutputFormat<DataRecord<DataRow<
 
             nextFileBlock();
 
-            if(isRestore() && isStream()){
+            if (isRestore() && isStream()) {
                 //把上一次成功的index之后的都移动过去
                 //block_0_0 block_0_1 block_0_2
                 //上一次成功的时 block_0_1
@@ -125,7 +128,9 @@ public class HdfsOutputFormatV2 extends BaseRichOutputFormat<DataRecord<DataRow<
             //如果是流处理,就在每次checkpoint 快照的时候,关闭文件句柄,在checkpoint完成通知时,移动文件到数据目录
             //如果是批处理,只需要在任务完成时,将临时文件移动到target目录
             //每次任务启动,判断是否是restore,如果不是,清理临时目录,如果是,将checkpointId 小于恢复后的id的所有文件移动到目标目录,继续消费
+
             //初始化文件写出器
+
             //打开文件系统
             /**
              *
@@ -172,18 +177,42 @@ public class HdfsOutputFormatV2 extends BaseRichOutputFormat<DataRecord<DataRow<
     @Override
     public void closeOutput() throws IOException {
         //如果是批处理,需要在关闭时,把子任务的数据移动过去
+
+        if (!isStream()) {
+            //需要将处理完成的文件移动过去
+            for (String fileBlock : fileBlocks) {
+                Path src = new Path(fileBlock);
+                int i = fileBlock.lastIndexOf(File.separator);
+                String fileBlockName = fileBlock.substring(i);
+                String targetFile = fileBlockName + fileSuffix;
+                Path dsc = new Path(targetFile);
+                HdfsUtil.moveBlockToTarget(src, dsc, fileSystem, true);
+            }
+
+        }
     }
 
 
     @Override
     public void snapshot(JobFormatState formatState) {
+        if (isStream()) {
+            return;
+        }
         //把当前正在写入的文件刷新,关闭文件句柄
+        formatState.setState(currentBlockIndex);
+        nextFileBlock();
         //把最后一行更新进state里
+
     }
 
     @Override
     public void checkpointComplete(long currentCheckpointIndex, long nextCheckpointIndex) {
         //把当前checkpointCompleteID下的所有文件移动到完成目录
+        //移动文件到target目录
+        if (!isStream()) {
+            return;
+        }
         //如果开启了合并小文件,需要移动时合并小文件
+        //mv .process_0/block_0_1 targetPath/fileName_0_1.后缀
     }
 }
