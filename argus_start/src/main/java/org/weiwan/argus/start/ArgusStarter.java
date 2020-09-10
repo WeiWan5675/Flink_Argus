@@ -97,7 +97,7 @@ public class ArgusStarter {
             case local:
                 logger.info("RunMode:" + RunMode.local.toString());
                 startFlag = startFromLocalMode(argsAll, options);
-                break;
+            break;
             case standalone:
                 logger.info("RunMode:" + RunMode.standalone.toString());
                 startFlag = startFromStandaloneMode(options, coreJarFile, urlList, argsAll);

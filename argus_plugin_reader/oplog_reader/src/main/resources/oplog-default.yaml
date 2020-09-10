@@ -11,8 +11,10 @@ reader:
     passWord:
   dataBase: local
   tableName: oplog.rs
-  analysisTableName: easylife.CustomerFollow,easylife.estate,easylife.estateHouse,easylife.Brokerage    #大小写跟mongo保持一致
-  pullTime: 2020-09-02 #拉取数据起始时间,默认值执行任务当前时间
+  analysisTableName: #easylife.CustomerFollow,easylife.estate,easylife.estateHouse,easylife.Brokerage    #大小写跟mongo保持一致
+  pullTime: "2020-09-09 15:43:12"  #"2020-09-08 00:00:00" #拉取数据起始时间,默认值执行任务当前时间
+  pullIndex: 1  #时间戳相同时指定拉取开始的下标
+
 
 
 
